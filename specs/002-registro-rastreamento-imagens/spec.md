@@ -31,6 +31,21 @@ O login é feito com uma carteira virtual que possua tokens Sepolia."
 - Q: Terceiros podem editar imagens registradas por outra pessoa? → A: Sim, e o sistema deve
   identificar quem realizou cada edição.
 
+### Session 2026-10-04
+
+- Q: Quais arquivos recebidos podem ser abertos no editor e registrados como nova versão? → A:
+  Apenas cópias exatas de um registro confirmado; arquivos com apenas correspondência visual são
+  recusados, mesmo quando há um único registro correspondente.
+- Q: Quando um registro pendente passa a "falhou"? → A: Após 30 minutos sem confirmação da rede;
+  antes de permitir o reenvio, o sistema consulta se o arquivo foi registrado nesse intervalo.
+- Q: A verificação pode ser iniciada pelo "Compartilhar" de outros aplicativos? → A: Não. A imagem
+  é escolhida apenas dentro do aplicativo, pelo seletor de fotos do aparelho.
+- Q: O que acontece se a chave do aparelho for perdida (reinstalação, dados apagados, novo
+  aparelho)? → A: Os registros antigos continuam válidos; uma nova chave é criada e vinculada à
+  carteira no próximo registro; uma carteira pode ter vários aparelhos vinculados.
+- Q: Em quais idiomas a interface estará disponível? → A: Apenas português (Brasil); outros
+  idiomas estão fora do escopo.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Capturar e registrar uma imagem (Priority: P1)
@@ -211,6 +226,9 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
   o usuário é direcionado ao registro existente.
 - O aplicativo é encerrado com transação enviada e não confirmada: o acompanhamento é retomado
   na próxima abertura.
+- A transação fica 30 minutos sem confirmação (descartada ou presa na rede): o registro passa a
+  "falhou" e pode ser reenviado; se ela for confirmada depois disso, a consulta anterior ao reenvio
+  detecta o registro e evita duplicidade.
 - O nó da rede está indisponível durante a verificação: o aplicativo informa a falha de conexão,
   sem retornar "Não registrada".
 - Arquivo enviado para verificação em formato não suportado ou corrompido: mensagem de erro
@@ -221,6 +239,9 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
   as configurações.
 - A carteira troca de conta ou de rede durante uma operação: a operação é cancelada antes do
   envio e o usuário é avisado.
+- A chave do aparelho é perdida (reinstalação, dados apagados ou novo aparelho): os registros
+  anteriores continuam válidos e atribuídos ao aparelho antigo; o próximo registro vincula uma
+  nova chave à carteira.
 
 ## Requirements _(mandatory)_
 
@@ -248,7 +269,9 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
   salvo na galeria e confirmar, por releitura, que o arquivo gravado corresponde ao hash antes do registro.
 - **FR-009**: O sistema MUST calcular o hash perceptual de 64 bits da imagem final.
 - **FR-010**: O sistema MUST assinar os dados do registro com uma chave exclusiva do aparelho,
-  não exportável, e vincular essa chave à carteira do usuário antes do primeiro registro.
+  não exportável, e vincular essa chave à carteira do usuário antes do primeiro registro. Uma
+  carteira MAY ter vários aparelhos vinculados; se a chave do aparelho for perdida, o sistema MUST
+  criar e vincular uma nova chave no próximo registro, sem invalidar registros anteriores.
 - **FR-011**: O sistema MUST registrar na blockchain: hash exato, hash perceptual, assinatura do
   aparelho, aparelho utilizado, responsável (carteira que assinou a transação), data/hora,
   imagem-pai e imagem original da cadeia.
@@ -256,12 +279,17 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
 - **FR-013**: O sistema MUST exibir o status de cada registro (não enviado, aguardando
   aprovação, pendente, confirmado, falhou) e o link para a transação no explorador de blocos.
 - **FR-014**: O sistema MUST retomar o acompanhamento de transações pendentes após reinício do
-  aplicativo e permitir reenviar registros que falharam.
+  aplicativo e permitir reenviar registros que falharam. Um registro enviado que permanecer sem
+  confirmação por 30 minutos MUST passar a "falhou"; antes de reenviar, o sistema MUST consultar
+  se o hash exato já foi registrado e, nesse caso, marcar o registro como "confirmado" em vez de
+  reenviar.
 
 **Edição**
 
 - **FR-015**: O sistema MUST permitir editar apenas imagens cujo arquivo corresponda exatamente a
   um registro confirmado (capturas e edições próprias, ou arquivos importados de terceiros).
+  Arquivos com apenas correspondência visual MUST ser recusados no editor, mesmo quando houver um
+  único registro correspondente.
 - **FR-016**: O sistema MUST oferecer, no mínimo, os filtros: brilho, contraste, preto e branco,
   sépia, desfoque, nitidez, detecção de bordas, recorte e rotação de 90°, com pré-visualização e
   desfazer.
@@ -272,7 +300,9 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
 
 **Verificação**
 
-- **FR-019**: O sistema MUST permitir verificar imagens sem login e sem custo.
+- **FR-019**: O sistema MUST permitir verificar imagens sem login e sem custo. A imagem a verificar
+  é escolhida dentro do aplicativo, pelo seletor de fotos do aparelho; receber imagens
+  compartilhadas por outros aplicativos está fora do escopo.
 - **FR-020**: O sistema MUST verificar primeiro por igualdade de hash exato e, se não houver
   correspondência, por igualdade de hash perceptual.
 - **FR-021**: O sistema MUST classificar o resultado em: Registrada – original; Registrada –
@@ -317,6 +347,7 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
 - **FR-038**: Antes de abrir a carteira, o sistema MUST informar em uma frase o que será solicitado e
   que o custo é em tokens de teste Sepolia; antes de registrar uma edição, MUST avisar que o registro é
   permanente.
+- **FR-039**: A interface MUST estar em português (Brasil); outros idiomas estão fora do escopo.
 
 ### Key Entities _(include if feature involves data)_
 
@@ -324,7 +355,7 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
   Contém identificador sequencial, hash exato, hash perceptual, aparelho, assinatura do aparelho,
   responsável, data/hora, imagem-pai (vazia para originais), original da cadeia e operações aplicadas.
 - **Aparelho**: chave pública de um aparelho vinculada a uma carteira; atesta em qual aparelho o
-  registro foi produzido.
+  registro foi produzido. Uma carteira pode ter vários aparelhos; vínculos não são revogados.
 - **Responsável**: carteira que assinou a transação do registro; autor (para originais) ou editor
   (para versões).
 - **Cadeia (Genealogia)**: árvore de registros que compartilham a mesma original.

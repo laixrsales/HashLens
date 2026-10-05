@@ -34,6 +34,6 @@
 - A spec cita "Sepolia", "carteira", SHA-256, pHash de 64 bits, distância de Hamming, Android,
   JPEG e 4G por serem requisitos de domínio e condições de teste definidos pela autora e pelo TCC,
   não escolhas de implementação; por isso os itens de "implementation details" foram aceitos.
-- Premissa a confirmar no `/speckit-plan`: edição permitida apenas para cópias exatas de registros
-  confirmados (Assumptions, FR-015, US4 cenário 2).
+- Premissa confirmada no `/speckit-clarify` (2026-10-04): edição apenas para cópias exatas de
+  registros confirmados (FR-015, US4 cenário 2, Assumptions).
 - Validação feita em 1 iteração; nenhum item falhou.
