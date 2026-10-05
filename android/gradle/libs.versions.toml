@@ -1,0 +1,110 @@
+# Versões estáveis conferidas em 2026-10-05 (Google Maven / Maven Central).
+# Itens ⚠️ do research: Reown AppKit (R1), web3j (R2), Roborazzi (R21).
+
+[versions]
+agp = "9.4.1"
+kotlin = "2.4.20"
+ksp = "2.3.12"
+hilt = "2.60.1"
+androidxHilt = "1.4.0"
+coroutines = "1.11.0"
+coreKtx = "1.19.1"
+activityCompose = "1.13.0"
+lifecycle = "2.11.0"
+composeBom = "2026.09.00"
+navigation = "2.10.2"
+room = "2.8.5"
+camerax = "1.6.2"
+work = "2.12.0"
+exifinterface = "1.4.2"
+# 4.x mais recente: o hashing-spec v1 foi escrito sobre OpenCV 4 (R9/R10); migrar para 5.x exige revalidar os golden.
+opencv = "4.14.0"
+# ⚠️ R2: 5.x e 6.x são compilados para Java 21 sem variante Android; 4.12.3-android é a última variante Android oficial.
+web3j = "4.12.3-android"
+# ⚠️ R1
+reownBom = "1.6.17"
+# ⚠️ R21
+roborazzi = "1.76.0"
+junit5 = "5.14.4"
+androidJunit5 = "1.14.0.0"
+junit4 = "4.13.2"
+mockk = "1.14.11"
+kotest = "6.2.5"
+robolectric = "4.17"
+androidxTestRunner = "1.7.0"
+androidxTestExtJunit = "1.3.0"
+espresso = "3.7.0"
+detekt = "1.23.8"
+
+[libraries]
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "androidxHilt" }
+androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "androidxHilt" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "androidxHilt" }
+
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "camerax" }
+
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
+androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
+
+opencv = { module = "org.opencv:opencv", version.ref = "opencv" }
+web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
+reown-bom = { module = "com.reown:android-bom", version.ref = "reownBom" }
+reown-android-core = { module = "com.reown:android-core" }
+reown-appkit = { module = "com.reown:appkit" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit5" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params" }
+junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+room = { id = "androidx.room", version.ref = "room" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
+android-junit5 = { id = "de.mannodermaus.android-junit5", version.ref = "androidJunit5" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
