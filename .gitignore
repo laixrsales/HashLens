@@ -1,0 +1,32 @@
+# Segredos (nunca entram no Git)
+local.properties
+.env
+.env.*
+*.keystore
+*.jks
+
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/31337/
+contracts/broadcast/**/dry-run/
+
+# Android / Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+out/
+captures/
+*.class
+*.iml
+*.log
+.externalNativeBuild/
+.cxx/
+
+# IDEs e sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
