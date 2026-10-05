@@ -216,7 +216,12 @@ setup (as versões mudam com frequência).
   a `FAILED` com motivo `TIMEOUT`. Antes de qualquer reenvio, o app chama
   `getIdBySha256(sha)`: se ≠ 0, o registro local vai direto para `CONFIRMED` com esse `recordId`
   (a transação "perdida" foi confirmada depois do prazo); só se = 0 abre a carteira de novo.
-  A mesma assinatura do aparelho (`signatureHex`) é reutilizada no reenvio.
+  A mesma assinatura do aparelho (`signatureHex`) é reutilizada no reenvio, que por isso exige a
+  mesma carteira do registro (o payload inclui o `registrant`); com outra carteira conectada, o
+  reenvio é bloqueado com pedido para conectar a original. O worker também
+  reconcilia pelo hash antes de qualquer `FAILED` (recibo com status 0 ou prazo estourado): se
+  `getIdBySha256(sha) ≠ 0`, o registro vai a `CONFIRMED`. Isso cobre a transação antiga confirmada
+  depois do reenvio, quando a nova reverte com `AlreadyRegistered` (data-model §2.3).
 - **Rationale**: clarificação de 2026-10-04 (FR-014). Na Sepolia a confirmação costuma levar
   menos de 1 min; 30 min separa atraso de descarte, e a consulta prévia evita revert
   `AlreadyRegistered` e cobrança de gás inútil.
