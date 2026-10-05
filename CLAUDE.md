@@ -12,7 +12,7 @@ App Android (Kotlin + Jetpack Compose + OpenCV) que registra imagens na Ethereum
 Formato obrigatório: `<tipo>/<NNN>-<slug>`
 
 - `<tipo>`: `feature` (funcionalidade nova), `refactor` (reestruturação sem mudar comportamento),
-  `bugfix` (correção), `style` (formatação/visual, sem mudar lógica).
+  `bugfix` (correção), `style` (formatação/visual, sem mudar lógica), `chore` (alterações de rotina).
 - `<NNN>`: 3 dígitos, sequência única para todo o repositório: o próximo número após o maior
   usado em qualquer branch (local ou remota) ou pasta de `specs/`.
 - `<slug>`: 2 a 4 palavras em kebab-case, minúsculas, sem acentos.

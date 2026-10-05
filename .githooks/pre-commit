@@ -8,9 +8,9 @@ case "$branch" in
   main|master) exit 0 ;;
 esac
 
-if ! printf '%s' "$branch" | grep -Eq '^(feature|refactor|bugfix|style)/[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$'; then
+if ! printf '%s' "$branch" | grep -Eq '^(feature|refactor|bugfix|style|chore)/[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$'; then
   echo "✖ Nome de branch inválido: '$branch'" >&2
-  echo "  Use <tipo>/<NNN>-<slug>, com tipo = feature | refactor | bugfix | style" >&2
+  echo "  Use <tipo>/<NNN>-<slug>, com tipo = feature | refactor | bugfix | style | chore" >&2
   echo "  Exemplo: feature/002-exportar-metricas" >&2
   echo "  Para renomear a branch atual:  git branch -m <novo-nome>" >&2
   exit 1
