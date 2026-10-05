@@ -107,15 +107,28 @@ LOCAL_ONLY ──(usuário solicita registro)──▶ AWAITING_WALLET
 AWAITING_WALLET ──(aprovada)──▶ PENDING          (txHash definido)
 AWAITING_WALLET ──(rejeitada / timeout)──▶ FAILED
 PENDING ──(recibo status=1)──▶ CONFIRMED          (recordId definido)
-PENDING ──(recibo status=0)──▶ FAILED            (failureReason = REVERTED)
-PENDING ──(30 min desde submittedAt sem recibo)──▶ FAILED   (failureReason = TIMEOUT)
+PENDING ──(recibo status=0 ou 30 min sem recibo)──▶ reconciliação
+reconciliação ──(getIdBySha256(sha) ≠ 0)──▶ CONFIRMED       (recordId lido on-chain)
+reconciliação ──(getIdBySha256(sha) = 0, recibo status=0)──▶ FAILED   (failureReason = REVERTED)
+reconciliação ──(getIdBySha256(sha) = 0, sem recibo)──▶ FAILED        (failureReason = TIMEOUT)
+reconciliação ──(erro de rede)──▶ PENDING                   (nova tentativa no próximo ciclo)
 FAILED ──(reenviar; getIdBySha256(sha) ≠ 0)──▶ CONFIRMED   (recordId lido on-chain, sem nova tx)
 FAILED ──(reenviar; getIdBySha256(sha) = 0)──▶ AWAITING_WALLET
 ```
 
-`CONFIRMED` é terminal. Só imagens `CONFIRMED` podem ser editadas (FR-015). Um recibo que chegue
-para um registro já em `FAILED(TIMEOUT)` também o leva a `CONFIRMED` (o worker continua
-consultando o `txHash` antigo até o próximo reenvio).
+`CONFIRMED` é terminal. Só imagens `CONFIRMED` podem ser editadas (FR-015).
+
+**Reenvio e carteira**: o reenvio exige a mesma carteira (`walletAddress`): `signatureHex` inclui
+o `registrant` no payload (signature-payload §1) e não vale para outra carteira. Com outra
+carteira conectada, o reenvio é bloqueado e o app pede a carteira original.
+
+**Reconciliação**: nenhum registro sai de `PENDING` para `FAILED` sem antes consultar
+`getIdBySha256(sha)`. O hash é a identidade do registro, não o `txHash`: se uma transação anterior
+(por exemplo, a que estourou o prazo antes de um reenvio) for confirmada depois, a transação nova
+reverte com `AlreadyRegistered`, e a reconciliação leva o registro a `CONFIRMED` com o `recordId`
+on-chain em vez de marcá-lo `FAILED(REVERTED)`. Um registro em `FAILED(TIMEOUT)` continua sendo
+reconciliado pelo worker em cada ciclo até ser reenviado; por isso não é preciso guardar os
+`txHash` anteriores.
 
 ---
 
