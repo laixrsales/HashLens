@@ -13,6 +13,15 @@ remappings = ["forge-std/=lib/forge-std/src/"]
 [fuzz]
 runs = 256
 
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = false
+int_types = "long"
+quote_style = "double"
+number_underscore = "thousands"
+sort_imports = true
+
 [rpc_endpoints]
 sepolia = "${SEPOLIA_RPC_URL}"
 

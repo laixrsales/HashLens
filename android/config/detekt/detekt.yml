@@ -1,0 +1,29 @@
+# Ajustes sobre a configuração padrão do detekt (buildUponDefaultConfig = true).
+# A formatação fica com o ktlint (.editorconfig); aqui só regras de qualidade.
+
+complexity:
+  LongParameterList:
+    # Telas e componentes Compose recebem estado e callbacks como parâmetros
+    ignoreAnnotated: ["Composable"]
+  TooManyFunctions:
+    ignoreAnnotatedFunctions: ["Preview"]
+
+naming:
+  FunctionNaming:
+    # Funções @Composable usam PascalCase
+    ignoreAnnotated: ["Composable"]
+  TopLevelPropertyNaming:
+    constantPattern: "[A-Z][A-Za-z0-9_]*"
+
+style:
+  MagicNumber:
+    ignoreAnnotated: ["Preview"]
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    excludes:
+      ["**/test/**", "**/androidTest/**", "**/ui/theme/**", "**/ui/preview/**"]
+  UnusedPrivateFunction:
+    ignoreAnnotated: ["Preview"]
+  MaxLineLength:
+    # Igual ao max_line_length do .editorconfig
+    maxLineLength: 120

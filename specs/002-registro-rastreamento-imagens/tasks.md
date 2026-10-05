@@ -37,10 +37,10 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T001 Criar estrutura do monorepo (`contracts/`, `android/`) e `.gitignore` cobrindo `local.properties`, `contracts/out/`, `contracts/cache/`, `.env`
 - [X] T002 Inicializar projeto Foundry em `contracts/foundry.toml` (solc 0.8.24, optimizer 200 runs) com `forge-std`
 - [X] T003 Inicializar projeto Android (Kotlin, Compose, minSdk 26, JVM 17) em `android/` com catálogo `android/gradle/libs.versions.toml`, fixando as versões estáveis atuais dos itens ⚠️ de `$SPEC/research.md` (Reown AppKit, web3j, Roborazzi)
-- [ ] T004 [P] Adicionar dependências (Compose BOM, Navigation, Hilt, Room, CameraX, WorkManager, ExifInterface, OpenCV, web3j, Reown AppKit, JUnit5, MockK, Kotest, Robolectric) em `android/app/build.gradle.kts`
-- [ ] T005 [P] Ler `sepolia.rpcUrl`, `registry.address`, `reown.projectId` e `registry.pendingTimeoutMinutes` (opcional, padrão 30; research R23) de `local.properties` para `BuildConfig` em `android/app/build.gradle.kts` e expor em `$PKG/config/ChainConfig.kt` (chainId 11155111, URL do explorador, prazo de pendência)
-- [ ] T006 [P] Conferir `.editorconfig` (ktlint, estilo `android_studio`) e configurar detekt em `android/`; `[fmt]` em `contracts/foundry.toml`
-- [ ] T007 Criar tarefa Gradle `copyRegistryAbi` que copia `contracts/out/ImageRegistry.sol/ImageRegistry.json` para `android/app/src/main/assets/abi/ImageRegistry.json`
+- [X] T004 [P] Adicionar dependências (Compose BOM, Navigation, Hilt, Room, CameraX, WorkManager, ExifInterface, OpenCV, web3j, Reown AppKit, JUnit5, MockK, Kotest, Robolectric) em `android/app/build.gradle.kts`
+- [X] T005 [P] Ler `sepolia.rpcUrl`, `registry.address`, `reown.projectId` e `registry.pendingTimeoutMinutes` (opcional, padrão 30; research R23) de `local.properties` para `BuildConfig` em `android/app/build.gradle.kts` e expor em `$PKG/config/ChainConfig.kt` (chainId 11155111, URL do explorador, prazo de pendência)
+- [X] T006 [P] Conferir `.editorconfig` (ktlint, estilo `android_studio`) e configurar detekt em `android/`; `[fmt]` em `contracts/foundry.toml`
+- [X] T007 Criar tarefa Gradle `copyRegistryAbi` que copia `contracts/out/ImageRegistry.sol/ImageRegistry.json` para `android/app/src/main/assets/abi/ImageRegistry.json`
 
 ---
 
