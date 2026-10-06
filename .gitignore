@@ -8,8 +8,7 @@ local.properties
 # Foundry
 contracts/out/
 contracts/cache/
-contracts/broadcast/*/31337/
-contracts/broadcast/**/dry-run/
+contracts/broadcast/
 
 # Android / Gradle / Kotlin
 .gradle/
