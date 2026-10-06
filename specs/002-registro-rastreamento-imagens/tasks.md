@@ -54,7 +54,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 - [X] T008 Escrever testes em `contracts/test/ImageRegistry.t.sol`: `registerDevice` (válido, chave inválida — "`publicKey.length == 65` e `publicKey[0] == 0x04`" —, chave duplicada na mesma carteira, mesma chave por outra carteira → `DeviceAlreadyRegistered`, mesma carteira com duas chaves → `getDevicesOf` retorna os dois ids); `registerCapture` (sucesso, SHA zero, SHA duplicado, device inexistente, device de outra carteira, assinatura ausente); `registerEdit` (sucesso, pai inexistente, `originalId` herdado, edição por outra carteira permitida, `operations` vazio/>256 bytes); getters; eventos; fuzz de ids e hashes
 - [X] T009 Implementar `contracts/src/ImageRegistry.sol` conforme `$SPEC/contracts/IImageRegistry.sol` até T008 passar
-- [ ] T010 Criar `contracts/script/Deploy.s.sol`, implantar na Sepolia e registrar o endereço na tabela de `$SPEC/quickstart.md`
+- [X] T010 Criar `contracts/script/Deploy.s.sol`, implantar na Sepolia e registrar o endereço na tabela de `$SPEC/quickstart.md`
 
 ### Núcleo de hashing e assinatura (test-first)
 

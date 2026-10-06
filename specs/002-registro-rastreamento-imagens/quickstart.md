@@ -22,14 +22,20 @@ forge test --gas-report  # registrar custo de registerCapture/registerEdit
 
 export SEPOLIA_RPC_URL=...        # não versionar
 export DEPLOYER_PRIVATE_KEY=...   # carteira de deploy, apenas testnet
-forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
+forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --gas-estimate-multiplier 800
 ```
+
+- `DEPLOYER_PRIVATE_KEY` precisa ter o prefixo `0x`; sem ele o script ignora a chave e o forge
+  falha com "You seem to be using Foundry's default sender".
+- A simulação local do forge subestima o gás de criação de contrato na Sepolia (≈1,4 M estimado
+  contra ≈7,5 M exigido pela rede), e sem o multiplicador a transação falha com `OutOfGas`.
+  Para conferir antes de enviar: `cast estimate --create $(forge inspect ImageRegistry bytecode) --from <carteira> --rpc-url $SEPOLIA_RPC_URL`.
 
 Anotar o endereço implantado na tabela abaixo.
 
-| Data          | Endereço `ImageRegistry` (Sepolia) | Commit        |
-| ------------- | ---------------------------------- | ------------- |
-| _a preencher_ | _a preencher_                      | _a preencher_ |
+| Data       | Endereço `ImageRegistry` (Sepolia)           | Commit    |
+| ---------- | -------------------------------------------- | --------- |
+| 2026-10-06 | `0xF2f42B34414936e456c6AC10c4844f456CAD65Ba` | `ac29e33` |
 
 ## 3. Aplicativo
 
