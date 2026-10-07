@@ -58,7 +58,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Núcleo de hashing e assinatura (test-first)
 
-- [ ] T011 [P] Adicionar imagens golden produzidas pela autora em `$RES/golden/` (original, edição leve, comprimida, preto e branco, outro ângulo, rotacionada via EXIF) e `$RES/golden/expected.json` gerado pela implementação de referência (ver research R9)
+- [X] T011 [P] Adicionar imagens golden produzidas pela autora em `$RES/golden/` (original, edição leve, comprimida, preto e branco, outro ângulo, rotacionada via EXIF) e `$RES/golden/expected.json` gerado pela implementação de referência (ver research R9)
 - [ ] T012 [P] Teste `$TEST/core/hashing/Sha256HasherTest.kt` (vetores NIST + arquivos golden)
 - [ ] T013 [P] Teste `$TEST/core/hashing/PerceptualHasherTest.kt` (golden, determinismo em 100 execuções, orientação EXIF, formato hex de 16 caracteres minúsculos) — Robolectric com OpenCV nativo ou mover para `$ITEST/` se necessário
 - [ ] T014 [P] Teste `$TEST/core/hashing/HammingTest.kt` (d=0, d=64, percentual arredondado a 1 casa)
