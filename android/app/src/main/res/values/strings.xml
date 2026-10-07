@@ -2,4 +2,9 @@
 <!-- Único idioma do app: português (Brasil). Não criar pastas values-<idioma> (R24). -->
 <resources>
     <string name="app_name">HashLens</string>
+
+    <!-- Percentual de alteração visual (PercentFormat; número já formatado em pt-BR) -->
+    <string name="alteration_percent">≈ %1$s%% de alteração visual</string>
+    <string name="alteration_none">Sem alteração visual detectável</string>
+    <string name="alteration_none_edited">Sem alteração visual detectável — mas este arquivo não é idêntico à original</string>
 </resources>
