@@ -77,8 +77,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Leitura da blockchain
 
-- [ ] T027 [P] Teste `$TEST/data/chain/AbiMapperTest.kt` decodificando respostas de `getRecord`/`getDevice`/`getDevicesOf` capturadas com `cast`
-- [ ] T028 Implementar `$PKG/data/chain/AbiMapper.kt` e `$PKG/data/chain/RegistryReader.kt` (todas as funções `view` via web3j, sem carteira; erros de rede como exceção tipada)
+- [X] T027 [P] Teste `$TEST/data/chain/AbiMapperTest.kt` decodificando respostas de `getRecord`/`getDevice`/`getDevicesOf` capturadas com `cast`
+- [X] T028 Implementar `$PKG/data/chain/AbiMapper.kt` e `$PKG/data/chain/RegistryReader.kt` (todas as funções `view` via web3j, sem carteira; erros de rede como exceção tipada)
 
 ### Infraestrutura do app
 
