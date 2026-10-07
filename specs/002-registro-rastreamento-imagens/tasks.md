@@ -66,9 +66,9 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T016 [P] Teste `$TEST/core/crypto/SignatureCodecTest.kt` (DER ↔ `r‖s`, normalização low-S, vetores de `$RES/signature/`)
 - [X] T017 [P] Teste `$TEST/domain/model/EditOperationCodecTest.kt` (ida e volta de todas as operações, locale pt-BR serializa com `.`, limite de 256 bytes, entrada malformada)
 - [X] T018 [P] Teste `$TEST/ui/common/PercentFormatTest.kt` (exibição pt-BR com vírgula: `12.5` → "≈ 12,5% de alteração visual"; `0.0` → "Sem alteração visual detectável"; `0.0` em `RegisteredEdited` → "Sem alteração visual detectável — mas este arquivo não é idêntico à original") — research R24, spec Edge Cases, hashing-spec §3
-- [ ] T019 [P] Implementar `$PKG/core/hashing/Sha256Hasher.kt` (streaming sobre `InputStream`)
-- [ ] T020 [P] Implementar `$PKG/core/hashing/PerceptualHasher.kt` conforme `$SPEC/contracts/hashing-spec.md` §2
-- [ ] T021 [P] Implementar `$PKG/core/hashing/Hamming.kt`
+- [X] T019 [P] Implementar `$PKG/core/hashing/Sha256Hasher.kt` (streaming sobre `InputStream`)
+- [X] T020 [P] Implementar `$PKG/core/hashing/PerceptualHasher.kt` conforme `$SPEC/contracts/hashing-spec.md` §2
+- [X] T021 [P] Implementar `$PKG/core/hashing/Hamming.kt`
 - [ ] T022 [P] Implementar `$PKG/core/crypto/SignaturePayload.kt` e `$PKG/core/crypto/SignatureCodec.kt`
 - [ ] T023 [P] Implementar `$PKG/domain/model/EditOperation.kt` e `$PKG/domain/model/EditOperationCodec.kt`
 - [ ] T024 [P] Implementar `$PKG/ui/common/PercentFormat.kt` até T018 passar
