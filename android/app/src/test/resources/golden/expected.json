@@ -1,0 +1,50 @@
+{
+  "hashingSpec": "v1",
+  "geradoPor": "tools/golden/gerar_golden.py",
+  "opencv": "4.14.0",
+  "observacao": "sha256 e phash são os valores esperados; phashImagehash (Python imagehash) é só referência e pode divergir em poucos bits (hashing-spec §2).",
+  "arquivos": {
+    "originais/20261006_205911.jpg": {
+      "descricao": "original da câmera, sem alterações (EXIF Orientation = 6)",
+      "sha256": "55824746f88c258e4ef10a10027ba7751e85b67c866f63023bdf90c2207aa527",
+      "phash": "fe44819b7ec4c03b",
+      "hammingAoOriginal": 0,
+      "phashImagehash": "fe44819b7ec4c03b"
+    },
+    "edicao_leve.jpg": {
+      "descricao": "original com brilho +15, JPEG q95",
+      "sha256": "9490e4ce9e39788e6b817908e68b8da1983a66b14a87b73d1435830fa6945bdf",
+      "phash": "fe44819b7ec4c03b",
+      "hammingAoOriginal": 0,
+      "phashImagehash": "fe44819b7ec4c03b"
+    },
+    "comprimida_q70.jpg": {
+      "descricao": "original recodificado em JPEG q70",
+      "sha256": "7f7a90fe17d049ced65f65f5c0228f357d1b9807ecdad9e69eb3ffa52b1a5a80",
+      "phash": "fe44819b7ec4c03b",
+      "hammingAoOriginal": 0,
+      "phashImagehash": "fe44819b7ec4c03b"
+    },
+    "preto_branco.jpg": {
+      "descricao": "original em escala de cinza, JPEG q95",
+      "sha256": "af417f83bc917ed1ecbf727845b2c707c1325d162cf756176c8adf8ea2ec61d4",
+      "phash": "fe44819b7ec4c03b",
+      "hammingAoOriginal": 0,
+      "phashImagehash": "fe44819b7ec4c03b"
+    },
+    "orientacao_exif_1.jpg": {
+      "descricao": "bytes idênticos ao original, exceto a tag EXIF Orientation trocada para 1 (mesmos pixels, exibidos sem rotação)",
+      "sha256": "88fa2dec7306a511c8d3670acdaf5a5c35031af87473eb38da8c4dfe91ccccda",
+      "phash": "b6318966993399ce",
+      "hammingAoOriginal": 38,
+      "phashImagehash": "b6318966993399ce"
+    },
+    "originais/20261006_205922.jpg": {
+      "descricao": "mesma cena fotografada de outro ângulo",
+      "sha256": "28c854e07996c6438738718d8f10bc3b11dd68055a26fa16478040be4e4746b6",
+      "phash": "ff50416fc0253fd0",
+      "hammingAoOriginal": 34,
+      "phashImagehash": "ef50416fc0273fd0"
+    }
+  }
+}

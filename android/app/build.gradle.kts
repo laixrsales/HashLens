@@ -65,6 +65,10 @@ android {
         // Robolectric e Roborazzi leem recursos e manifesto nos testes JVM
         unitTests.isIncludeAndroidResources = true
     }
+
+    // Testes instrumentados leem as mesmas imagens golden dos testes JVM (assets "golden/..."),
+    // sem cópia: o pHash depende do OpenCV nativo, que só roda no aparelho
+    sourceSets.getByName("androidTest").assets.directories.add("src/test/resources")
 }
 
 room {

@@ -12,8 +12,12 @@
 
 Entrada: bytes do arquivo. Passos:
 
-1. Decodificar para RGBA aplicando a orientação EXIF, se presente.
-2. Converter para escala de cinza (`Imgproc.COLOR_RGBA2GRAY`, 8 bits).
+1. Decodificar com o próprio OpenCV, `Imgcodecs.imdecode` com
+   `IMREAD_COLOR | IMREAD_IGNORE_ORIENTATION` (BGR, 8 bits por canal), e em seguida aplicar a
+   orientação EXIF, se presente (lida com `ExifInterface`; espelhamento horizontal antes da rotação
+   nas orientações 2, 4, 5 e 7). Não usar `BitmapFactory`: outro decodificador pode mudar bits do
+   pHash.
+2. Converter para escala de cinza (`Imgproc.COLOR_BGR2GRAY`, 8 bits).
 3. Redimensionar para **32×32** com `Imgproc.INTER_AREA`.
 4. Converter para `CV_32F` (valores 0–255, sem normalizar).
 5. Aplicar `Core.dct` 2D.
@@ -23,6 +27,11 @@ Entrada: bytes do arquivo. Passos:
 9. Empacotar os 64 bits com o primeiro bit como **mais significativo** → `uint64`.
 
 Representação textual: 16 caracteres hex minúsculos (ex.: `9e4c398ab9d93331`).
+
+**Formatos aceitos** (os que o `imdecode` do OpenCV para Android decodifica): **JPEG, PNG e WebP**.
+**HEIC/HEIF** (formato opcional da câmera de alguns celulares), RAW/DNG e demais formatos não são
+aceitos: o arquivo é tratado como não decodificável (`Error(UNSUPPORTED_FILE)`, FR-040). O
+HashLens grava suas capturas e edições sempre em JPEG (§5).
 
 > Espelha `imagehash.phash(hash_size=8, highfreq_factor=4)`. Divergências de alguns bits em
 > relação a valores calculados em Python são esperadas (interpolação/decodificador) e não afetam

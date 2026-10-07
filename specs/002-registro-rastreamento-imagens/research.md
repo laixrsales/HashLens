@@ -251,3 +251,18 @@ setup (as versões mudam com frequência).
 - **Alternatives considered**: revogar o aparelho antigo ao vincular um novo (exigiria função e
   estado extra no contrato sem necessidade na PoC); limitar a um aparelho por carteira (forçaria
   uma carteira nova a cada reinstalação).
+
+## R26. Decodificação para o pHash e formatos aceitos
+
+- **Decision**: o `PerceptualHasher` decodifica com `Imgcodecs.imdecode` do OpenCV (BGR) e aplica
+  a orientação EXIF lida com `ExifInterface` (hashing-spec §2). Formatos aceitos: JPEG, PNG e WebP.
+  HEIC/HEIF e demais formatos são recusados como `UNSUPPORTED_FILE` (FR-040), e a limitação é
+  informada na tela "Como funciona" e na verificação.
+- **Rationale**: é o mesmo decodificador da implementação de referência que gera os valores
+  golden (`tools/golden/gerar_golden.py`), o que reduz divergências de bits entre o app e a
+  referência; o `BitmapFactory` usa outro decodificador. As capturas e edições do próprio app são
+  sempre JPEG, então a limitação só afeta arquivos externos (clarificação de 2026-10-06).
+- **Alternatives considered**: `BitmapFactory` (aceita HEIC a partir do Android 9, mas o pHash
+  pode divergir da referência); converter HEIC para JPEG antes do pHash (o pHash passaria a
+  depender do conversor, e o SHA-256 do arquivo original não mudaria, então a cópia continuaria
+  sem correspondência exata).

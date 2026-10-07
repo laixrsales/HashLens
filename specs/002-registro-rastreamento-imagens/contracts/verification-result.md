@@ -52,14 +52,15 @@ data class RecordView(
 
 ## 3. Textos da UI (pt-BR)
 
-| Resultado            | Título                       | Mensagem obrigatória                                                                                                    |
-| -------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `RegisteredOriginal` | Registrada – original        | "Este arquivo é idêntico a uma captura registrada."                                                                     |
-| `RegisteredEdited`   | Registrada – versão alterada | "Versão editada registrada. ≈ X% de alteração visual em relação à original."                                            |
-| `VisualMatch`        | Correspondência visual       | "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a N registro(s). Pode ser uma cópia recomprimida." |
-| `Tampered`           | Registro adulterado          | "A assinatura do aparelho não confere com os dados registrados."                                                        |
-| `NotRegistered`      | Não registrada               | "Nenhum registro encontrado. Isso não significa que a imagem seja falsa."                                               |
-| `Error(NETWORK)`     | Não foi possível verificar   | "Sem conexão com a rede. Tente novamente."                                                                              |
+| Resultado                 | Título                       | Mensagem obrigatória                                                                                                    |
+| ------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `RegisteredOriginal`      | Registrada – original        | "Este arquivo é idêntico a uma captura registrada."                                                                     |
+| `RegisteredEdited`        | Registrada – versão alterada | "Versão editada registrada. ≈ X% de alteração visual em relação à original."                                            |
+| `VisualMatch`             | Correspondência visual       | "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a N registro(s). Pode ser uma cópia recomprimida." |
+| `Tampered`                | Registro adulterado          | "A assinatura do aparelho não confere com os dados registrados."                                                        |
+| `NotRegistered`           | Não registrada               | "Nenhum registro encontrado. Isso não significa que a imagem seja falsa."                                               |
+| `Error(NETWORK)`          | Não foi possível verificar   | "Sem conexão com a rede. Tente novamente."                                                                              |
+| `Error(UNSUPPORTED_FILE)` | Formato não suportado        | "Não foi possível ler este arquivo. Use uma imagem JPEG, PNG ou WebP; fotos em HEIC não são aceitas."                   |
 
 Rodapé fixo em todos os resultados positivos: "O registro comprova quando e por quem o arquivo
 foi registrado, não que a cena retratada seja real."
