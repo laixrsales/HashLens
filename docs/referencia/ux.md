@@ -50,7 +50,8 @@ Para cada tela: **objetivo**, **conteúdo**, **ação primária** e **estados ob
 
 ### 4.1 Como funciona (primeiro uso)
 - Objetivo: explicar em uma tela o que é registrar, o que é verificar, critérios para edição e filtros disponíveis.
-- Conteúdo: três ideias curtas com ilustração simples; aviso de que é uma rede de testes.
+- Conteúdo: três ideias curtas com ilustração simples; aviso de que é uma rede de testes; formatos
+  aceitos (JPEG, PNG e WebP) e não aceitos (HEIC/HEIF), em uma linha (FR-040).
 - Ação primária: "Começar". Secundária: "Pular".
 - Estados: único.
 
@@ -93,8 +94,10 @@ Para cada tela: **objetivo**, **conteúdo**, **ação primária** e **estados ob
 
 ### 4.7 Verificar imagem
 - Objetivo: escolher a imagem a verificar.
-- Conteúdo: explicação de uma linha; "Escolher imagem" (Photo Picker).
-- Estados: inicial; analisando (etapas: lendo a imagem → consultando registros); arquivo não suportado.
+- Conteúdo: explicação de uma linha; formatos aceitos (JPEG, PNG e WebP); "Escolher imagem"
+  (Photo Picker).
+- Estados: inicial; analisando (etapas: lendo a imagem → consultando registros); arquivo não
+  suportado (nomeia os formatos aceitos e informa que HEIC não é aceito, FR-040).
 
 ### 4.8 Resultado da verificação
 - Objetivo: responder "esta imagem está registrada?" em um relance.

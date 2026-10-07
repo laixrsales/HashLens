@@ -46,6 +46,12 @@ O login é feito com uma carteira virtual que possua tokens Sepolia."
 - Q: Em quais idiomas a interface estará disponível? → A: Apenas português (Brasil); outros
   idiomas estão fora do escopo.
 
+### Session 2026-10-06
+
+- Q: Quais formatos de imagem são aceitos na verificação e na edição? → A: JPEG, PNG e WebP, os
+  formatos que o decodificador do OpenCV usado no pHash lê no Android. HEIC/HEIF não é aceito; a
+  limitação é informada ao usuário na tela "Como funciona" e na verificação (FR-040, research R26).
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Capturar e registrar uma imagem (Priority: P1)
@@ -231,8 +237,9 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
   detecta o registro e evita duplicidade.
 - O nó da rede está indisponível durante a verificação: o aplicativo informa a falha de conexão,
   sem retornar "Não registrada".
-- Arquivo enviado para verificação em formato não suportado ou corrompido: mensagem de erro
-  específica, sem consulta à rede.
+- Arquivo enviado para verificação em formato não suportado (ex.: HEIC) ou corrompido: mensagem
+  de erro específica, que informa os formatos aceitos (JPEG, PNG e WebP), sem consulta à rede
+  (FR-040).
 - Imagem de altíssima resolução: o processamento ocorre sem travar a interface e com indicação
   de progresso.
 - Permissão de câmera ou de acesso a fotos negada: o aplicativo explica o motivo e oferece abrir
@@ -343,11 +350,16 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
 - **FR-036**: A interface MUST ser utilizável com leitor de tela, com fonte ampliada em até 200%, em
   tema claro e escuro e com alvos de toque no tamanho mínimo recomendado pela plataforma.
 - **FR-037**: No primeiro uso, o sistema MUST explicar em uma única tela, que pode ser pulada, o que é
-  registrar, o que é verificar uma imagem e como editar uma imagem.
+  registrar, o que é verificar uma imagem, como editar uma imagem e quais formatos de imagem são
+  aceitos (FR-040).
 - **FR-038**: Antes de abrir a carteira, o sistema MUST informar em uma frase o que será solicitado e
   que o custo é em tokens de teste Sepolia; antes de registrar uma edição, MUST avisar que o registro é
   permanente.
 - **FR-039**: A interface MUST estar em português (Brasil); outros idiomas estão fora do escopo.
+- **FR-040**: A verificação e a importação para edição MUST aceitar imagens **JPEG, PNG e WebP**.
+  Arquivos **HEIC/HEIF**, RAW/DNG e de outros formatos MUST ser recusados com mensagem que nomeia
+  os formatos aceitos, sem consulta à rede. Os formatos aceitos e os não aceitos MUST ser
+  informados na tela "Como funciona" (FR-037) e na tela de verificação.
 
 ### Key Entities _(include if feature involves data)_
 
