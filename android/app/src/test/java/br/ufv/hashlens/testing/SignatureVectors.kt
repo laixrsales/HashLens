@@ -44,7 +44,10 @@ object SignatureVectors {
     /** Payload do caso "original" com o último bit do pHash invertido; a assinatura não confere. */
     val tamperedPayloadHex: String get() = root["pHashAlterado"]["payload"].asText()
 
-    val publicKey: PublicKey by lazy { decodeP256Point(root["publicKey"].asText().hexToByteArray()) }
+    /** Chave pública não comprimida `04 ‖ x ‖ y`, como gravada on-chain (65 bytes). */
+    val publicKeyBytes: ByteArray get() = root["publicKey"].asText().hexToByteArray()
+
+    val publicKey: PublicKey by lazy { decodeP256Point(publicKeyBytes) }
 
     fun verify(message: ByteArray, der: ByteArray): Boolean = Signature.getInstance("SHA256withECDSA").run {
         initVerify(publicKey)

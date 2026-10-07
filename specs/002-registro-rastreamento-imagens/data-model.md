@@ -144,7 +144,8 @@ data class ImageRecord(
     val originalId: Long,
     val registrant: String,       // endereço 0x...
     val deviceId: Int, val signature: ByteArray,   // r‖s (64 bytes)
-    val timestamp: Instant, val operations: List<EditOperation>,
+    val timestamp: Instant,
+    val operations: String,       // texto on-chain exato; decodificado só em RecordView
 )
 
 data class Device(val id: Int, val owner: String, val publicKey: ByteArray)
@@ -163,5 +164,11 @@ sealed interface EditOperation {
 ```
 
 Serialização de `EditOperation` ↔ string on-chain: ver `contracts/hashing-spec.md` §4.
+
+`ImageRecord.operations` guarda o texto on-chain sem decodificar porque ele é coberto pela
+assinatura do aparelho (signature-payload §1): decodificar e reserializar poderia mudar bytes
+(ex.: `brightness:30` → `brightness:+30`) ou falhar em registros malformados, e a verificação
+acusaria adulteração indevida. A lista de `EditOperation` aparece em `RecordView.operations`
+(`verification-result.md` §2), obtida com `EditOperationCodec.decode`.
 
 Resultado de verificação e nós de genealogia: ver `contracts/verification-result.md`.

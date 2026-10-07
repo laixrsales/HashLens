@@ -16,8 +16,7 @@ object SignatureCodec {
     private const val BYTE_MASK = 0xff
     private const val SIGN_BIT = 0x80
 
-    /** Ordem n da curva P-256. */
-    private val ORDER = BigInteger("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", 16)
+    private val ORDER = P256.ORDER
     private val HALF_ORDER = ORDER.shiftRight(1)
 
     /**

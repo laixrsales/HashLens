@@ -72,8 +72,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T022 [P] Implementar `$PKG/core/crypto/SignaturePayload.kt` e `$PKG/core/crypto/SignatureCodec.kt`
 - [X] T023 [P] Implementar `$PKG/domain/model/EditOperation.kt` e `$PKG/domain/model/EditOperationCodec.kt`
 - [X] T024 [P] Implementar `$PKG/ui/common/PercentFormat.kt` até T018 passar
-- [ ] T025 Implementar `$PKG/core/crypto/DeviceSignatureVerifier.kt` (depende de T022) com teste `$TEST/core/crypto/DeviceSignatureVerifierTest.kt`
-- [ ] T026 [P] Criar modelos `$PKG/domain/model/ImageRecord.kt`, `Device.kt`, `RecordView.kt` conforme `$SPEC/data-model.md` §3
+- [X] T025 Implementar `$PKG/core/crypto/DeviceSignatureVerifier.kt` (depende de T022) com teste `$TEST/core/crypto/DeviceSignatureVerifierTest.kt`
+- [X] T026 [P] Criar modelos `$PKG/domain/model/ImageRecord.kt`, `Device.kt`, `RecordView.kt` conforme `$SPEC/data-model.md` §3
 
 ### Leitura da blockchain
 
