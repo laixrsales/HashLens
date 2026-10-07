@@ -42,10 +42,13 @@ CHAIN_ID = 11_155_111
 CONTRACT = "0xF2f42B34414936e456c6AC10c4844f456CAD65Ba"  # ImageRegistry na Sepolia (T010)
 REGISTRANT = "0x1234567890AbcdEF1234567890aBcdef12345678"  # carteira fictícia
 
+# deviceId e parentId são os ids que o contrato atribui quando os dois casos são registrados em
+# ordem num ImageRegistry novo (tools/chain/capturar_respostas.sh), para que as respostas
+# capturadas tenham assinaturas válidas.
 CASOS = [
     {
         "nome": "original",
-        "deviceId": 7,
+        "deviceId": 1,
         "sha256": "55824746f88c258e4ef10a10027ba7751e85b67c866f63023bdf90c2207aa527",
         "pHash": "fe44819b7ec4c03b",
         "parentId": 0,
@@ -53,10 +56,10 @@ CASOS = [
     },
     {
         "nome": "edicao",
-        "deviceId": 0x01020304,
+        "deviceId": 1,
         "sha256": "9490e4ce9e39788e6b817908e68b8da1983a66b14a87b73d1435830fa6945bdf",
         "pHash": "fe44819b7ec4c03b",
-        "parentId": 258,
+        "parentId": 1,
         "operations": "brightness:+15;grayscale",
     },
 ]
