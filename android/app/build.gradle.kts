@@ -64,6 +64,14 @@ android {
     testOptions {
         // Robolectric e Roborazzi leem recursos e manifesto nos testes JVM
         unitTests.isIncludeAndroidResources = true
+        // O Robolectric acessa internos do java.base que o JDK 25 (JBR do Android Studio) não expõe
+        unitTests.all {
+            it.jvmArgs(
+                "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+                "--add-opens=java.base/java.io=ALL-UNNAMED",
+                "--enable-native-access=ALL-UNNAMED"
+            )
+        }
     }
 
     // Testes instrumentados leem as mesmas imagens golden dos testes JVM (assets "golden/..."),

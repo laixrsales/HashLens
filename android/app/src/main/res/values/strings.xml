@@ -7,4 +7,11 @@
     <string name="alteration_percent">≈ %1$s%% de alteração visual</string>
     <string name="alteration_none">Sem alteração visual detectável</string>
     <string name="alteration_none_edited">Sem alteração visual detectável — mas este arquivo não é idêntico à original</string>
+
+    <!-- Permissões (ui/common/Permissions.kt; ux.md §4.4) -->
+    <string name="camera_permission_title">Permita o uso da câmera</string>
+    <string name="camera_permission_message">O HashLens usa a câmera para fotografar e registrar a foto. Ela só fica ligada enquanto esta tela está aberta.</string>
+    <string name="camera_permission_message_settings">A câmera está bloqueada para o HashLens. Para fotografar e registrar fotos, ative a permissão Câmera nas configurações do app.</string>
+    <string name="camera_permission_allow">Permitir câmera</string>
+    <string name="permission_open_settings">Abrir configurações</string>
 </resources>

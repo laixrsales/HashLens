@@ -82,10 +82,10 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Infraestrutura do app
 
-- [ ] T029 Criar `$PKG/HashLensApp.kt` (Hilt + `OpenCVLoader.initLocal()`), `$PKG/MainActivity.kt` (sem `intent-filter` de `ACTION_SEND`/`ACTION_VIEW` em `android/app/src/main/AndroidManifest.xml`; research R16), `$PKG/ui/theme/` e `$PKG/ui/navigation/HashLensNavHost.kt` com rotas vazias
-- [ ] T030 [P] Módulos Hilt em `$PKG/di/` (`ChainModule`, `CryptoModule`, `DatabaseModule`, `DispatchersModule`, `ClockModule` com `java.time.Clock` injetável para os testes de prazo)
-- [ ] T031 [P] Implementar `$PKG/core/imaging/JpegEncoder.kt` (rotação física, q=95, EXIF `Orientation=1`, `DateTimeOriginal`, `Software`, sem GPS) e `$PKG/core/imaging/ImageDecoder.kt` (aplica orientação EXIF), com teste `$TEST/core/imaging/JpegEncoderTest.kt`
-- [ ] T032 [P] Utilitário de permissões em `$PKG/ui/common/Permissions.kt` (câmera; explicação + atalho para configurações)
+- [X] T029 Criar `$PKG/HashLensApp.kt` (Hilt + `OpenCVLoader.initLocal()`), `$PKG/MainActivity.kt` (sem `intent-filter` de `ACTION_SEND`/`ACTION_VIEW` em `android/app/src/main/AndroidManifest.xml`; research R16), `$PKG/ui/theme/` e `$PKG/ui/navigation/HashLensNavHost.kt` com rotas vazias
+- [X] T030 [P] Módulos Hilt em `$PKG/di/` (`ChainModule`, `CryptoModule`, `DatabaseModule`, `DispatchersModule`, `ClockModule` com `java.time.Clock` injetável para os testes de prazo)
+- [X] T031 [P] Implementar `$PKG/core/imaging/JpegEncoder.kt` (rotação física, q=95, EXIF `Orientation=1`, `DateTimeOriginal`, `Software`, sem GPS) e `$PKG/core/imaging/ImageDecoder.kt` (aplica orientação EXIF), com teste `$TEST/core/imaging/JpegEncoderTest.kt`
+- [X] T032 [P] Utilitário de permissões em `$PKG/ui/common/Permissions.kt` (câmera; explicação + atalho para configurações)
 
 ### Fundação de UI (Princípio VIII)
 

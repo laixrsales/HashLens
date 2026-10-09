@@ -3,10 +3,29 @@
 
     <!-- Leitura do contrato por JSON-RPC (RegistryReader) -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Captura de fotos (CameraX) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="true" />
 
     <application
+        android:name=".HashLensApp"
         android:allowBackup="false"
         android:label="@string/app_name"
-        android:supportsRtl="true" />
+        android:supportsRtl="true"
+        android:theme="@style/Theme.HashLens">
+
+        <!-- Só a entrada do launcher: sem intent-filter de ACTION_SEND/ACTION_VIEW (research R16) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
 
 </manifest>
