@@ -89,8 +89,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Fundação de UI (Princípio VIII)
 
-- [ ] T033 Propor a direção visual em `docs/design/direcao-visual.md` seguindo `.claude/skills/hashlens-ui/SKILL.md` e **aguardar aprovação da autora**
-- [ ] T034 Implementar tokens em `$PKG/ui/theme/` (`Color.kt`, `Type.kt`, `Shape.kt`, `Spacing.kt`, `Theme.kt`) conforme a direção aprovada
+- [X] T033 Propor a direção visual em `docs/design/direcao-visual.md` seguindo `.claude/skills/hashlens-ui/SKILL.md` e **aguardar aprovação da autora**
+- [X] T034 Implementar tokens em `$PKG/ui/theme/` (`Color.kt`, `Type.kt`, `Shape.kt`, `Spacing.kt`, `Theme.kt`) conforme a direção aprovada
 - [ ] T035 [P] Configurar Roborazzi em `android/app/build.gradle.kts` e base de screenshot tests em `$TEST/ui/ScreenshotTest.kt`
 - [ ] T036 [P] Criar dados fictícios em `$PKG/ui/preview/SampleData.kt` cobrindo todos os estados de `docs/referencia/ux.md`, incluindo "falhou por prazo" e "novo vínculo de aparelho"
 - [ ] T037 Criar componentes em `$PKG/ui/components/` (`StatusHeader`, `StepProgress`, `AlterationMeter`, `TechnicalDetails`, `AddressChip`, `EmptyState`, `ErrorState`) com previews de todos os estados e screenshot tests em `$TEST/ui/components/`

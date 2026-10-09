@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Papel (ui/theme/Color.kt), só para a janela antes do Compose desenhar -->
+    <color name="window_background">#F6F4EF</color>
+</resources>
