@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
     alias(libs.plugins.android.junit5)
+    alias(libs.plugins.roborazzi)
     alias(libs.plugins.detekt)
 }
 
@@ -161,6 +162,8 @@ dependencies {
     testImplementation(libs.androidx.work.testing)
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
+    // Força o Espresso 3.7 (o 3.5 transitivo chama InputManager.getInstance(), removido nos SDKs recentes)
+    testImplementation(libs.androidx.test.espresso.core)
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.roborazzi.junit.rule)

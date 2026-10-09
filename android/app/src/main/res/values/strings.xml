@@ -14,4 +14,84 @@
     <string name="camera_permission_message_settings">A câmera está bloqueada para o HashLens. Para fotografar e registrar fotos, ative a permissão Câmera nas configurações do app.</string>
     <string name="camera_permission_allow">Permitir câmera</string>
     <string name="permission_open_settings">Abrir configurações</string>
+    <!-- Vocabulário de status (ux.md §5; ui/components/ImageStatus.kt). Mesma palavra em todo o app. -->
+    <string name="status_original">Registrada – original</string>
+    <string name="status_edited">Registrada – versão alterada</string>
+    <string name="status_visual_match">Correspondência visual</string>
+    <string name="status_tampered">Registro adulterado</string>
+    <string name="status_not_registered">Não registrada</string>
+    <string name="status_pending">Registrando…</string>
+    <string name="status_failed">Não registrada – tentar de novo</string>
+    <string name="status_photo_registered">Foto registrada</string>
+
+    <!-- Mensagens dos resultados (contracts/verification-result.md §3) -->
+    <string name="verification_original_message">Este arquivo é idêntico a uma captura registrada.</string>
+    <string name="verification_edited_message">Versão editada registrada. ≈ %1$s%% de alteração visual em relação à original.</string>
+    <string name="verification_edited_zero_message">Versão editada registrada. Sem alteração visual detectável — mas este arquivo não é idêntico à original.</string>
+    <plurals name="verification_visual_match_message">
+        <item quantity="one">O arquivo não é idêntico a nenhum registro, mas é visualmente igual a %1$d registro. Pode ser uma cópia recomprimida.</item>
+        <item quantity="other">O arquivo não é idêntico a nenhum registro, mas é visualmente igual a %1$d registros. Pode ser uma cópia recomprimida.</item>
+    </plurals>
+    <string name="verification_tampered_message">A assinatura do aparelho não confere com os dados registrados.</string>
+    <string name="verification_not_registered_message">Nenhum registro encontrado. Isso não significa que a imagem seja falsa.</string>
+    <string name="verification_network_title">Não foi possível verificar</string>
+    <string name="verification_network_message">Sem conexão com a rede. Tente novamente.</string>
+    <string name="verification_unsupported_title">Formato não suportado</string>
+    <string name="verification_unsupported_message">Não foi possível ler este arquivo. Use uma imagem JPEG, PNG ou WebP; fotos em HEIC não são aceitas.</string>
+
+    <!-- Acompanhamento do registro (ux.md §4.5) -->
+    <string name="registration_pending_message">A rede está confirmando o registro. Você pode sair desta tela; o registro continua.</string>
+    <string name="registration_confirmed_message">Registrada em %1$s.</string>
+    <string name="registration_failed_message">O registro não foi concluído. Nada foi registrado em seu nome.</string>
+    <string name="step_device_binding">Vínculo do aparelho</string>
+    <string name="step_device_binding_detail">Primeiro registro com esta carteira neste aparelho: aprove o vínculo na carteira. Isso só acontece uma vez.</string>
+    <string name="step_device_binding_new_key_detail">Este aparelho ganhou uma chave nova e precisa ser vinculado de novo. Seus registros anteriores continuam válidos.</string>
+    <string name="step_saved">Salva na galeria</string>
+    <string name="step_wallet">Aprovação na carteira</string>
+    <string name="step_wallet_detail">Aprove o registro no app da carteira.</string>
+    <string name="step_sent">Enviado</string>
+    <string name="step_sent_detail">Aguardando a confirmação da rede.</string>
+    <string name="step_confirmed">Confirmado</string>
+    <string name="step_failed_rejected">O registro foi recusado na carteira.</string>
+    <string name="step_failed_network">Não foi possível enviar à rede. Verifique a conexão.</string>
+    <string name="step_failed_timeout">A rede não confirmou o registro em 30 minutos.</string>
+    <string name="step_state_done">concluída</string>
+    <string name="step_state_active">em andamento</string>
+    <string name="step_state_waiting">aguardando</string>
+    <string name="step_state_failed">falhou</string>
+
+    <!-- Verificar imagem (ux.md §4.7) -->
+    <string name="step_reading_image">Lendo a imagem</string>
+    <string name="step_querying_records">Consultando registros</string>
+
+    <!-- Régua de alteração (ui/components/AlterationMeter.kt) -->
+    <string name="alteration_from_original">Alteração em relação à original</string>
+    <string name="alteration_from_parent">Alteração em relação à versão anterior</string>
+
+    <!-- Detalhes técnicos (ui/components/TechnicalDetails.kt; glossário ux.md §6) -->
+    <string name="technical_details">Detalhes técnicos</string>
+    <string name="technical_sha256">Identificador do arquivo (SHA-256)</string>
+    <string name="technical_phash">Identificador visual (pHash)</string>
+    <string name="technical_wallet">Carteira</string>
+    <string name="technical_device">Aparelho</string>
+    <string name="technical_record">Registro</string>
+    <string name="technical_transaction">Transação</string>
+    <string name="technical_open_explorer">Ver no Etherscan</string>
+    <string name="state_expanded">expandido</string>
+    <string name="state_collapsed">recolhido</string>
+
+    <!-- Chip da carteira (ui/components/AddressChip.kt) -->
+    <string name="wallet_connect">Conectar carteira</string>
+    <string name="wallet_wrong_network">Rede errada</string>
+    <string name="wallet_chip_connected_description">Carteira conectada, %1$s. Abrir carteira.</string>
+    <string name="wallet_chip_wrong_network_description">Carteira em rede errada, %1$s. Abrir carteira para trocar para Sepolia.</string>
+
+    <!-- Estados vazios e de erro -->
+    <string name="library_empty_title">Nenhuma foto registrada ainda</string>
+    <string name="library_empty_message">As fotos que você registrar neste aparelho aparecem aqui.</string>
+    <string name="action_register_photo">Registrar foto</string>
+    <string name="action_try_again">Tentar de novo</string>
+    <string name="action_choose_another_image">Escolher outra imagem</string>
+    <string name="camera_error_title">A câmera não abriu</string>
+    <string name="camera_error_message">Outro app pode estar usando a câmera. Feche-o e tente de novo.</string>
 </resources>
