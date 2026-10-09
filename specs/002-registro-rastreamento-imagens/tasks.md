@@ -94,7 +94,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T035 [P] Configurar Roborazzi em `android/app/build.gradle.kts` e base de screenshot tests em `$TEST/ui/ScreenshotTest.kt`
 - [X] T036 [P] Criar dados fictícios em `$PKG/ui/preview/SampleData.kt` cobrindo todos os estados de `docs/referencia/ux.md`, incluindo "falhou por prazo" e "novo vínculo de aparelho"
 - [X] T037 Criar componentes em `$PKG/ui/components/` (`StatusHeader`, `StepProgress`, `AlterationMeter`, `TechnicalDetails`, `AddressChip`, `EmptyState`, `ErrorState`) com previews de todos os estados e screenshot tests em `$TEST/ui/components/`
-- [ ] T038 Criar telas sem estado Início e Como funciona em `$PKG/ui/home/` e `$PKG/ui/onboarding/` com previews e screenshot tests; **revisão da autora**
+- [X] T038 Criar telas sem estado Início e Como funciona em `$PKG/ui/home/` e `$PKG/ui/onboarding/` com previews e screenshot tests; **revisão da autora**
 
 **Checkpoint**: contrato implantado; hashing, payload e leitura testados; direção visual aprovada e componentes base prontos.
 

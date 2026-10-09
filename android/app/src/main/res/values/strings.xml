@@ -94,4 +94,35 @@
     <string name="action_choose_another_image">Escolher outra imagem</string>
     <string name="camera_error_title">A câmera não abriu</string>
     <string name="camera_error_message">Outro app pode estar usando a câmera. Feche-o e tente de novo.</string>
+    <!-- Início (ux.md §4.2; direção visual §7.1) -->
+    <string name="home_question">Esta imagem está registrada?</string>
+    <string name="home_question_detail">Descubra quando e por quem ela foi registrada. Não precisa de conta.</string>
+    <string name="action_verify_image">Verificar imagem</string>
+    <string name="accepted_formats">Aceita JPEG, PNG e WebP.</string>
+    <string name="home_your_photos">Suas fotos</string>
+    <string name="home_register_detail">Fotografe e registre na hora</string>
+    <string name="home_library">Meu acervo</string>
+    <string name="home_library_detail">Fotos registradas neste aparelho</string>
+    <plurals name="home_library_pending">
+        <item quantity="one">%1$d registrando</item>
+        <item quantity="other">%1$d registrando</item>
+    </plurals>
+    <string name="home_import">Importar para editar</string>
+    <string name="home_import_detail">Edite uma foto registrada</string>
+    <string name="action_how_it_works">Como funciona</string>
+
+    <!-- Como funciona (ux.md §4.1; FR-037, FR-040) -->
+    <string name="onboarding_title">Como funciona</string>
+    <string name="onboarding_intro">O HashLens guarda uma prova de quando e por quem cada foto foi registrada, e de quanto ela mudou desde então.</string>
+    <string name="onboarding_register_title">Registrar</string>
+    <string name="onboarding_register_text">Fotografe pelo app. A foto ganha um registro permanente com a data e a sua carteira, que assina em seu nome.</string>
+    <string name="onboarding_verify_title">Verificar</string>
+    <string name="onboarding_verify_text">Escolha qualquer imagem para saber se ela está registrada, por quem e quanto mudou desde a original. Não precisa de conta.</string>
+    <string name="onboarding_edit_title">Editar</string>
+    <string name="onboarding_edit_text">Só fotos registradas, ou cópias idênticas a elas, podem ser editadas. Filtros: brilho, contraste, preto e branco, sépia, desfoque, nitidez, bordas, recorte e rotação. Cada versão fica ligada à original.</string>
+    <string name="onboarding_limits">O registro comprova quando e por quem a foto foi registrada, não que a cena retratada seja real.</string>
+    <string name="onboarding_test_network">O HashLens usa a Sepolia, uma rede de testes: registrar não custa dinheiro de verdade.</string>
+    <string name="onboarding_formats">Aceita JPEG, PNG e WebP. Fotos em HEIC ou HEIF não são aceitas.</string>
+    <string name="action_start">Começar</string>
+    <string name="action_skip">Pular</string>
 </resources>

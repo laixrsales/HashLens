@@ -240,6 +240,9 @@ object SampleData {
         val failed = LibraryItem(record = null, status = ImageStatus.Failed)
         val fileRemoved = LibraryItem(Records.secondGeneration, ImageStatus.Edited, fileAvailable = false)
 
+        /** Indicador do Início: "2 registrando". */
+        const val PENDING_COUNT = 2
+
         val empty = emptyList<LibraryItem>()
         val mixed = listOf(pending, failed, confirmed, confirmedVersion, fileRemoved)
     }
