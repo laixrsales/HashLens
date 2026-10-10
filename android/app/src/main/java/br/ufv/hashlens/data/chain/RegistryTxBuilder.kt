@@ -33,6 +33,10 @@ data class TxCost(val gasLimit: BigInteger, val gasPrice: BigInteger, val balanc
     val hasEnoughBalance: Boolean get() = balance >= maxCost
 }
 
+/** O saldo da carteira não cobre o [cost] estimado; a transação não foi aberta (FR-003). */
+class InsufficientFundsException(val cost: TxCost) :
+    Exception("saldo insuficiente: ${cost.balance} wei de ${cost.maxCost} wei")
+
 /**
  * Transações de escrita do ImageRegistry (`contracts/IImageRegistry.sol`).
  *

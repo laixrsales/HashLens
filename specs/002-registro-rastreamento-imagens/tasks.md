@@ -123,14 +123,15 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T048 [P] [US1] Implementar `$PKG/data/gallery/GalleryRepository.kt` (MediaStore `Pictures/HashLens`, gravação e releitura)
 - [X] T049 [P] [US1] Implementar `$PKG/data/chain/RegistryTxBuilder.kt` (calldata de `registerDevice`, `registerCapture`, `registerEdit`; estimativa de gás; checagem de saldo)
 - [X] T050 [US1] Implementar `$PKG/data/chain/ReceiptTracker.kt` (polling de recibo, parse de `ImageRegistered`/`DeviceRegistered`)
-- [ ] T051 [US1] Implementar `$PKG/domain/usecase/EnsureDeviceBoundUseCase.kt` até T041 passar (alias da carteira → procura a chave em `getDevicesOf` → `registerDevice` se ausente; nunca revoga vínculos)
-- [ ] T052 [US1] Implementar `$PKG/domain/usecase/RegisterLocalImageUseCase.kt` (monta payload, assina uma vez, envia, grava `txHash` e `submittedAt`, atualiza status; reutilizado por edição e reenvio)
-- [ ] T053 [US1] Implementar `$PKG/domain/usecase/CaptureAndRegisterUseCase.kt` (encode → hashes → galeria → releitura → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase`)
+- [X] T051 [US1] Implementar `$PKG/domain/usecase/EnsureDeviceBoundUseCase.kt` até T041 passar (alias da carteira → procura a chave em `getDevicesOf` → `registerDevice` se ausente; nunca revoga vínculos)
+- [X] T052 [US1] Implementar `$PKG/domain/usecase/RegisterLocalImageUseCase.kt` (monta payload, assina uma vez, envia, grava `txHash` e `submittedAt`, atualiza status; reutilizado por edição e reenvio)
+- [X] T053 [US1] Implementar `$PKG/domain/usecase/CaptureAndRegisterUseCase.kt` (encode → hashes → galeria → releitura → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase`)
 - [ ] T054 [US1] Implementar `$PKG/work/PendingTxWorker.kt` até T044 passar (acompanha `PENDING` e `FAILED(TIMEOUT)`; reconcilia por `getIdBySha256` antes de qualquer transição para `FAILED`; aplica o prazo de `ChainConfig`)
 - [ ] T055 [US1] Criar telas sem estado `WalletSheet`, `CaptureScreen` e `RegistrationProgressScreen` com previews de todos os estados de `docs/referencia/ux.md` 4.3–4.5 (inclusive vínculo de aparelho e falha por prazo) e screenshot tests; **revisão da autora antes da ligação**
 - [ ] T056 [US1] Ligar `$PKG/ui/wallet/WalletSheet.kt` ao `WalletViewModel.kt` (conexão, endereço abreviado, aviso de rede, saldo, link para faucet)
 - [ ] T057 [US1] Ligar `$PKG/ui/capture/CaptureScreen.kt` e `RegistrationProgressScreen.kt` ao `CaptureViewModel.kt` (CameraX, captura, etapas do registro, link do Etherscan nos detalhes técnicos; em `AlreadyRegistered`, mostrar "Esta imagem já está registrada" com o botão "Ver registro", que abre `VerificationResultScreen` desse registro — spec Edge Cases)
-- [ ] T058 [US1] Tratar saldo insuficiente, transação rejeitada e troca de conta/rede durante a operação em `CaptureViewModel.kt`, com textos em `android/app/src/main/res/values/strings.xml`
+- [X] T103 [US1] Checar saldo antes de abrir a carteira (FR-003, US1 cenário 4): `RegistryTxBuilder.estimate` em `EnsureDeviceBoundUseCase` (lança `InsufficientFundsException`) e em `RegisterLocalImageUseCase` (`SubmissionResult.InsufficientFunds`), `CaptureResult.InsufficientFunds(localId, cost)` e `FailureReason.INSUFFICIENT_FUNDS`; estimativa que reverteria → `FAILED(REVERTED)` sem abrir a carteira; testes em `EnsureDeviceBoundUseCaseTest` e `CaptureAndRegisterUseCaseTest`
+- [ ] T058 [US1] Tratar saldo insuficiente (`CaptureResult.InsufficientFunds` de T103: custo estimado em SepoliaETH e link do faucet), transação rejeitada e troca de conta/rede durante a operação em `CaptureViewModel.kt`, com textos em `android/app/src/main/res/values/strings.xml`
 
 **Checkpoint**: US1 funcional e demonstrável (MVP).
 

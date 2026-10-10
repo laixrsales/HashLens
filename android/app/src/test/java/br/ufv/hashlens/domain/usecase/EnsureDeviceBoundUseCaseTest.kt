@@ -3,9 +3,11 @@ package br.ufv.hashlens.domain.usecase
 import android.app.Application
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceKeyManager
+import br.ufv.hashlens.data.chain.InsufficientFundsException
 import br.ufv.hashlens.data.chain.ReceiptTracker
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.chain.RegistryTxBuilder
+import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.local.AppDatabase
 import br.ufv.hashlens.data.local.DeviceBindingEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
@@ -13,6 +15,7 @@ import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.testing.SignatureVectors
 import br.ufv.hashlens.testing.inMemoryDatabase
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -20,6 +23,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
@@ -42,14 +46,16 @@ class EnsureDeviceBoundUseCaseTest {
     private val reader = mockk<RegistryReader>()
     private val wallet = mockk<WalletSession>()
     private val receipts = mockk<ReceiptTracker>()
+    private val txBuilder = mockk<RegistryTxBuilder>()
     private val config = ChainConfig(rpcUrl = "", registryAddress = CONTRACT, reownProjectId = "")
-    private val useCase = EnsureDeviceBoundUseCase(keyManager, reader, wallet, receipts, bindings, config)
+    private val useCase = EnsureDeviceBoundUseCase(keyManager, reader, wallet, receipts, txBuilder, bindings, config)
 
     @After
     fun closeDatabase() = db.close()
 
     /** A carteira envia a transação e o recibo traz o `deviceId` do evento `DeviceRegistered`. */
     private fun chainRegisters(publicKey: ByteArray, txHash: String, newDeviceId: Int) {
+        coEvery { txBuilder.estimate(any(), RegistryTxBuilder.registerDevice(publicKey)) } returns ENOUGH
         coEvery { wallet.sendTransaction(CONTRACT, RegistryTxBuilder.registerDevice(publicKey)) } returns txHash
         coEvery { receipts.awaitDeviceRegistered(txHash) } returns newDeviceId
     }
@@ -152,6 +158,18 @@ class EnsureDeviceBoundUseCaseTest {
         }
     }
 
+    @Test
+    fun `saldo insuficiente para registerDevice não abre a carteira`() = runTest {
+        every { keyManager.getOrCreatePublicKey(WALLET_A) } returns KEY_A
+        onChain(WALLET_A)
+        coEvery { txBuilder.estimate(WALLET_A, RegistryTxBuilder.registerDevice(KEY_A)) } returns NOT_ENOUGH
+
+        shouldThrow<InsufficientFundsException> { useCase(WALLET_A) }.cost shouldBe NOT_ENOUGH
+
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+        bindings.get(WALLET_A.lowercase()).shouldNotBeNull().status shouldBe RegistrationStatus.FAILED
+    }
+
     private companion object {
         val CONTRACT = SignatureVectors.case("original").payload.contract
         const val WALLET_A = "0x1234567890AbcdEF1234567890aBcdef12345678"
@@ -162,6 +180,9 @@ class EnsureDeviceBoundUseCaseTest {
         // Chaves P-256 não comprimidas (65 bytes, prefixo 0x04): o caso de uso só compara bytes
         val KEY_A: ByteArray = SignatureVectors.publicKeyBytes
         val KEY_B: ByteArray = byteArrayOf(0x04) + ByteArray(64) { (it + 1).toByte() }
+        val GAS: BigInteger = BigInteger.valueOf(100_000)
+        val ENOUGH = TxCost(gasLimit = GAS, gasPrice = BigInteger.TEN, balance = BigInteger.TEN.pow(18))
+        val NOT_ENOUGH = TxCost(gasLimit = GAS, gasPrice = BigInteger.TEN, balance = BigInteger.ONE)
         val OLD_KEY: ByteArray = byteArrayOf(0x04) + ByteArray(64) { (0xA0 + it).toByte() }
     }
 }

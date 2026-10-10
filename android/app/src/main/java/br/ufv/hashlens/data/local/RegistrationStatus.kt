@@ -38,7 +38,10 @@ enum class FailureReason {
     HASH_MISMATCH,
 
     /** Falha de rede ao consultar o contrato ou ao falar com a carteira. */
-    NETWORK
+    NETWORK,
+
+    /** O saldo da carteira não cobre o gás estimado; a carteira nem foi aberta (FR-003). */
+    INSUFFICIENT_FUNDS
 }
 
 /** Como a imagem local surgiu. */

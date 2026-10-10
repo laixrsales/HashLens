@@ -9,8 +9,11 @@ import br.ufv.hashlens.core.crypto.SignaturePayload
 import br.ufv.hashlens.core.hashing.PerceptualHasher
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.core.imaging.JpegEncoder
+import br.ufv.hashlens.data.chain.InsufficientFundsException
+import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.chain.RegistryTxBuilder
+import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.data.local.AppDatabase
 import br.ufv.hashlens.data.local.FailureReason
@@ -32,6 +35,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import java.io.IOException
+import java.math.BigInteger
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
@@ -63,6 +68,7 @@ class CaptureAndRegisterUseCaseTest {
     private val ensureDeviceBound = mockk<EnsureDeviceBoundUseCase>()
     private val keyManager = mockk<DeviceKeyManager>()
     private val wallet = mockk<WalletSession>()
+    private val txBuilder = mockk<RegistryTxBuilder>()
     private val photo = mockk<Bitmap>()
     private val uri: Uri = Uri.parse("content://media/external/images/media/42")
 
@@ -73,7 +79,7 @@ class CaptureAndRegisterUseCaseTest {
         gallery = gallery,
         reader = reader,
         ensureDeviceBound = ensureDeviceBound,
-        registerLocalImage = RegisterLocalImageUseCase(images, keyManager, wallet, config, clock),
+        registerLocalImage = RegisterLocalImageUseCase(images, keyManager, wallet, txBuilder, config, clock),
         images = images,
         clock = clock
     )
@@ -87,6 +93,7 @@ class CaptureAndRegisterUseCaseTest {
         coEvery { reader.getIdBySha256(SHA) } returns null
         coEvery { ensureDeviceBound(WALLET) } returns BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
         every { keyManager.sign(WALLET, any()) } returns SIGNATURE
+        coEvery { txBuilder.estimate(WALLET, CALLDATA) } returns ENOUGH
         coEvery { wallet.sendTransaction(any(), any()) } returns TX
     }
 
@@ -204,6 +211,59 @@ class CaptureAndRegisterUseCaseTest {
         images.getByStatus(listOf(RegistrationStatus.AWAITING_WALLET, RegistrationStatus.PENDING)).shouldBeEmpty()
     }
 
+    @Test
+    fun `saldo insuficiente para o registro não abre a carteira e informa o custo`() = runTest {
+        happyPath()
+        coEvery { txBuilder.estimate(WALLET, CALLDATA) } returns NOT_ENOUGH
+
+        val result = useCase(photo, ROTATION, WALLET)
+
+        val image = onlyImage()
+        result shouldBe CaptureResult.InsufficientFunds(localId = image.localId, cost = NOT_ENOUGH)
+        image.status shouldBe RegistrationStatus.FAILED
+        image.failureReason shouldBe FailureReason.INSUFFICIENT_FUNDS
+        // Assinada uma vez: o reenvio com saldo reaproveita
+        image.signatureHex shouldBe SIGNATURE.toHexString()
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `saldo insuficiente para vincular o aparelho não registra a imagem`() = runTest {
+        happyPath()
+        coEvery { ensureDeviceBound(WALLET) } throws InsufficientFundsException(NOT_ENOUGH)
+
+        val result = useCase(photo, ROTATION, WALLET)
+
+        val image = onlyImage()
+        result shouldBe CaptureResult.InsufficientFunds(localId = image.localId, cost = NOT_ENOUGH)
+        image.status shouldBe RegistrationStatus.FAILED
+        image.failureReason shouldBe FailureReason.INSUFFICIENT_FUNDS
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `estimativa que reverteria falha por REVERTED sem abrir a carteira`() = runTest {
+        happyPath()
+        coEvery { txBuilder.estimate(WALLET, CALLDATA) } throws RegistryException.Rpc(3, "execution reverted")
+
+        val result = useCase(photo, ROTATION, WALLET)
+
+        result shouldBe CaptureResult.Failed(localId = onlyImage().localId, reason = FailureReason.REVERTED)
+        onlyImage().status shouldBe RegistrationStatus.FAILED
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `falha de rede na estimativa falha por NETWORK sem abrir a carteira`() = runTest {
+        happyPath()
+        coEvery { txBuilder.estimate(WALLET, CALLDATA) } throws RegistryException.Network(IOException("sem conexão"))
+
+        val result = useCase(photo, ROTATION, WALLET)
+
+        result shouldBe CaptureResult.Failed(localId = onlyImage().localId, reason = FailureReason.NETWORK)
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
     private companion object {
         val NOW: Instant = Instant.parse("2026-10-09T18:00:00Z")
         val CONTRACT = SignatureVectors.case("original").payload.contract
@@ -218,5 +278,9 @@ class CaptureAndRegisterUseCaseTest {
         val SHA = Sha256(MessageDigest.getInstance("SHA-256").digest(JPEG).toHexString())
         val PHASH: PHash = PHash.fromHex("fe44819b7ec4c03b")
         val SIGNATURE: ByteArray = SignatureVectors.case("original").rawHex.hexToByteArray()
+        val CALLDATA = RegistryTxBuilder.registerCapture(SHA, PHASH, DEVICE_ID, SIGNATURE)
+        val GAS: BigInteger = BigInteger.valueOf(200_000)
+        val ENOUGH = TxCost(gasLimit = GAS, gasPrice = BigInteger.TEN, balance = BigInteger.TEN.pow(18))
+        val NOT_ENOUGH = TxCost(gasLimit = GAS, gasPrice = BigInteger.TEN, balance = BigInteger.ONE)
     }
 }
