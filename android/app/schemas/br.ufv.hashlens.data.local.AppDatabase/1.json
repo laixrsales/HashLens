@@ -1,0 +1,180 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "9c5753019948b98fb90f953a0ca4ae70",
+    "entities": [
+      {
+        "tableName": "local_image",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `contentUri` TEXT NOT NULL, `sha256Hex` TEXT NOT NULL, `pHashHex` TEXT NOT NULL, `origin` TEXT NOT NULL, `parentRecordId` INTEGER, `originalRecordId` INTEGER, `operations` TEXT, `walletAddress` TEXT NOT NULL, `deviceId` INTEGER, `signatureHex` TEXT, `status` TEXT NOT NULL, `txHash` TEXT, `recordId` INTEGER, `submittedAt` INTEGER, `failureReason` TEXT, `errorMessage` TEXT, `createdAt` INTEGER NOT NULL, `fileAvailable` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "localId",
+            "columnName": "localId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentUri",
+            "columnName": "contentUri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sha256Hex",
+            "columnName": "sha256Hex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pHashHex",
+            "columnName": "pHashHex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "origin",
+            "columnName": "origin",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentRecordId",
+            "columnName": "parentRecordId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "originalRecordId",
+            "columnName": "originalRecordId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "operations",
+            "columnName": "operations",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "walletAddress",
+            "columnName": "walletAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "signatureHex",
+            "columnName": "signatureHex",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "txHash",
+            "columnName": "txHash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "recordId",
+            "columnName": "recordId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "submittedAt",
+            "columnName": "submittedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "failureReason",
+            "columnName": "failureReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "errorMessage",
+            "columnName": "errorMessage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileAvailable",
+            "columnName": "fileAvailable",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "localId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_local_image_sha256Hex",
+            "unique": true,
+            "columnNames": [
+              "sha256Hex"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_local_image_sha256Hex` ON `${TABLE_NAME}` (`sha256Hex`)"
+          }
+        ]
+      },
+      {
+        "tableName": "device_binding",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`walletAddress` TEXT NOT NULL, `publicKeyHex` TEXT NOT NULL, `deviceId` INTEGER, `txHash` TEXT, `status` TEXT NOT NULL, PRIMARY KEY(`walletAddress`))",
+        "fields": [
+          {
+            "fieldPath": "walletAddress",
+            "columnName": "walletAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publicKeyHex",
+            "columnName": "publicKeyHex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "txHash",
+            "columnName": "txHash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "walletAddress"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c5753019948b98fb90f953a0ca4ae70')"
+    ]
+  }
+}

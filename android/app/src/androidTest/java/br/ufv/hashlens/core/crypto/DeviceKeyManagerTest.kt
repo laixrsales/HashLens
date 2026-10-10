@@ -95,6 +95,7 @@ class DeviceKeyManagerTest {
 
     @Test
     fun assinaturaDeOutraCarteiraNaoConfere() {
+        manager.getOrCreatePublicKey(WALLET_A)
         val publicKeyB = P256.decodePublicKey(manager.getOrCreatePublicKey(WALLET_B))
         val message = "mensagem".encodeToByteArray()
 
