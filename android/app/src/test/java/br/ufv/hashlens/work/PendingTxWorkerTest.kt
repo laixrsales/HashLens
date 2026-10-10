@@ -21,6 +21,7 @@ import br.ufv.hashlens.testing.inMemoryDatabase
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -177,7 +178,7 @@ class PendingTxWorkerTest {
         runWorker(Duration.ofMinutes(29))
 
         image(id).shouldBePending()
-        coVerify(exactly = 0) { reader.getIdBySha256(any()) }
+        coVerify { reader wasNot Called }
     }
 
     @Test
@@ -223,7 +224,7 @@ class PendingTxWorkerTest {
             failureReason shouldBe FailureReason.REJECTED
         }
         coVerify(exactly = 0) { receipts.receipt(any()) }
-        coVerify(exactly = 0) { reader.getIdBySha256(any()) }
+        coVerify { reader wasNot Called }
     }
 
     @Test

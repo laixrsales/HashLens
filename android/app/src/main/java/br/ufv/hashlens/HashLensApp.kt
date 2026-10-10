@@ -2,15 +2,26 @@ package br.ufv.hashlens
 
 import android.app.Application
 import android.util.Log
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import br.ufv.hashlens.data.wallet.WalletSession
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import org.opencv.android.OpenCVLoader
 
 @HiltAndroidApp
-class HashLensApp : Application() {
+class HashLensApp :
+    Application(),
+    Configuration.Provider {
     @Inject
     lateinit var walletSession: WalletSession
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    // Workers com injeção do Hilt (PendingTxWorker); o inicializador padrão está desligado no manifesto
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     override fun onCreate() {
         super.onCreate()
