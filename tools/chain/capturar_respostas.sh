@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Captura respostas ABI reais das funções `view` do ImageRegistry (T027).
+# Captura respostas ABI reais das funções `view` do ImageRegistry (T027) e os recibos das
+# transações de escrita (T050).
 #
 # Sobe um anvil local, coloca o bytecode do ImageRegistry no endereço da Sepolia usado nos
 # vetores de assinatura, registra o aparelho e os dois casos de
 # android/app/src/test/resources/signature/vectors.json pela carteira dos vetores
 # (anvil_impersonateAccount) e grava as respostas brutas de `cast call` em
-# android/app/src/test/resources/chain/responses.json. Como contrato, carteira, deviceId e
+# android/app/src/test/resources/chain/responses.json; os recibos (inclusive o de uma captura
+# repetida, que reverte com AlreadyRegistered) vão para chain/receipts.json. Como contrato, carteira, deviceId e
 # parentId batem com os vetores, as assinaturas dos registros capturados são válidas.
 #
 # Uso (a partir da raiz do repositório; requer Foundry e jq):
@@ -19,6 +21,7 @@ set -euo pipefail
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
 VETORES="$RAIZ/android/app/src/test/resources/signature/vectors.json"
 SAIDA="$RAIZ/android/app/src/test/resources/chain/responses.json"
+SAIDA_RECIBOS="$RAIZ/android/app/src/test/resources/chain/receipts.json"
 PORTA=8547
 RPC="http://127.0.0.1:$PORTA"
 export PATH="$HOME/.foundry/bin:$PATH"
@@ -27,6 +30,7 @@ export PATH="$HOME/.foundry/bin:$PATH"
 T_APARELHO=1791320400
 T_CAPTURA=1791320460
 T_EDICAO=1791320520
+T_REPETIDA=1791320580
 
 anvil --port "$PORTA" --silent --timestamp "$((T_APARELHO - 60))" &
 ANVIL_PID=$!
@@ -49,15 +53,21 @@ cast rpc anvil_setCode "$CONTRATO" "$(cast code "$TEMPORARIO" --rpc-url "$RPC")"
 cast rpc anvil_impersonateAccount "$CARTEIRA" --rpc-url "$RPC" >/dev/null
 cast rpc anvil_setBalance "$CARTEIRA" 0x56BC75E2D63100000 --rpc-url "$RPC" >/dev/null
 
-enviar() { # enviar <timestamp> <assinatura> <args...>
-    local ts=$1
-    shift
+recibos='[]'
+
+enviar() { # enviar <nome do recibo> <timestamp> <assinatura> <args...> (grava o recibo em $recibos)
+    local nome=$1 ts=$2 recibo
+    shift 2
     cast rpc evm_setNextBlockTimestamp "$ts" --rpc-url "$RPC" >/dev/null
-    cast send "$CONTRATO" "$@" --from "$CARTEIRA" --unlocked --rpc-url "$RPC" >/dev/null
+    # --gas-limit fixo: sem estimativa, uma chamada que reverte também é minerada (recibo com status 0)
+    recibo=$(cast send "$CONTRATO" "$@" --from "$CARTEIRA" --unlocked --rpc-url "$RPC" \
+        --gas-limit 500000 --json 2>/dev/null || true)
+    recibos=$(jq --arg n "$nome" --argjson r "$recibo" \
+        '. + [{nome: $n, status: $r.status, logs: [$r.logs[] | {address, topics, data}]}]' <<<"$recibos")
 }
 
-registrar() { # registrar <timestamp> <índice do caso>
-    local ts=$1 i=$2 raw
+registrar() { # registrar <nome do recibo> <timestamp> <índice do caso>
+    local nome=$1 ts=$2 i=$3 raw
     raw=$(vetor ".casos[$i].assinaturaRaw")
     local sha=0x$(vetor ".casos[$i].campos.sha256")
     local phash=0x$(vetor ".casos[$i].campos.pHash")
@@ -65,17 +75,17 @@ registrar() { # registrar <timestamp> <índice do caso>
     local parent=$(vetor ".casos[$i].campos.parentId")
     local ops=$(vetor ".casos[$i].campos.operations")
     if [[ "$parent" == "0" ]]; then
-        enviar "$ts" "registerCapture(bytes32,uint64,uint32,bytes32,bytes32)" \
+        enviar "$nome" "$ts" "registerCapture(bytes32,uint64,uint32,bytes32,bytes32)" \
             "$sha" "$phash" "$device" "0x${raw:0:64}" "0x${raw:64:64}"
     else
-        enviar "$ts" "registerEdit(uint256,bytes32,uint64,uint32,bytes32,bytes32,string)" \
+        enviar "$nome" "$ts" "registerEdit(uint256,bytes32,uint64,uint32,bytes32,bytes32,string)" \
             "$parent" "$sha" "$phash" "$device" "0x${raw:0:64}" "0x${raw:64:64}" "$ops"
     fi
 }
 
-enviar "$T_APARELHO" "registerDevice(bytes)" "$CHAVE_PUBLICA"
-registrar "$T_CAPTURA" 0
-registrar "$T_EDICAO" 1
+enviar "registerDevice" "$T_APARELHO" "registerDevice(bytes)" "$CHAVE_PUBLICA"
+registrar "registerCapture original" "$T_CAPTURA" 0
+registrar "registerEdit edicao" "$T_EDICAO" 1
 
 # Cada chamada: nome, assinatura, argumento; grava o calldata e o retorno ABI bruto do eth_call
 chamadas=(
@@ -106,6 +116,9 @@ for chamada in "${chamadas[@]}"; do
         '. + [{nome: $n, funcao: $f, argumento: $a, calldata: $c, resposta: $r}]' <<<"$respostas")
 done
 
+# Depois das leituras, para não mudar as respostas: a mesma captura de novo reverte (AlreadyRegistered)
+registrar "registerCapture repetida" "$T_REPETIDA" 0
+
 mkdir -p "$(dirname "$SAIDA")"
 jq -n --arg contrato "$CONTRATO" --arg carteira "$CARTEIRA" \
     --argjson tAparelho "$T_APARELHO" --argjson tCaptura "$T_CAPTURA" --argjson tEdicao "$T_EDICAO" \
@@ -117,4 +130,11 @@ jq -n --arg contrato "$CONTRATO" --arg carteira "$CARTEIRA" \
         timestamps: {aparelho: $tAparelho, captura: $tCaptura, edicao: $tEdicao},
         respostas: $respostas
     }' >"$SAIDA"
+jq -n --arg contrato "$CONTRATO" --argjson recibos "$recibos" '{
+        geradoPor: "tools/chain/capturar_respostas.sh",
+        observacao: "Recibos reais (anvil) de eth_getTransactionReceipt, só status e logs. registerCapture repetida reverte com AlreadyRegistered.",
+        contrato: $contrato,
+        recibos: $recibos
+    }' >"$SAIDA_RECIBOS"
 echo "Respostas gravadas em ${SAIDA#"$RAIZ"/}"
+echo "Recibos gravados em ${SAIDA_RECIBOS#"$RAIZ"/}"

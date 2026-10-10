@@ -120,9 +120,9 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T045 [P] [US1] Implementar `$PKG/core/crypto/DeviceKeyManager.kt` (Keystore P-256, um alias por carteira `hashlens-device-<endereço em minúsculas>`, StrongBox com fallback, exporta chave pública em 65 bytes `0x04 ‖ X ‖ Y`)
 - [X] T046 [P] [US1] Implementar `$PKG/data/wallet/WalletSession.kt` (Reown AppKit: conectar, desconectar, `StateFlow` de conta/rede, troca para Sepolia, `eth_sendTransaction`)
 - [X] T047 [P] [US1] Implementar Room em `$PKG/data/local/` (`AppDatabase`, DAOs, `RegistrationStatus`, `FailureReason` = `REJECTED`, `REVERTED`, `TIMEOUT`, `HASH_MISMATCH`, `NETWORK`; `LocalImageEntity` com `sha256Hex` "`String` (64) … Índice único", `pHashHex` "`String` (16)", `origin` "`CAPTURE`, `EDIT`", `signatureHex` "`r‖s` (128 hex), gerada uma vez e reutilizada em reenvios", `submittedAt` "epoch ms em que o `txHash` foi recebido", `fileAvailable`; `DeviceBindingEntity` com `walletAddress` (PK, minúsculo), `publicKeyHex` "`String` (130)", `deviceId` "Nulo até a confirmação") conforme `$SPEC/data-model.md` §2
-- [ ] T048 [P] [US1] Implementar `$PKG/data/gallery/GalleryRepository.kt` (MediaStore `Pictures/HashLens`, gravação e releitura)
-- [ ] T049 [P] [US1] Implementar `$PKG/data/chain/RegistryTxBuilder.kt` (calldata de `registerDevice`, `registerCapture`, `registerEdit`; estimativa de gás; checagem de saldo)
-- [ ] T050 [US1] Implementar `$PKG/data/chain/ReceiptTracker.kt` (polling de recibo, parse de `ImageRegistered`/`DeviceRegistered`)
+- [X] T048 [P] [US1] Implementar `$PKG/data/gallery/GalleryRepository.kt` (MediaStore `Pictures/HashLens`, gravação e releitura)
+- [X] T049 [P] [US1] Implementar `$PKG/data/chain/RegistryTxBuilder.kt` (calldata de `registerDevice`, `registerCapture`, `registerEdit`; estimativa de gás; checagem de saldo)
+- [X] T050 [US1] Implementar `$PKG/data/chain/ReceiptTracker.kt` (polling de recibo, parse de `ImageRegistered`/`DeviceRegistered`)
 - [ ] T051 [US1] Implementar `$PKG/domain/usecase/EnsureDeviceBoundUseCase.kt` até T041 passar (alias da carteira → procura a chave em `getDevicesOf` → `registerDevice` se ausente; nunca revoga vínculos)
 - [ ] T052 [US1] Implementar `$PKG/domain/usecase/RegisterLocalImageUseCase.kt` (monta payload, assina uma vez, envia, grava `txHash` e `submittedAt`, atualiza status; reutilizado por edição e reenvio)
 - [ ] T053 [US1] Implementar `$PKG/domain/usecase/CaptureAndRegisterUseCase.kt` (encode → hashes → galeria → releitura → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase`)
@@ -133,6 +133,10 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [ ] T058 [US1] Tratar saldo insuficiente, transação rejeitada e troca de conta/rede durante a operação em `CaptureViewModel.kt`, com textos em `android/app/src/main/res/values/strings.xml`
 
 **Checkpoint**: US1 funcional e demonstrável (MVP).
+
+### Manutenção após a US1
+
+- [ ] T102 Investigar e corrigir `connectedDebugAndroidTest` terminando com `BUILD FAILED` ("There were failing tests") mesmo com todos os testes instrumentados passando (relatório com 0 falhas; ocorre também no `PerceptualHasherTest`, com ou sem filtro de classe). Suspeita: AGP 9 + plugin `android-junit5` em `android/app/build.gradle.kts`. Critério: tarefa termina com `BUILD SUCCESSFUL` quando os testes passam e falha quando um teste falha. Branch própria `chore/<NNN>-...`
 
 ---
 
@@ -279,6 +283,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 - **US4 (6)**: depende de US3.
 - **US5 (7)**: depende de 2; exercitado plenamente após US3.
 - **US6 (8)**: depende de US1 (T052, T054).
+- **Manutenção (T102)**: após a US1, antes da US2; não depende de nenhuma história.
 - **Polish (9)**: após as histórias desejadas.
 
 ### Within Each User Story

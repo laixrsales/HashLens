@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Captura de fotos (CameraX) -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Gravação na galeria no Android 8 e 9; a partir do 10 o MediaStore dispensa (GalleryRepository) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <uses-feature
         android:name="android.hardware.camera.any"

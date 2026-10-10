@@ -37,7 +37,7 @@ class GalleryRepositoryTest {
     }
 
     @Test
-    fun bytesRelidosSaoIguaisAosGravados() = runBlocking {
+    fun bytesRelidosSaoIguaisAosGravados() = runBlocking<Unit> {
         val bytes = golden(ORIGINAL)
 
         val uri = repository.save(bytes, "hashlens_teste_releitura.jpg").also { saved += it }
@@ -46,7 +46,7 @@ class GalleryRepositoryTest {
     }
 
     @Test
-    fun releituraNaoDependeDoConteudoDaImagem() = runBlocking {
+    fun releituraNaoDependeDoConteudoDaImagem() = runBlocking<Unit> {
         // Bytes que não formam um JPEG válido: a galeria não pode recodificar nem alterar nada
         val bytes = golden(ORIGINAL).copyOf(ARBITRARY_PREFIX) + byteArrayOf(0, 1, 2, 3)
 
@@ -56,7 +56,7 @@ class GalleryRepositoryTest {
     }
 
     @Test
-    fun gravaComoJpegNaPastaDoHashLens() = runBlocking {
+    fun gravaComoJpegNaPastaDoHashLens() = runBlocking<Unit> {
         val uri = repository.save(golden(ORIGINAL), "hashlens_teste_pasta.jpg").also { saved += it }
 
         resolver.getType(uri) shouldBe "image/jpeg"
