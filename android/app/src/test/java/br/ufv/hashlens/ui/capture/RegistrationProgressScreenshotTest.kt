@@ -42,6 +42,12 @@ class RegistrationProgressScreenshotTest : ScreenshotTest() {
     fun hashMismatch() = progress("falha_releitura", RegistrationProgressSamples.hashMismatch)
 
     @Test
+    fun reverted() = progress("falha_revertida", RegistrationProgressSamples.reverted)
+
+    @Test
+    fun saveFailed() = progress("falha_galeria", RegistrationProgressSamples.saveFailed)
+
+    @Test
     fun insufficientFunds() = progress("saldo_insuficiente", RegistrationProgressSamples.insufficientFunds)
 
     @Test

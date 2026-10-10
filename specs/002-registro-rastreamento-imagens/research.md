@@ -17,6 +17,10 @@ setup (as versões mudam com frequência).
 - **Alternatives considered**: MetaMask SDK Android (prende o usuário a uma carteira); carteira
   embutida no app (viola o Princípio III); login social com carteira custodial (introduz
   intermediário, contrário à proposta do TCC).
+- **Limitação conhecida** (aceita pela autora em 2026-10-10, T056): a lista de carteiras do AppKit
+  ("Connect wallet", "All wallets"), aberta pela folha "Conectar carteira", só existe em inglês;
+  a biblioteca permite trocar cores, não textos. É a única exceção a R24 e aparece só na escolha
+  da carteira; todos os textos do HashLens seguem em pt-BR.
 
 ## R2. Cliente Ethereum (leitura, ABI, recibos)
 
@@ -236,6 +240,7 @@ setup (as versões mudam com frequência).
   percentual exibidos com vírgula decimal; a serialização on-chain continua com ponto
   (hashing-spec §4).
 - **Rationale**: clarificação de 2026-10-04 (FR-039); público e avaliação do TCC no Brasil.
+- **Exceção**: a lista de carteiras do Reown AppKit, só em inglês (limitação conhecida em R1).
 - **Alternatives considered**: português e inglês, com ou sem troca manual (custo de tradução e
   de revisão das telas em dois idiomas sem ganho para a avaliação).
 

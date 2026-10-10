@@ -57,7 +57,8 @@ sealed interface WalletSheetUiState {
     /** O app da carteira está aberto, aguardando a pessoa aprovar a conexão. */
     data object Connecting : WalletSheetUiState
 
-    data class Connected(val address: String, val balance: BigDecimal) : WalletSheetUiState
+    /** [balance] nulo quando a rede não respondeu; a linha do saldo some. */
+    data class Connected(val address: String, val balance: BigDecimal?) : WalletSheetUiState
 
     data class WrongNetwork(val address: String) : WalletSheetUiState
 
@@ -197,7 +198,7 @@ private fun AccountContent(state: WalletSheetUiState, onAction: (WalletSheetActi
             modifier = modifier
         ) {
             Account(state.address)
-            Body(stringResource(R.string.wallet_balance, SepoliaEthFormat.amount(state.balance)))
+            state.balance?.let { Body(stringResource(R.string.wallet_balance, SepoliaEthFormat.amount(it))) }
         }
 
         is WalletSheetUiState.WrongNetwork -> SheetLayout(

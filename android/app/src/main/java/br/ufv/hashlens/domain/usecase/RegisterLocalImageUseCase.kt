@@ -58,10 +58,16 @@ class RegisterLocalImageUseCase @Inject constructor(
     /**
      * @param walletAddress carteira conectada; deve ser a mesma que solicitou o registro, porque a
      *   assinatura cobre o `registrant`.
+     * @param onProgress avisado antes de abrir a carteira, com o custo estimado.
      * @throws IllegalArgumentException se a imagem não existir, já tiver sido enviada ou for de outra
      *   carteira.
      */
-    suspend operator fun invoke(localId: Long, walletAddress: String, deviceId: Int): SubmissionResult {
+    suspend operator fun invoke(
+        localId: Long,
+        walletAddress: String,
+        deviceId: Int,
+        onProgress: (RegistrationProgress) -> Unit = {}
+    ): SubmissionResult {
         val image = requireNotNull(images.getById(localId)) { "imagem local inexistente: $localId" }
         require(image.walletAddress.equals(walletAddress, ignoreCase = true)) {
             "o registro pertence a outra carteira"
@@ -81,8 +87,12 @@ class RegisterLocalImageUseCase @Inject constructor(
             errorMessage = null
         )
         val calldata = calldata(signed)
-        preflight(signed, walletAddress, calldata)?.let { return it }
+        val cost = when (val check = preflight(signed, walletAddress, calldata)) {
+            is Preflight.Blocked -> return check.result
+            is Preflight.Clear -> check.cost
+        }
 
+        onProgress(RegistrationProgress.AwaitingWallet(cost))
         val awaiting = signed.copy(status = RegistrationStatus.AWAITING_WALLET)
         images.update(awaiting)
         return try {
@@ -101,28 +111,28 @@ class RegisterLocalImageUseCase @Inject constructor(
         }
     }
 
-    /**
-     * Estima o gás antes de abrir a carteira. Devolve o resultado da falha (já gravada como `FAILED`,
-     * com a assinatura) ou `null` se a transação pode seguir.
-     */
-    private suspend fun preflight(
-        image: LocalImageEntity,
-        walletAddress: String,
-        calldata: String
-    ): SubmissionResult? {
+    /** Resultado da estimativa: segue com o [Clear.cost] ou para com o [Blocked.result] já gravado. */
+    private sealed interface Preflight {
+        data class Clear(val cost: TxCost) : Preflight
+
+        data class Blocked(val result: SubmissionResult) : Preflight
+    }
+
+    /** Estima o gás antes de abrir a carteira; as falhas ficam gravadas como `FAILED`, com a assinatura. */
+    private suspend fun preflight(image: LocalImageEntity, walletAddress: String, calldata: String): Preflight {
         val cost = try {
             txBuilder.estimate(walletAddress, calldata)
         } catch (e: RegistryException) {
             // O nó respondeu com erro: a transação reverteria (ex.: AlreadyRegistered)
             val reason = if (e is RegistryException.Rpc) FailureReason.REVERTED else FailureReason.NETWORK
             images.update(image.failed(reason, e.message))
-            return SubmissionResult.Failed(reason)
+            return Preflight.Blocked(SubmissionResult.Failed(reason))
         }
         return if (cost.hasEnoughBalance) {
-            null
+            Preflight.Clear(cost)
         } else {
             images.update(image.failed(FailureReason.INSUFFICIENT_FUNDS))
-            SubmissionResult.InsufficientFunds(cost)
+            Preflight.Blocked(SubmissionResult.InsufficientFunds(cost))
         }
     }
 

@@ -170,7 +170,9 @@ private fun Header(stage: RegistrationStage, zone: ZoneId) {
                 when (stage.reason) {
                     RegistrationFailure.Rejected, RegistrationFailure.Network -> R.string.registration_failed_message
                     RegistrationFailure.Timeout -> R.string.registration_timeout_message
+                    RegistrationFailure.Reverted -> R.string.registration_reverted_message
                     RegistrationFailure.HashMismatch -> R.string.registration_hash_mismatch_message
+                    RegistrationFailure.SaveFailed -> R.string.registration_save_failed_message
                 }
             )
         )
@@ -247,7 +249,10 @@ private fun Actions(stage: RegistrationStage, onAction: (RegistrationProgressAct
                     onAction(RegistrationProgressAction.Done)
                 })
             is RegistrationStage.Failed -> {
-                if (stage.reason == RegistrationFailure.HashMismatch) {
+                // Sem arquivo confiável na galeria: refazer a foto, não reenviar
+                if (stage.reason == RegistrationFailure.HashMismatch ||
+                    stage.reason == RegistrationFailure.SaveFailed
+                ) {
                     PrimaryButton(
                         stringResource(R.string.action_take_photo_again),
                         onClick = { onAction(RegistrationProgressAction.RetakePhoto) }
@@ -320,8 +325,12 @@ private fun RegistrationFailure.steps(): List<ProgressStep> = when (this) {
         registrationSteps(StepState.Done, StepState.Done, StepState.Failed, sentDetail = R.string.step_failed_network)
     RegistrationFailure.Timeout ->
         registrationSteps(StepState.Done, StepState.Done, StepState.Failed, sentDetail = R.string.step_failed_timeout)
+    RegistrationFailure.Reverted ->
+        registrationSteps(StepState.Done, StepState.Done, StepState.Failed, sentDetail = R.string.step_failed_reverted)
     RegistrationFailure.HashMismatch ->
         registrationSteps(StepState.Failed, savedDetail = R.string.step_failed_hash_mismatch)
+    RegistrationFailure.SaveFailed ->
+        registrationSteps(StepState.Failed, savedDetail = R.string.step_failed_save)
 }
 
 private fun registrationSteps(
@@ -396,6 +405,18 @@ private fun RegistrationHashMismatchPreview() = HashLensTheme {
 
 @Preview
 @Composable
+private fun RegistrationRevertedPreview() = HashLensTheme {
+    RegistrationProgressScreen(RegistrationProgressSamples.reverted, onAction = {}, zone = SampleData.ZONE)
+}
+
+@Preview
+@Composable
+private fun RegistrationSaveFailedPreview() = HashLensTheme {
+    RegistrationProgressScreen(RegistrationProgressSamples.saveFailed, onAction = {}, zone = SampleData.ZONE)
+}
+
+@Preview
+@Composable
 private fun RegistrationInsufficientPreview() = HashLensTheme {
     RegistrationProgressScreen(RegistrationProgressSamples.insufficientFunds, onAction = {}, zone = SampleData.ZONE)
 }
@@ -421,6 +442,8 @@ object RegistrationProgressSamples {
     val networkFailure get() = state(RegistrationStage.Failed(RegistrationFailure.Network))
     val timeout get() = state(RegistrationStage.Failed(RegistrationFailure.Timeout))
     val hashMismatch get() = state(RegistrationStage.Failed(RegistrationFailure.HashMismatch))
+    val reverted get() = state(RegistrationStage.Failed(RegistrationFailure.Reverted))
+    val saveFailed get() = state(RegistrationStage.Failed(RegistrationFailure.SaveFailed))
     val insufficientFunds
         get() = state(
             RegistrationStage.InsufficientFunds(SampleData.Chain.REGISTRATION_COST, SampleData.Chain.BALANCE_LOW)

@@ -91,7 +91,7 @@ class CaptureAndRegisterUseCaseTest {
         coEvery { gallery.save(JPEG, any()) } returns uri
         coEvery { gallery.read(uri) } returns JPEG
         coEvery { reader.getIdBySha256(SHA) } returns null
-        coEvery { ensureDeviceBound(WALLET) } returns BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
+        coEvery { ensureDeviceBound(WALLET, any()) } returns BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
         every { keyManager.sign(WALLET, any()) } returns SIGNATURE
         coEvery { txBuilder.estimate(WALLET, CALLDATA) } returns ENOUGH
         coEvery { wallet.sendTransaction(any(), any()) } returns TX
@@ -151,7 +151,7 @@ class CaptureAndRegisterUseCaseTest {
         happyPath()
         val seen = mutableListOf<RegistrationStatus>()
         // Status gravado quando o vínculo é conferido e quando a carteira é aberta
-        coEvery { ensureDeviceBound(WALLET) } coAnswers {
+        coEvery { ensureDeviceBound(WALLET, any()) } coAnswers {
             seen += onlyImage().status
             BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
         }
@@ -177,7 +177,7 @@ class CaptureAndRegisterUseCaseTest {
         result shouldBe CaptureResult.Failed(localId = image.localId, reason = FailureReason.HASH_MISMATCH)
         image.status shouldBe RegistrationStatus.FAILED
         image.failureReason shouldBe FailureReason.HASH_MISMATCH
-        coVerify(exactly = 0) { ensureDeviceBound(any()) }
+        coVerify(exactly = 0) { ensureDeviceBound(any(), any()) }
         coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
     }
 
@@ -206,7 +206,7 @@ class CaptureAndRegisterUseCaseTest {
         val result = useCase(photo, ROTATION, WALLET)
 
         result.shouldBeInstanceOf<CaptureResult.AlreadyRegistered>().recordId shouldBe EXISTING_RECORD
-        coVerify(exactly = 0) { ensureDeviceBound(any()) }
+        coVerify(exactly = 0) { ensureDeviceBound(any(), any()) }
         coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
         images.getByStatus(listOf(RegistrationStatus.AWAITING_WALLET, RegistrationStatus.PENDING)).shouldBeEmpty()
     }
@@ -230,7 +230,7 @@ class CaptureAndRegisterUseCaseTest {
     @Test
     fun `saldo insuficiente para vincular o aparelho não registra a imagem`() = runTest {
         happyPath()
-        coEvery { ensureDeviceBound(WALLET) } throws InsufficientFundsException(NOT_ENOUGH)
+        coEvery { ensureDeviceBound(WALLET, any()) } throws InsufficientFundsException(NOT_ENOUGH)
 
         val result = useCase(photo, ROTATION, WALLET)
 
@@ -264,10 +264,86 @@ class CaptureAndRegisterUseCaseTest {
         coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
     }
 
+    @Test
+    fun `avisa o progresso com a foto salva e a carteira aguardando com o custo estimado`() = runTest {
+        happyPath()
+        val progress = mutableListOf<RegistrationProgress>()
+
+        useCase(photo, ROTATION, WALLET) { progress += it }
+
+        progress shouldBe listOf(
+            RegistrationProgress.Saved(onlyImage().localId),
+            RegistrationProgress.AwaitingWallet(ENOUGH)
+        )
+    }
+
+    @Test
+    fun `reenvio com o hash já na rede confirma sem abrir a carteira`() = runTest {
+        happyPath()
+        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
+        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
+        // A transação foi confirmada por outro caminho (ex.: reenvio anterior que estourou o prazo)
+        coEvery { reader.getIdBySha256(SHA) } returns EXISTING_RECORD
+
+        val result = useCase.resubmit(localId, WALLET)
+
+        result shouldBe CaptureResult.Confirmed(localId, EXISTING_RECORD)
+        onlyImage().run {
+            status shouldBe RegistrationStatus.CONFIRMED
+            recordId shouldBe EXISTING_RECORD
+            originalRecordId shouldBe EXISTING_RECORD
+            failureReason.shouldBeNull()
+        }
+        coVerify(exactly = 1) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `reenvio sem o hash na rede reabre a carteira com a mesma assinatura`() = runTest {
+        happyPath()
+        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
+        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
+        coEvery { wallet.sendTransaction(any(), any()) } returns TX
+
+        val result = useCase.resubmit(localId, WALLET)
+
+        result shouldBe CaptureResult.Submitted(localId, TX)
+        onlyImage().status shouldBe RegistrationStatus.PENDING
+        // Assinada uma vez só, na primeira tentativa
+        coVerify(exactly = 1) { keyManager.sign(any(), any()) }
+    }
+
+    @Test
+    fun `reenvio com outra carteira conectada é bloqueado`() = runTest {
+        happyPath()
+        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
+        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
+
+        val result = useCase.resubmit(localId, OTHER_WALLET)
+
+        result shouldBe CaptureResult.WrongWallet(localId, expected = WALLET.lowercase())
+        onlyImage().failureReason shouldBe FailureReason.REJECTED
+        coVerify(exactly = 1) { ensureDeviceBound(any(), any()) }
+    }
+
+    @Test
+    fun `reenvio sem rede na checagem mantém a falha sem abrir a carteira`() = runTest {
+        happyPath()
+        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
+        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
+        coEvery { reader.getIdBySha256(SHA) } throws RegistryException.Network(IOException("sem conexão"))
+
+        val result = useCase.resubmit(localId, WALLET)
+
+        result shouldBe CaptureResult.Failed(localId, FailureReason.NETWORK)
+        onlyImage().status shouldBe RegistrationStatus.FAILED
+        coVerify(exactly = 1) { wallet.sendTransaction(any(), any()) }
+    }
+
     private companion object {
         val NOW: Instant = Instant.parse("2026-10-09T18:00:00Z")
         val CONTRACT = SignatureVectors.case("original").payload.contract
         const val WALLET = "0x1234567890AbcdEF1234567890aBcdef12345678"
+        const val OTHER_WALLET = "0xAbCdEf0123456789aBcDeF0123456789AbCdEf01"
         const val ROTATION = 90
         const val DEVICE_ID = 3
         const val EXISTING_RECORD = 5L

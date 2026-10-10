@@ -178,4 +178,15 @@
     <string name="step_failed_hash_mismatch">A foto salva não confere com a capturada.</string>
     <string name="step_failed_insufficient">A carteira não foi aberta: falta saldo de teste.</string>
     <string name="action_take_photo_again">Fotografar de novo</string>
+    <string name="registration_reverted_message">A rede recusou o registro, e nada foi registrado em seu nome. Tente de novo.</string>
+    <string name="registration_save_failed_message">Não foi possível salvar a foto na galeria, então nada foi registrado. Verifique o espaço livre e fotografe de novo.</string>
+    <string name="step_failed_reverted">A rede recusou o registro.</string>
+    <string name="step_failed_save">Não foi possível salvar a foto na galeria.</string>
+
+    <!-- Avisos de carteira durante o registro (T058) -->
+    <string name="notice_wallet_not_ready">Conecte uma carteira na Sepolia para registrar a foto.</string>
+    <string name="notice_wallet_account_changed">A carteira trocou de conta durante o registro. Volte para a conta %1$s para aprovar.</string>
+    <string name="notice_wallet_network_changed">A carteira saiu da Sepolia durante o registro. Volte para a Sepolia para aprovar.</string>
+    <string name="notice_wallet_disconnected">A carteira foi desconectada durante o registro. Conecte de novo e toque em Tentar de novo.</string>
+    <string name="notice_wrong_wallet_retry">Conecte a carteira %1$s usada neste registro para tentar de novo.</string>
 </resources>

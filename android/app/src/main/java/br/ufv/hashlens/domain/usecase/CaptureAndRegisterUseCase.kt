@@ -43,6 +43,15 @@ sealed interface CaptureResult {
 
     /** O arquivo já tem registro on-chain ([recordId]); nenhuma transação foi aberta. */
     data class AlreadyRegistered(val recordId: Long) : CaptureResult
+
+    /** Reenvio: o hash já estava on-chain, então a linha local foi confirmada sem nova transação (R23). */
+    data class Confirmed(val localId: Long, val recordId: Long) : CaptureResult
+
+    /**
+     * Reenvio bloqueado: a carteira conectada não é a que pediu o registro ([expected]); a assinatura
+     * do aparelho cobre o `registrant` e não vale para outra carteira (data-model §2.3).
+     */
+    data class WrongWallet(val localId: Long, val expected: String) : CaptureResult
 }
 
 /**
@@ -67,8 +76,14 @@ class CaptureAndRegisterUseCase @Inject constructor(
     /**
      * @param rotationDegrees rotação informada pela câmera (0, 90, 180 ou 270).
      * @param walletAddress carteira conectada que assina o registro.
+     * @param onProgress etapas avisadas enquanto o registro não termina (foto salva, vínculo, carteira).
      */
-    suspend operator fun invoke(photo: Bitmap, rotationDegrees: Int, walletAddress: String): CaptureResult {
+    suspend operator fun invoke(
+        photo: Bitmap,
+        rotationDegrees: Int,
+        walletAddress: String,
+        onProgress: (RegistrationProgress) -> Unit = {}
+    ): CaptureResult {
         val capturedAt = ZonedDateTime.ofInstant(clock.instant(), ZoneId.systemDefault())
         val (jpeg, sha256, pHash) = withContext(defaultDispatcher) {
             val bytes = encoder.encode(photo, rotationDegrees, capturedAt)
@@ -93,17 +108,70 @@ class CaptureAndRegisterUseCase @Inject constructor(
                 if (existingId != null) {
                     CaptureResult.AlreadyRegistered(existingId)
                 } else {
-                    submit(images.insert(image), walletAddress)
+                    val localId = images.insert(image)
+                    onProgress(RegistrationProgress.Saved(localId))
+                    submit(localId, walletAddress, onProgress)
                 }
             },
             onFailure = { failed(image, FailureReason.NETWORK, it.message) }
         )
     }
 
-    /** Vínculo do aparelho e transação, com a imagem já no acervo como `LOCAL_ONLY`. */
-    private suspend fun submit(localId: Long, walletAddress: String): CaptureResult = bindDevice(walletAddress).fold(
+    /**
+     * "Tentar de novo" de um registro que falhou (data-model §2.3, research R23): consulta o hash
+     * on-chain antes de qualquer transação. Já registrado → confirma sem abrir a carteira; senão,
+     * refaz o vínculo e reabre a carteira com a mesma assinatura do aparelho.
+     *
+     * @throws IllegalArgumentException se a imagem não existir ou não estiver em `FAILED`.
+     */
+    suspend fun resubmit(
+        localId: Long,
+        walletAddress: String,
+        onProgress: (RegistrationProgress) -> Unit = {}
+    ): CaptureResult {
+        val image = requireNotNull(images.getById(localId)) { "imagem local inexistente: $localId" }
+        require(image.status == RegistrationStatus.FAILED) { "só registros que falharam são reenviados" }
+        if (!image.walletAddress.equals(walletAddress, ignoreCase = true)) {
+            return CaptureResult.WrongWallet(localId, image.walletAddress)
+        }
+        return lookup(Sha256(image.sha256Hex)).fold(
+            onSuccess = { recordId ->
+                if (recordId != null) {
+                    images.update(
+                        image.copy(
+                            status = RegistrationStatus.CONFIRMED,
+                            recordId = recordId,
+                            originalRecordId = if (image.origin ==
+                                ImageOrigin.CAPTURE
+                            ) {
+                                recordId
+                            } else {
+                                image.originalRecordId
+                            },
+                            failureReason = null,
+                            errorMessage = null
+                        )
+                    )
+                    CaptureResult.Confirmed(localId, recordId)
+                } else {
+                    submit(localId, walletAddress, onProgress)
+                }
+            },
+            onFailure = {
+                images.update(image.copy(failureReason = FailureReason.NETWORK, errorMessage = it.message))
+                CaptureResult.Failed(localId, FailureReason.NETWORK)
+            }
+        )
+    }
+
+    /** Vínculo do aparelho e transação, com a imagem já no acervo como `LOCAL_ONLY` ou `FAILED`. */
+    private suspend fun submit(
+        localId: Long,
+        walletAddress: String,
+        onProgress: (RegistrationProgress) -> Unit
+    ): CaptureResult = bindDevice(walletAddress, onProgress).fold(
         onSuccess = { device ->
-            when (val result = registerLocalImage(localId, walletAddress, device.deviceId)) {
+            when (val result = registerLocalImage(localId, walletAddress, device.deviceId, onProgress)) {
                 is SubmissionResult.Submitted -> CaptureResult.Submitted(localId, result.txHash)
                 is SubmissionResult.Failed -> CaptureResult.Failed(localId, result.reason)
                 is SubmissionResult.InsufficientFunds -> CaptureResult.InsufficientFunds(localId, result.cost)
@@ -135,8 +203,11 @@ class CaptureAndRegisterUseCase @Inject constructor(
         Result.failure(e)
     }
 
-    private suspend fun bindDevice(walletAddress: String): Result<BoundDevice> = try {
-        Result.success(ensureDeviceBound(walletAddress))
+    private suspend fun bindDevice(
+        walletAddress: String,
+        onProgress: (RegistrationProgress) -> Unit
+    ): Result<BoundDevice> = try {
+        Result.success(ensureDeviceBound(walletAddress, onProgress))
     } catch (e: InsufficientFundsException) {
         Result.failure(e)
     } catch (e: WalletException) {

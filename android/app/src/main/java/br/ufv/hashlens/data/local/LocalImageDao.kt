@@ -27,6 +27,9 @@ interface LocalImageDao {
     @Query("SELECT * FROM local_image WHERE localId = :localId")
     fun observeById(localId: Long): Flow<LocalImageEntity?>
 
+    @Query("SELECT COUNT(*) FROM local_image WHERE status IN (:statuses)")
+    fun observeCountByStatus(statuses: List<RegistrationStatus>): Flow<Int>
+
     /** Acervo, mais recentes primeiro. */
     @Query("SELECT * FROM local_image ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<LocalImageEntity>>

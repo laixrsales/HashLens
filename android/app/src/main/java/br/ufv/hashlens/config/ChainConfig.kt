@@ -15,6 +15,8 @@ data class ChainConfig(
     val registryAddress: String,
     val reownProjectId: String,
     val explorerUrl: String = SEPOLIA_EXPLORER_URL,
+    /** Onde pedir saldo de teste gratuito (FR-003). */
+    val faucetUrl: String = SEPOLIA_FAUCET_URL,
     /** Prazo sem recibo até a transação pendente passar a `FAILED(TIMEOUT)` (research R23). */
     val pendingTimeout: Duration = Duration.ofMinutes(DEFAULT_PENDING_TIMEOUT_MINUTES)
 ) {
@@ -25,6 +27,7 @@ data class ChainConfig(
     companion object {
         const val SEPOLIA_CHAIN_ID = 11_155_111L
         const val SEPOLIA_EXPLORER_URL = "https://sepolia.etherscan.io"
+        const val SEPOLIA_FAUCET_URL = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia"
         const val DEFAULT_PENDING_TIMEOUT_MINUTES = 30L
 
         fun fromBuildConfig(): ChainConfig = ChainConfig(

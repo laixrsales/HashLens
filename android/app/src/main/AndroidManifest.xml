@@ -15,6 +15,14 @@
         android:name="android.hardware.camera.any"
         android:required="true" />
 
+    <!-- Saber se há uma carteira compatível com WalletConnect instalada (folha "Conectar carteira") -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="wc" />
+        </intent>
+    </queries>
+
     <application
         android:name=".HashLensApp"
         android:allowBackup="false"
@@ -22,13 +30,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HashLens">
 
-        <!-- Só a entrada do launcher: sem intent-filter de ACTION_SEND/ACTION_VIEW (research R16) -->
+        <!--
+            Launcher e a volta do app da carteira (hashlens-wc://). Nenhum filtro aceita imagens:
+            sem ACTION_SEND nem ACTION_VIEW de image/* (research R16, FR-019).
+        -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="hashlens-wc" />
             </intent-filter>
         </activity>
 

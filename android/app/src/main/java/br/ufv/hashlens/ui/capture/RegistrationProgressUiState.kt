@@ -53,8 +53,14 @@ enum class RegistrationFailure {
     /** A rede não confirmou dentro do prazo, e o registro não consta on-chain (research R23). */
     Timeout,
 
+    /** A transação reverteu e o hash não está on-chain (recibo com status 0). */
+    Reverted,
+
     /** O arquivo relido da galeria não confere com o capturado; nada foi assinado (research R8). */
-    HashMismatch
+    HashMismatch,
+
+    /** A galeria recusou a gravação (ex.: sem espaço); nada foi registrado. */
+    SaveFailed
 }
 
 sealed interface RegistrationProgressAction {

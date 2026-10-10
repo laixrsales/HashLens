@@ -16,8 +16,11 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
@@ -36,6 +39,12 @@ sealed interface WalletState {
     }
 }
 
+/** Respostas da carteira a um pedido de conexão que não viram [WalletState]. */
+sealed interface WalletEvent {
+    /** A pessoa recusou a conexão na carteira, ou o pedido expirou sem resposta. */
+    data object ConnectionRejected : WalletEvent
+}
+
 /**
  * Sessão com a carteira externa via Reown AppKit (research R1). O app nunca vê chaves privadas
  * (Constituição III): só pede à carteira que assine e envie transações.
@@ -48,6 +57,9 @@ sealed interface WalletState {
 class WalletSession @Inject constructor(private val config: ChainConfig) {
     private val _state = MutableStateFlow<WalletState>(WalletState.Disconnected)
     val state: StateFlow<WalletState> = _state.asStateFlow()
+
+    private val _events = MutableSharedFlow<WalletEvent>(extraBufferCapacity = EVENT_BUFFER)
+    val events: SharedFlow<WalletEvent> = _events.asSharedFlow()
 
     /** Pedidos aguardando resposta da carteira, pelo id JSON-RPC. */
     private val pending = ConcurrentHashMap<Long, CancellableContinuation<String>>()
@@ -110,6 +122,15 @@ class WalletSession @Inject constructor(private val config: ChainConfig) {
     }
 
     /** Encerra a sessão; o estado volta a [WalletState.Disconnected] mesmo se o relay falhar. */
+    /**
+     * Volta do app da carteira para o HashLens (`hashlens-wc://`, redirect do [METADATA]): entrega o
+     * link ao AppKit para concluir a conexão ou a resposta do pedido.
+     */
+    fun handleDeepLink(uri: String) {
+        if (!initialized || !uri.startsWith(REDIRECT_SCHEME)) return
+        AppKit.handleDeepLink(uri) { Log.w(TAG, "link da carteira não reconhecido", it.throwable) }
+    }
+
     suspend fun disconnect() {
         if (initialized) {
             suspendCancellableCoroutine { continuation ->
@@ -175,7 +196,9 @@ class WalletSession @Inject constructor(private val config: ChainConfig) {
     private val delegate = object : AppKit.ModalDelegate {
         override fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession) = refresh()
 
-        override fun onSessionRejected(rejectedSession: Modal.Model.RejectedSession) = Unit
+        override fun onSessionRejected(rejectedSession: Modal.Model.RejectedSession) {
+            _events.tryEmit(WalletEvent.ConnectionRejected)
+        }
 
         override fun onSessionUpdate(updatedSession: Modal.Model.UpdatedSession) = refresh()
 
@@ -197,7 +220,9 @@ class WalletSession @Inject constructor(private val config: ChainConfig) {
 
         override fun onSessionRequestResponse(response: Modal.Model.SessionRequestResponse) = complete(response.result)
 
-        override fun onProposalExpired(proposal: Modal.Model.ExpiredProposal) = Unit
+        override fun onProposalExpired(proposal: Modal.Model.ExpiredProposal) {
+            _events.tryEmit(WalletEvent.ConnectionRejected)
+        }
 
         override fun onRequestExpired(request: Modal.Model.ExpiredRequest) {
             pending.remove(request.id)?.resumeWithException(WalletException.Expired())
@@ -212,6 +237,10 @@ class WalletSession @Inject constructor(private val config: ChainConfig) {
 
     internal companion object {
         private const val TAG = "WalletSession"
+        private const val EVENT_BUFFER = 4
+
+        /** Esquema que traz a pessoa de volta do app da carteira (intent-filter da MainActivity). */
+        const val REDIRECT_SCHEME = "hashlens-wc://"
         private const val NAMESPACE = "eip155"
         private const val SEPOLIA_CAIP2 = "$NAMESPACE:${ChainConfig.SEPOLIA_CHAIN_ID}"
         private const val SEPOLIA_HEX = "0xaa36a7"
@@ -228,7 +257,7 @@ class WalletSession @Inject constructor(private val config: ChainConfig) {
             description = "Registro e verificação de imagens na Ethereum Sepolia",
             url = "https://github.com/laixrsales/HashLens",
             icons = emptyList(),
-            redirect = null
+            redirect = "${REDIRECT_SCHEME}request"
         )
 
         private fun sepolia() = Modal.Model.Chain(

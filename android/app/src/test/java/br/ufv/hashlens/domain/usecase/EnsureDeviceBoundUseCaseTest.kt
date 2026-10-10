@@ -170,6 +170,38 @@ class EnsureDeviceBoundUseCaseTest {
         bindings.get(WALLET_A.lowercase()).shouldNotBeNull().status shouldBe RegistrationStatus.FAILED
     }
 
+    @Test
+    fun `avisa o vínculo com o custo antes de abrir a carteira`() = runTest {
+        every { keyManager.getOrCreatePublicKey(WALLET_A) } returns KEY_A
+        onChain(WALLET_A)
+        chainRegisters(KEY_A, TX_1, newDeviceId = 1)
+        val progress = mutableListOf<RegistrationProgress>()
+
+        useCase(WALLET_A) { progress += it }
+
+        progress shouldBe listOf(RegistrationProgress.BindingDevice(newKey = false, cost = ENOUGH))
+    }
+
+    @Test
+    fun `chave diferente da do vínculo local avisa que é um novo vínculo`() = runTest {
+        bindings.upsert(
+            DeviceBindingEntity(
+                walletAddress = WALLET_A.lowercase(),
+                publicKeyHex = OLD_KEY.toHexString(),
+                deviceId = 1,
+                status = RegistrationStatus.CONFIRMED
+            )
+        )
+        every { keyManager.getOrCreatePublicKey(WALLET_A) } returns KEY_A
+        onChain(WALLET_A, 1 to OLD_KEY)
+        chainRegisters(KEY_A, TX_2, newDeviceId = 2)
+        val progress = mutableListOf<RegistrationProgress>()
+
+        useCase(WALLET_A) { progress += it }
+
+        progress shouldBe listOf(RegistrationProgress.BindingDevice(newKey = true, cost = ENOUGH))
+    }
+
     private companion object {
         val CONTRACT = SignatureVectors.case("original").payload.contract
         const val WALLET_A = "0x1234567890AbcdEF1234567890aBcdef12345678"

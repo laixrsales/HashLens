@@ -49,13 +49,15 @@ class EnsureDeviceBoundUseCase @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     /**
+     * @param onProgress avisado antes de abrir a carteira para `registerDevice`.
      * @throws InsufficientFundsException se o saldo não cobrir `registerDevice`; a carteira não é aberta.
      * @throws WalletException se a pessoa recusar `registerDevice` ou a carteira falhar.
      * @throws TransactionException se `registerDevice` reverter ou não confirmar no prazo.
      * @throws br.ufv.hashlens.data.chain.RegistryException em falha de leitura do contrato.
      */
-    suspend operator fun invoke(walletAddress: String): BoundDevice {
+    suspend operator fun invoke(walletAddress: String, onProgress: (RegistrationProgress) -> Unit = {}): BoundDevice {
         val publicKey = withContext(ioDispatcher) { keyManager.getOrCreatePublicKey(walletAddress) }
+        val previous = bindings.get(walletAddress.lowercase())
         val binding = DeviceBindingEntity(
             walletAddress = walletAddress.lowercase(),
             publicKeyHex = publicKey.toHexString(),
@@ -73,6 +75,9 @@ class EnsureDeviceBoundUseCase @Inject constructor(
             bindings.upsert(binding.copy(status = RegistrationStatus.FAILED))
             throw InsufficientFundsException(cost)
         }
+        // Já havia vínculo local com outra chave: a do Keystore se perdeu (R25)
+        val newKey = previous != null && previous.publicKeyHex != binding.publicKeyHex
+        onProgress(RegistrationProgress.BindingDevice(newKey, cost))
         return BoundDevice(register(binding, calldata), newlyBound = true)
     }
 
