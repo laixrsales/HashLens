@@ -182,8 +182,9 @@ Dois elementos aparecem só nas telas de registro e verificação e dão identid
 
 **O momento marcante: a revelação.** Quando o registro é confirmado (Acompanhamento → "Foto
 registrada"), a miniatura, que ficou em tons de cinza com a borda âmbar durante "Registrando…",
-**revela** para as cores reais em cerca de 600 ms. Ao mesmo tempo, as cantoneiras se fecham sobre
-ela e mudam para o verde folha, e o título troca para "Foto registrada" com uma vibração curta
+**revela** para as cores reais em cerca de 600 ms. Ao mesmo tempo, as cantoneiras mudam para o
+verde folha, mantendo a mesma distância da foto de todos os estados (ajuste da autora na revisão
+da T055), e o título troca para "Foto registrada" com uma vibração curta
 (`HapticFeedbackType.Confirm`). É a única animação de "celebração" do app.
 
 Demais transições respondem a ações e são curtas:

@@ -2,6 +2,7 @@ package br.ufv.hashlens.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.matchers.doubles.plusOrMinus
@@ -70,6 +71,17 @@ class ThemeContrastTest {
         distinct.size shouldBe status.all.size - 1
         status.tampered shouldBe status.failed
         status.failed.content shouldBe theme.scheme.error
+    }
+
+    @Test
+    fun `controles da câmera passam no AA sobre o visor e sobre o véu`() {
+        val camera = HashLensCameraColors
+        // Pior caso do véu: por cima de uma área branca da foto
+        val scrimOverWhite = camera.scrim.compositeOver(Color.White)
+        assertSoftly {
+            camera.content.shouldContrastWith(camera.background, TEXT, "controles sobre o visor")
+            camera.content.shouldContrastWith(scrimOverWhite, TEXT, "texto sobre o véu em foto clara")
+        }
     }
 
     @Test

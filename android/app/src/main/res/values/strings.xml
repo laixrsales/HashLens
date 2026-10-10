@@ -125,4 +125,57 @@
     <string name="onboarding_formats">Aceita JPEG, PNG e WebP. Fotos em HEIC ou HEIF não são aceitas.</string>
     <string name="action_start">Começar</string>
     <string name="action_skip">Pular</string>
+
+    <!-- Ações comuns -->
+    <string name="action_continue">Continuar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_close">Fechar</string>
+    <string name="action_back_home">Voltar ao início</string>
+    <string name="action_done">Concluir</string>
+    <string name="action_view_record">Ver registro</string>
+    <string name="action_get_test_balance">Obter saldo de teste</string>
+
+    <!-- Conectar carteira (ux.md §4.3) -->
+    <string name="wallet_sheet_why">Para registrar uma foto, a sua carteira assina o registro em seu nome. O HashLens nunca vê a senha nem a frase secreta da carteira.</string>
+    <string name="wallet_sheet_cost">O registro usa a Sepolia, uma rede de testes: custa só saldo de teste, que é gratuito.</string>
+    <string name="wallet_connecting_title">Aguardando a carteira</string>
+    <string name="wallet_connecting_message">Aprove a conexão no app da carteira e volte para o HashLens.</string>
+    <string name="wallet_connected_title">Carteira conectada</string>
+    <string name="wallet_balance">Saldo de teste: %1$s SepoliaETH</string>
+    <string name="wallet_wrong_network_title">Carteira em outra rede</string>
+    <string name="wallet_wrong_network_message">O HashLens registra na Sepolia, a rede de testes. Troque a rede da carteira para continuar.</string>
+    <string name="action_switch_to_sepolia">Trocar para Sepolia</string>
+    <string name="low_balance_title">Saldo de teste insuficiente</string>
+    <string name="wallet_low_balance_message">Sua carteira tem %1$s SepoliaETH, pouco para pagar a taxa de um registro. O saldo de teste é gratuito: peça em um faucet e volte.</string>
+    <string name="action_check_balance_again">Verificar saldo de novo</string>
+    <string name="wallet_not_installed_title">Nenhuma carteira encontrada</string>
+    <string name="wallet_not_installed_message">Instale uma carteira compatível com WalletConnect, como a MetaMask, e volte para conectar.</string>
+    <string name="action_choose_wallet">Escolher uma carteira</string>
+    <string name="wallet_rejected_title">Conexão recusada</string>
+    <string name="wallet_rejected_message">A conexão foi recusada na carteira. Nada foi compartilhado com o HashLens.</string>
+
+    <!-- Câmera (ux.md §4.4) -->
+    <string name="camera_will_register">A foto será registrada</string>
+    <string name="action_take_photo">Fotografar</string>
+    <string name="action_switch_camera">Trocar câmera</string>
+    <string name="flash_off">Flash desligado</string>
+    <string name="flash_on">Flash ligado</string>
+    <string name="flash_auto">Flash automático</string>
+    <string name="camera_processing">Preparando a foto…</string>
+    <string name="camera_viewfinder_description">Visor da câmera</string>
+
+    <!-- Acompanhamento do registro (ux.md §4.5) -->
+    <string name="registration_title">Registro da foto</string>
+    <string name="registration_photo_description">Foto capturada</string>
+    <string name="registration_binding_message">A carteira vai pedir duas aprovações: vincular este aparelho e registrar a foto. As duas custam só saldo de teste.</string>
+    <string name="registration_awaiting_message">A carteira vai pedir sua aprovação para registrar a foto. Custa só saldo de teste.</string>
+    <string name="registration_estimated_cost">Custo estimado: %1$s SepoliaETH (saldo de teste).</string>
+    <string name="registration_insufficient_message">O registro custa cerca de %1$s SepoliaETH, e sua carteira tem %2$s. A carteira não foi aberta. Peça saldo de teste gratuito em um faucet e tente de novo.</string>
+    <string name="registration_hash_mismatch_message">A foto salva na galeria não confere com a capturada, então nada foi assinado nem registrado. Fotografe de novo.</string>
+    <string name="registration_timeout_message">A rede não confirmou o registro em 30 minutos e ele não consta na rede. Nada foi registrado em seu nome.</string>
+    <string name="registration_already_title">Esta imagem já está registrada</string>
+    <string name="registration_already_message">Nenhum novo registro foi feito: o registro existente continua valendo.</string>
+    <string name="step_failed_hash_mismatch">A foto salva não confere com a capturada.</string>
+    <string name="step_failed_insufficient">A carteira não foi aberta: falta saldo de teste.</string>
+    <string name="action_take_photo_again">Fotografar de novo</string>
 </resources>

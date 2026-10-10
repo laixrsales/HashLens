@@ -43,5 +43,9 @@ data class Sizes(
     /** Traço das cantoneiras. */
     val cornerMarkStroke: Dp = 2.dp,
     /** Comprimento de cada braço das cantoneiras. */
-    val cornerMarkLength: Dp = 16.dp
+    val cornerMarkLength: Dp = 16.dp,
+    /** Disparador da câmera, na zona do polegar. */
+    val shutter: Dp = 72.dp,
+    /** Lado maior da miniatura da foto no Acompanhamento do registro. */
+    val thumbnail: Dp = 200.dp
 )
