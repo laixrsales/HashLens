@@ -52,8 +52,11 @@ sealed interface EditorUiState {
 
 /** Por que a imagem não abre no editor (US3 cenários 3 e 5, FR-015). */
 enum class IneligibleReason {
-    /** O registro ainda não foi confirmado pela rede. */
+    /** O registro ainda não foi confirmado pela rede (local, aguardando a carteira ou pendente). */
     Pending,
+
+    /** O registro falhou; precisa ser refeito antes da edição. */
+    RegistrationFailed,
 
     /** O arquivo não é cópia exata de nenhum registro (inclusive correspondência só visual, R18). */
     NotRegistered,

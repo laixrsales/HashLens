@@ -77,6 +77,9 @@
     <string name="editor_confirm_operations">Alterações: %1$s.</string>
     <string name="editor_pending_title">A foto ainda está sendo registrada</string>
     <string name="editor_pending_message">Só fotos com registro confirmado podem ser editadas. Acompanhe o registro no acervo e volte quando ele terminar.</string>
+    <string name="editor_failed_title">O registro desta foto falhou</string>
+    <string name="editor_failed_message">Só fotos com registro confirmado podem ser editadas. Tente registrar de novo pelo acervo e volte quando ele for confirmado.</string>
+    <string name="notice_editor_limit">Esta versão já tem todas as alterações que cabem no registro. Salve e registre antes de continuar.</string>
     <string name="editor_not_registered_title">Esta imagem não pode ser editada</string>
     <string name="editor_not_registered_message">Só fotos registradas, ou cópias idênticas a elas, podem ser editadas. Este arquivo não corresponde exatamente a nenhum registro.</string>
     <string name="editor_unavailable_title">A foto não está mais na galeria</string>

@@ -44,6 +44,9 @@ class EditorScreenshotTest : ScreenshotTest() {
     fun pending() = editor("nao_elegivel_pendente", EditorSamples.pending)
 
     @Test
+    fun registrationFailed() = editor("nao_elegivel_registro_falhou", EditorSamples.registrationFailed)
+
+    @Test
     fun notRegistered() = editor("nao_elegivel_sem_registro", EditorSamples.notRegistered)
 
     @Test

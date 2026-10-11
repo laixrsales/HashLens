@@ -187,8 +187,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T070 [US3] Implementar `$PKG/core/imaging/FilterPipeline.kt` (aplica `List<EditOperation>` sobre `Mat`; prévia em resolução reduzida, aplicação final em resolução cheia)
 - [X] T071 [US3] Implementar `$PKG/domain/usecase/EditAndRegisterUseCase.kt` (pipeline → encode → hashes → galeria → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase` com `registerEdit`)
 - [X] T072 [US3] Criar `EditorScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.6 (inclusive imagem de terceiro e aviso de permanência) e screenshot tests; **revisão da autora**
-- [ ] T073 [US3] Ligar `$PKG/ui/editor/EditorScreen.kt` ao `EditorViewModel.kt` (seleção de filtros, parâmetros, prévia, desfazer, salvar)
-- [ ] T074 [US3] Bloquear abertura do editor para imagens não `CONFIRMED` com mensagem explicativa em `$PKG/ui/editor/EditorViewModel.kt`
+- [X] T073 [US3] Ligar `$PKG/ui/editor/EditorScreen.kt` ao `EditorViewModel.kt` (seleção de filtros, parâmetros, prévia, desfazer, salvar)
+- [X] T074 [US3] Bloquear abertura do editor para imagens não `CONFIRMED` com mensagem explicativa em `$PKG/ui/editor/EditorViewModel.kt`
 
 **Checkpoint**: edição própria registrada e verificável pela US2.
 

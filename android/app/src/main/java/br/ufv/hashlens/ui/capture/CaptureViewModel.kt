@@ -7,11 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.ufv.hashlens.R
 import br.ufv.hashlens.config.ChainConfig
-import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.LocalImageEntity
-import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.di.ApplicationScope
@@ -19,25 +17,21 @@ import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.ui.common.AddressFormat
-import br.ufv.hashlens.ui.common.SepoliaEthFormat
 import br.ufv.hashlens.work.PendingTxReconciler
 import br.ufv.hashlens.work.PendingTxScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
 import java.time.Clock
-import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 enum class CameraLens { Back, Front }
@@ -100,6 +94,8 @@ class CaptureViewModel @Inject constructor(
 
     /** Miniatura da foto do registro em andamento, para o Acompanhamento. */
     private var thumbnailOfRun: ImageBitmap? = null
+
+    private val watcher = RegistrationWatcher(images, reconciler, reader, config, clock)
 
     init {
         viewModelScope.launch { session.state.collect(::onWalletChanged) }
@@ -183,17 +179,8 @@ class CaptureViewModel @Inject constructor(
     }
 
     private fun onProgress(progress: RegistrationProgress) {
-        when (progress) {
-            is RegistrationProgress.Saved -> {
-                localId = progress.localId
-                showStage(RegistrationStage.AwaitingApproval())
-            }
-            is RegistrationProgress.BindingDevice -> showStage(RegistrationStage.BindingDevice(progress.newKey))
-            is RegistrationProgress.AwaitingWallet ->
-                showStage(
-                    RegistrationStage.AwaitingApproval(SepoliaEthFormat.fromWei(progress.cost.maxCost).normalized())
-                )
-        }
+        if (progress is RegistrationProgress.Saved) localId = progress.localId
+        showStage(progress.toStage())
     }
 
     private suspend fun onResult(result: CaptureResult) {
@@ -225,47 +212,21 @@ class CaptureViewModel @Inject constructor(
      */
     private fun track(localId: Long) {
         tracking?.cancel()
-        val job = applicationScope.launch {
-            while (isActive) {
-                val image = images.getById(localId) ?: return@launch
-                when (image.status) {
-                    RegistrationStatus.CONFIRMED -> return@launch confirmed(image)
-                    RegistrationStatus.FAILED ->
-                        return@launch showStage(RegistrationStage.Failed(image.failureReason.toFailure()))
-                    else -> {
-                        try {
-                            reconciler.check(image)
-                        } catch (_: RegistryException.Network) {
-                            // Sem rede agora; o próximo ciclo tenta de novo
-                        }
-                        delay(POLL_INTERVAL_MS)
-                    }
-                }
-            }
-        }
+        val job = applicationScope.launch { watcher.watch(localId)?.let(::show) }
         tracking = job
         addCloseable { job.cancel() }
     }
 
-    private suspend fun confirmed(image: LocalImageEntity) {
-        val recordId = image.recordId
-        val registeredAt = recordId?.let { registrationTime(it) } ?: Instant.ofEpochMilli(clock.millis())
-        _ui.update {
-            it.copy(
-                progress = RegistrationProgressUiState(
-                    stage = RegistrationStage.Confirmed(registeredAt),
-                    thumbnail = thumbnailOfRun,
-                    technical = technicalItems(image, config)
-                )
-            )
-        }
-    }
+    private suspend fun confirmed(image: LocalImageEntity) = show(watcher.confirmed(image))
 
-    /** Horário do bloco que confirmou; sem rede, `null` (a tela usa o horário do aparelho). */
-    private suspend fun registrationTime(recordId: Long): Instant? = try {
-        reader.getRecord(recordId)?.timestamp
-    } catch (_: RegistryException) {
-        null
+    private fun show(watched: WatchedStage) = _ui.update {
+        it.copy(
+            progress = RegistrationProgressUiState(
+                stage = watched.stage,
+                thumbnail = thumbnailOfRun,
+                technical = watched.technical
+            )
+        )
     }
 
     /** T058: a carteira mudou enquanto aguardava a aprovação; o pedido aberto não vai passar. */
@@ -295,6 +256,6 @@ class CaptureViewModel @Inject constructor(
 
     companion object {
         /** Um bloco da Sepolia sai a cada ~12 s. */
-        const val POLL_INTERVAL_MS = 4_000L
+        const val POLL_INTERVAL_MS = RegistrationWatcher.POLL_INTERVAL_MS
     }
 }

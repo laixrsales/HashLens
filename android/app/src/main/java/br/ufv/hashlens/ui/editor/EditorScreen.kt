@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.HideImage
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.BottomSheetDefaults
@@ -279,6 +280,13 @@ private fun NotEligible(reason: IneligibleReason, onAction: (EditorAction) -> Un
                         title = stringResource(R.string.editor_pending_title),
                         message = stringResource(R.string.editor_pending_message)
                     ) { SecondaryButton(back, onClick = { onAction(EditorAction.Close) }) }
+                    IneligibleReason.RegistrationFailed -> ErrorState(
+                        icon = Icons.Outlined.ErrorOutline,
+                        title = stringResource(R.string.editor_failed_title),
+                        message = stringResource(R.string.editor_failed_message),
+                        actionLabel = back,
+                        onAction = { onAction(EditorAction.Close) }
+                    )
                     IneligibleReason.NotRegistered -> ErrorState(
                         icon = Icons.Outlined.BrokenImage,
                         title = stringResource(R.string.editor_not_registered_title),
@@ -351,6 +359,12 @@ private fun EditorPendingPreview() = HashLensTheme { EditorScreen(EditorSamples.
 
 @Preview
 @Composable
+private fun EditorRegistrationFailedPreview() = HashLensTheme {
+    EditorScreen(EditorSamples.registrationFailed, onAction = {})
+}
+
+@Preview
+@Composable
 private fun EditorNotRegisteredPreview() = HashLensTheme { EditorScreen(EditorSamples.notRegistered, onAction = {}) }
 
 @Preview
@@ -380,6 +394,7 @@ object EditorSamples {
     val confirming: EditorUiState get() = sample().copy(confirmingSave = true)
     val processing: EditorUiState get() = sample().copy(processing = true)
     val pending: EditorUiState = EditorUiState.NotEligible(IneligibleReason.Pending)
+    val registrationFailed: EditorUiState = EditorUiState.NotEligible(IneligibleReason.RegistrationFailed)
     val notRegistered: EditorUiState = EditorUiState.NotEligible(IneligibleReason.NotRegistered)
     val unavailable: EditorUiState = EditorUiState.NotEligible(IneligibleReason.FileUnavailable)
 }

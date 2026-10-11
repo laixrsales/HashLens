@@ -15,6 +15,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import br.ufv.hashlens.ui.capture.CaptureRoute
+import br.ufv.hashlens.ui.editor.EditorRoute
+import br.ufv.hashlens.ui.editor.EditorViewModel
 import br.ufv.hashlens.ui.home.HomeAction
 import br.ufv.hashlens.ui.home.HomeRoute
 import br.ufv.hashlens.ui.verify.VerifyRoute
@@ -69,6 +71,16 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
                     onOpenHistory = { navController.navigate(Route.Genealogy.path) }
                 )
             }
+            // Aberto pelo acervo (US6) com o localId da imagem; a importação de terceiros entra na US4
+            composable(
+                Route.Editor.path,
+                arguments = listOf(navArgument(EditorViewModel.PARENT_LOCAL_ID) { type = NavType.LongType })
+            ) {
+                EditorRoute(
+                    onClose = { navController.popBackStack() },
+                    onViewRecord = { navController.navigate(Route.verificationResult(it)) }
+                )
+            }
             appKitGraph(navController)
             // Telas das próximas histórias (US3–US6): ainda vazias
             Route.entries.filter { it !in BUILT }.forEach { route ->
@@ -79,13 +91,13 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
 }
 
 /** Destinos que já têm tela; os demais ficam vazios até a sua história. */
-private val BUILT = setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult)
+private val BUILT = setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult, Route.Editor)
 
 /** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */
 internal fun HomeAction.route(): Route? = when (this) {
     HomeAction.VerifyImage -> Route.Verify
     HomeAction.OpenLibrary -> Route.Library
-    HomeAction.ImportForEdit -> Route.Editor
     HomeAction.HowItWorks -> Route.Onboarding
-    HomeAction.RegisterPhoto, HomeAction.OpenWallet -> null
+    // Importar para editar entra com a US4 (T077-T078)
+    HomeAction.RegisterPhoto, HomeAction.OpenWallet, HomeAction.ImportForEdit -> null
 }
