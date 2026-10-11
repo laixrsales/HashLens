@@ -6,7 +6,7 @@ complexity:
     # Telas e componentes Compose recebem estado e callbacks como parâmetros
     ignoreAnnotated: ["Composable"]
   TooManyFunctions:
-    ignoreAnnotatedFunctions: ["Preview"]
+    ignoreAnnotatedFunctions: ["Preview", "PreviewLightDark", "PreviewFontScale"]
 
 naming:
   FunctionNaming:
