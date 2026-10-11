@@ -154,9 +154,9 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T059 [P] [US2] Teste `$TEST/domain/usecase/VerifyImageUseCaseTest.kt` com `RegistryReader` falso: original, versão alterada (percentual correto), correspondência visual com múltiplos candidatos, adulterado, não registrada, erro de rede, arquivo inválido; registro assinado por aparelho antigo da mesma carteira continua válido (R25)
-- [ ] T060 [P] [US2] Teste de UI `$ITEST/ui/verify/VerifyScreenTest.kt` (título e mensagem obrigatória de cada resultado conforme `$SPEC/contracts/verification-result.md` §3)
-- [ ] T061 [P] [US2] Teste Robolectric `$TEST/ManifestShareTargetTest.kt`: nenhuma activity do app resolve `ACTION_SEND` ou `ACTION_VIEW` com `image/*` — FR-019
+- [X] T059 [P] [US2] Teste `$TEST/domain/usecase/VerifyImageUseCaseTest.kt` com `RegistryReader` falso: original, versão alterada (percentual correto), correspondência visual com múltiplos candidatos, adulterado, não registrada, erro de rede, arquivo inválido; registro assinado por aparelho antigo da mesma carteira continua válido (R25)
+- [X] T060 [P] [US2] Teste de UI `$ITEST/ui/verify/VerifyScreenTest.kt` (título e mensagem obrigatória de cada resultado conforme `$SPEC/contracts/verification-result.md` §3)
+- [X] T061 [P] [US2] Teste Robolectric `$TEST/ManifestShareTargetTest.kt`: nenhuma activity do app resolve `ACTION_SEND` ou `ACTION_VIEW` com `image/*` — FR-019
 
 ### Implementation for User Story 2
 
