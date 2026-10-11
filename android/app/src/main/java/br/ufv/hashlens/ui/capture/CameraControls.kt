@@ -63,8 +63,9 @@ internal fun RegisterHint() {
     }
 }
 
+/** Espera sobre o visor ou a foto, sempre com texto (direção visual §6). */
 @Composable
-internal fun ProcessingLabel() {
+internal fun ProcessingLabel(text: String = stringResource(R.string.camera_processing)) {
     val camera = HashLensTheme.cameraColors
     Row(
         Modifier
@@ -80,7 +81,7 @@ internal fun ProcessingLabel() {
             strokeWidth = HashLensTheme.sizes.cornerMarkStroke
         )
         Text(
-            stringResource(R.string.camera_processing),
+            text,
             style = MaterialTheme.typography.bodyLarge,
             color = camera.content
         )

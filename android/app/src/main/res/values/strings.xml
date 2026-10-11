@@ -41,6 +41,47 @@
     <string name="verification_unknown_message">A rede respondeu com dados inesperados. Tente novamente em alguns minutos.</string>
     <string name="verification_footer">O registro comprova quando e por quem o arquivo foi registrado, não que a cena retratada seja real.</string>
 
+    <!-- Editor (ux.md §4.6) -->
+    <string name="tool_brightness">Brilho</string>
+    <string name="tool_contrast">Contraste</string>
+    <string name="tool_grayscale">Preto e branco</string>
+    <string name="tool_sepia">Sépia</string>
+    <string name="tool_blur">Desfoque</string>
+    <string name="tool_sharpen">Nitidez</string>
+    <string name="tool_edges">Bordas</string>
+    <string name="tool_crop">Recortar</string>
+    <string name="tool_rotate">Girar</string>
+    <string name="tool_edges_sensitivity">Sensibilidade %1$d</string>
+    <string name="operation_brightness">Brilho %1$s</string>
+    <string name="operation_contrast">Contraste %1$s</string>
+    <string name="operation_blur">Desfoque %1$d</string>
+    <string name="operation_crop">Recorte</string>
+    <string name="operation_rotate">Rotação de %1$d°</string>
+    <string name="editor_loading">Abrindo a imagem…</string>
+    <string name="editor_processing">Aplicando as alterações em resolução cheia…</string>
+    <string name="editor_compare_hint">Toque e segure a foto para ver a original</string>
+    <string name="editor_showing_original">Original</string>
+    <string name="editor_compare_action">Ver a original</string>
+    <string name="editor_third_party">Registrada originalmente por %1$s</string>
+    <string name="editor_image_description">Prévia da foto editada</string>
+    <string name="editor_original_description">Foto original, sem alterações</string>
+    <string name="editor_crop_hint">Arraste os cantos da moldura para recortar</string>
+    <string name="editor_crop_frame">Moldura do recorte</string>
+    <string name="action_apply">Aplicar</string>
+    <string name="action_undo">Desfazer</string>
+    <string name="action_redo">Refazer</string>
+    <string name="action_save_and_register">Salvar e registrar</string>
+    <string name="action_keep_editing">Continuar editando</string>
+    <string name="editor_confirm_title">Registrar esta versão?</string>
+    <string name="editor_confirm_message">O registro é permanente: esta versão fica ligada à original e não pode ser apagada. A carteira vai pedir a sua aprovação.</string>
+    <string name="editor_confirm_operations">Alterações: %1$s.</string>
+    <string name="editor_pending_title">A foto ainda está sendo registrada</string>
+    <string name="editor_pending_message">Só fotos com registro confirmado podem ser editadas. Acompanhe o registro no acervo e volte quando ele terminar.</string>
+    <string name="editor_not_registered_title">Esta imagem não pode ser editada</string>
+    <string name="editor_not_registered_message">Só fotos registradas, ou cópias idênticas a elas, podem ser editadas. Este arquivo não corresponde exatamente a nenhum registro.</string>
+    <string name="editor_unavailable_title">A foto não está mais na galeria</string>
+    <string name="editor_unavailable_message">O arquivo foi apagado ou alterado desde o registro. Edite a partir de uma cópia idêntica à registrada.</string>
+
     <!-- Verificar imagem e Resultado da verificação (ux.md §4.7 e §4.8; direção visual §7.2) -->
     <string name="verify_title">Verificar imagem</string>
     <string name="verify_intro">Escolha uma imagem da galeria para saber se ela está registrada, por quem e quanto mudou desde a original.</string>
