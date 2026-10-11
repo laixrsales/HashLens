@@ -137,7 +137,12 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Manutenção após a US1
 
-- [ ] T102 Investigar e corrigir `connectedDebugAndroidTest` terminando com `BUILD FAILED` ("There were failing tests") mesmo com todos os testes instrumentados passando (relatório com 0 falhas; ocorre também no `PerceptualHasherTest`, com ou sem filtro de classe). Suspeita: AGP 9 + plugin `android-junit5` em `android/app/build.gradle.kts`. Critério: tarefa termina com `BUILD SUCCESSFUL` quando os testes passam e falha quando um teste falha. Branch própria `chore/<NNN>-...`
+- [X] T102 Investigar e corrigir `connectedDebugAndroidTest` terminando com `BUILD FAILED` ("There were failing tests") mesmo com todos os testes instrumentados passando (relatório com 0 falhas; ocorre também no `PerceptualHasherTest`, com ou sem filtro de classe). Suspeita: AGP 9 + plugin `android-junit5` em `android/app/build.gradle.kts`. Critério: tarefa termina com `BUILD SUCCESSFUL` quando os testes passam e falha quando um teste falha. Branch própria `chore/<NNN>-...`
+  - Resolução: causa no AGP 9.4.1 (`gradle-work-action` 32.4.1), não no `android-junit5`. O
+    `DeviceTrackingListener` lê o aparelho do `uniqueId` do JUnit, em que o `:` do serial `ip:porta`
+    (`adb connect`) vira `%3A`; o resultado não casa com o serial e a execução é dada como falha.
+    Reproduzido no emulador (`localhost:5555` falha, `emulator-5554` passa). Contorno documentado em
+    `quickstart.md` §3 (USB ou Wi-Fi pareado com `adb pair`); correção upstream na linha 9.5 do AGP.
 
 ---
 
