@@ -47,5 +47,7 @@ data class Sizes(
     /** Disparador da câmera, na zona do polegar. */
     val shutter: Dp = 72.dp,
     /** Lado maior da miniatura da foto no Acompanhamento do registro. */
-    val thumbnail: Dp = 200.dp
+    val thumbnail: Dp = 200.dp,
+    /** Largura mínima de cada ferramenta na faixa de filtros do Editor. */
+    val toolButtonWidth: Dp = 72.dp
 )

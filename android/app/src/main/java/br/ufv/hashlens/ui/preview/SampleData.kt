@@ -4,6 +4,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.compose.ui.graphics.Paint
@@ -85,6 +87,25 @@ object SampleData {
             canvas.drawPath(hill(w, h, peak = 0.35f, height = 0.45f), Paint().apply { color = Color(0xFF5B8C51) })
             canvas.drawPath(hill(w, h, peak = 0.8f, height = 0.6f), Paint().apply { color = Color(0xFF3E6B3A) })
         }
+
+        /** A mesma foto em preto e branco e com brilho +30: a prévia do Editor depois de duas operações. */
+        fun grayscale(): ImageBitmap = ImageBitmap(WIDTH, HEIGHT).also { bitmap ->
+            val matrix = ColorMatrix().apply {
+                setToSaturation(0f)
+                for (channel in 0..2) this[channel, OFFSET_COLUMN] = BRIGHTNESS
+            }
+            Canvas(bitmap).drawImage(
+                landscape(),
+                Offset.Zero,
+                Paint().apply {
+                    colorFilter =
+                        ColorFilter.colorMatrix(matrix)
+                }
+            )
+        }
+
+        private const val OFFSET_COLUMN = 4
+        private const val BRIGHTNESS = 30f
 
         private fun hill(w: Float, h: Float, peak: Float, height: Float) = Path().apply {
             moveTo(0f, h)

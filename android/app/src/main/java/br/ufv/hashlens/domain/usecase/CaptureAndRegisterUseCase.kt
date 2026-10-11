@@ -4,10 +4,7 @@ import android.graphics.Bitmap
 import br.ufv.hashlens.core.hashing.PerceptualHasher
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.core.imaging.JpegEncoder
-import br.ufv.hashlens.data.chain.InsufficientFundsException
-import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
-import br.ufv.hashlens.data.chain.TransactionException
 import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.data.local.FailureReason
@@ -15,7 +12,6 @@ import br.ufv.hashlens.data.local.ImageOrigin
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
-import br.ufv.hashlens.data.wallet.WalletException
 import br.ufv.hashlens.di.DefaultDispatcher
 import br.ufv.hashlens.domain.model.Sha256
 import java.time.Clock
@@ -164,59 +160,14 @@ class CaptureAndRegisterUseCase @Inject constructor(
         )
     }
 
-    /** Vínculo do aparelho e transação, com a imagem já no acervo como `LOCAL_ONLY` ou `FAILED`. */
     private suspend fun submit(
         localId: Long,
         walletAddress: String,
         onProgress: (RegistrationProgress) -> Unit
-    ): CaptureResult = bindDevice(walletAddress, onProgress).fold(
-        onSuccess = { device ->
-            when (val result = registerLocalImage(localId, walletAddress, device.deviceId, onProgress)) {
-                is SubmissionResult.Submitted -> CaptureResult.Submitted(localId, result.txHash)
-                is SubmissionResult.Failed -> CaptureResult.Failed(localId, result.reason)
-                is SubmissionResult.InsufficientFunds -> CaptureResult.InsufficientFunds(localId, result.cost)
-            }
-        },
-        onFailure = { cause ->
-            // Só a recusa é decisão da pessoa; as demais falhas do vínculo podem ser reenviadas
-            val reason = when (cause) {
-                is InsufficientFundsException -> FailureReason.INSUFFICIENT_FUNDS
-                is WalletException.Rejected -> FailureReason.REJECTED
-                else -> FailureReason.NETWORK
-            }
-            val image = requireNotNull(images.getById(localId))
-            images.update(
-                image.copy(status = RegistrationStatus.FAILED, failureReason = reason, errorMessage = cause.message)
-            )
-            if (cause is InsufficientFundsException) {
-                CaptureResult.InsufficientFunds(localId, cause.cost)
-            } else {
-                CaptureResult.Failed(localId, reason)
-            }
-        }
-    )
+    ): CaptureResult =
+        submitLocalImage(localId, walletAddress, onProgress, ensureDeviceBound, registerLocalImage, images)
 
-    /** Id on-chain deste SHA-256; falha de leitura do contrato vira [Result.failure]. */
-    private suspend fun lookup(sha256: Sha256): Result<Long?> = try {
-        Result.success(reader.getIdBySha256(sha256))
-    } catch (e: RegistryException) {
-        Result.failure(e)
-    }
-
-    private suspend fun bindDevice(
-        walletAddress: String,
-        onProgress: (RegistrationProgress) -> Unit
-    ): Result<BoundDevice> = try {
-        Result.success(ensureDeviceBound(walletAddress, onProgress))
-    } catch (e: InsufficientFundsException) {
-        Result.failure(e)
-    } catch (e: WalletException) {
-        Result.failure(e)
-    } catch (e: TransactionException) {
-        Result.failure(e)
-    } catch (e: RegistryException) {
-        Result.failure(e)
-    }
+    private suspend fun lookup(sha256: Sha256): Result<Long?> = reader.lookupId(sha256)
 
     /** Grava a imagem já como `FAILED`: ela está na galeria, mas não foi enviada. */
     private suspend fun failed(image: LocalImageEntity, reason: FailureReason, message: String? = null): CaptureResult {

@@ -6,6 +6,7 @@ import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.local.FailureReason
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.wallet.WalletState
+import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.ui.common.SepoliaEthFormat
 import br.ufv.hashlens.ui.components.TechnicalItem
@@ -41,6 +42,14 @@ internal fun walletNotice(
         !state.isSepolia -> CaptureEffect.Notice(R.string.notice_wallet_network_changed)
         else -> null
     }
+}
+
+/** Etapa do Acompanhamento avisada pelo caso de uso antes de a transação sair (captura e edição). */
+internal fun RegistrationProgress.toStage(): RegistrationStage = when (this) {
+    is RegistrationProgress.Saved -> RegistrationStage.AwaitingApproval()
+    is RegistrationProgress.BindingDevice -> RegistrationStage.BindingDevice(newKey)
+    is RegistrationProgress.AwaitingWallet ->
+        RegistrationStage.AwaitingApproval(SepoliaEthFormat.fromWei(cost.maxCost).normalized())
 }
 
 internal fun TxCost.toStage() = RegistrationStage.InsufficientFunds(

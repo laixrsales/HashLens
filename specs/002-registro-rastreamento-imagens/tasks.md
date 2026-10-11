@@ -178,17 +178,17 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T067 [P] [US3] Teste instrumentado `$ITEST/core/imaging/FilterPipelineTest.kt` (cada filtro: dimensões, canais, determinismo; crop e rotate90 alteram dimensões corretamente)
-- [ ] T068 [P] [US3] Teste `$TEST/domain/usecase/EditAndRegisterUseCaseTest.kt` (recusa pai não `CONFIRMED`; `parentId` correto; operações serializadas na ordem; payload inclui `operationsHash`)
+- [X] T067 [P] [US3] Teste instrumentado `$ITEST/core/imaging/FilterPipelineTest.kt` (cada filtro: dimensões, canais, determinismo; crop e rotate90 alteram dimensões corretamente)
+- [X] T068 [P] [US3] Teste `$TEST/domain/usecase/EditAndRegisterUseCaseTest.kt` (recusa pai não `CONFIRMED`; `parentId` correto; operações serializadas na ordem; payload inclui `operationsHash`)
 
 ### Implementation for User Story 3
 
-- [ ] T069 [P] [US3] Implementar filtros em `$PKG/core/imaging/filters/` (`ImageFilter` + uma classe por operação de `$SPEC/contracts/hashing-spec.md` §4)
-- [ ] T070 [US3] Implementar `$PKG/core/imaging/FilterPipeline.kt` (aplica `List<EditOperation>` sobre `Mat`; prévia em resolução reduzida, aplicação final em resolução cheia)
-- [ ] T071 [US3] Implementar `$PKG/domain/usecase/EditAndRegisterUseCase.kt` (pipeline → encode → hashes → galeria → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase` com `registerEdit`)
-- [ ] T072 [US3] Criar `EditorScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.6 (inclusive imagem de terceiro e aviso de permanência) e screenshot tests; **revisão da autora**
-- [ ] T073 [US3] Ligar `$PKG/ui/editor/EditorScreen.kt` ao `EditorViewModel.kt` (seleção de filtros, parâmetros, prévia, desfazer, salvar)
-- [ ] T074 [US3] Bloquear abertura do editor para imagens não `CONFIRMED` com mensagem explicativa em `$PKG/ui/editor/EditorViewModel.kt`
+- [X] T069 [P] [US3] Implementar filtros em `$PKG/core/imaging/filters/` (`ImageFilter` + uma classe por operação de `$SPEC/contracts/hashing-spec.md` §4)
+- [X] T070 [US3] Implementar `$PKG/core/imaging/FilterPipeline.kt` (aplica `List<EditOperation>` sobre `Mat`; prévia em resolução reduzida, aplicação final em resolução cheia)
+- [X] T071 [US3] Implementar `$PKG/domain/usecase/EditAndRegisterUseCase.kt` (pipeline → encode → hashes → galeria → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase` com `registerEdit`)
+- [X] T072 [US3] Criar `EditorScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.6 (inclusive imagem de terceiro e aviso de permanência) e screenshot tests; **revisão da autora**
+- [X] T073 [US3] Ligar `$PKG/ui/editor/EditorScreen.kt` ao `EditorViewModel.kt` (seleção de filtros, parâmetros, prévia, desfazer, salvar)
+- [X] T074 [US3] Bloquear abertura do editor para imagens não `CONFIRMED` com mensagem explicativa em `$PKG/ui/editor/EditorViewModel.kt`
 
 **Checkpoint**: edição própria registrada e verificável pela US2.
 

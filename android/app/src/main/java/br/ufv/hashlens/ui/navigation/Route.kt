@@ -1,5 +1,6 @@
 package br.ufv.hashlens.ui.navigation
 
+import br.ufv.hashlens.ui.editor.EditorViewModel
 import br.ufv.hashlens.ui.verify.VerifyViewModel
 
 /** Destinos do mapa de navegação (ux.md §3). Os argumentos entram com cada tela. */
@@ -9,7 +10,9 @@ enum class Route(val path: String) {
     Wallet("wallet"),
     Capture("capture"),
     RegistrationProgress("registration"),
-    Editor("editor"),
+
+    /** Editor de uma imagem do acervo. */
+    Editor("editor/{${EditorViewModel.PARENT_LOCAL_ID}}"),
     Verify("verify"),
 
     /** Resultado de um registro já conhecido (ex.: "Ver registro" no Acompanhamento). */
@@ -20,5 +23,7 @@ enum class Route(val path: String) {
 
     companion object {
         fun verificationResult(recordId: Long): String = "verification-result/$recordId"
+
+        fun editor(localId: Long): String = "editor/$localId"
     }
 }
