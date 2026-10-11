@@ -17,6 +17,7 @@ import br.ufv.hashlens.domain.model.RecordView
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -267,6 +268,40 @@ class VerifyImageUseCaseTest {
         coEvery { reader.getDevice(any()) } throws RegistryException.Network(IOException("offline"))
 
         useCase(FILE) shouldBe VerificationResult.Error(Reason.NETWORK)
+    }
+
+    @Test
+    fun `erro do nó é Error UNKNOWN, nunca Não registrada`() = runTest {
+        coEvery { reader.getIdBySha256(sha256Of(FILE)) } throws RegistryException.Rpc(-32000, "execution reverted")
+
+        useCase(FILE) shouldBe VerificationResult.Error(Reason.UNKNOWN)
+    }
+
+    @Test
+    fun `id apontado pelo contrato sem registro correspondente é Error UNKNOWN`() = runTest {
+        coEvery { reader.getIdBySha256(sha256Of(FILE)) } returns 99L
+
+        useCase(FILE) shouldBe VerificationResult.Error(Reason.UNKNOWN)
+    }
+
+    @Test
+    fun `operações fora do formato do app não invalidam um registro com assinatura válida`() = runTest {
+        val original = register(id = 1, sha256 = sha256Of(OTHER_FILE), pHash = QUERY_PHASH)
+        // Texto assinado por outro cliente do contrato, que o EditOperationCodec não reconhece
+        register(
+            id = 2,
+            sha256 = sha256Of(FILE),
+            pHash = QUERY_PHASH,
+            parentId = 1,
+            originalId = 1,
+            operations = "vintage:3"
+        )
+
+        val result = useCase(FILE).shouldBeInstanceOf<VerificationResult.RegisteredEdited>()
+
+        result.original shouldBe view(original)
+        result.record.id shouldBe 2L
+        result.record.operations.shouldBeEmpty()
     }
 
     @Test
