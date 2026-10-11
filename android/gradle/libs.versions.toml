@@ -2,6 +2,7 @@
 # Itens ⚠️ do research: Reown AppKit (R1), web3j (R2), Roborazzi (R21).
 
 [versions]
+# 9.4.1: connectedDebugAndroidTest falha com aparelho de serial "ip:porta" (adb connect); corrigido na 9.5 (T102, quickstart.md §3)
 agp = "9.4.1"
 kotlin = "2.4.20"
 ksp = "2.3.12"

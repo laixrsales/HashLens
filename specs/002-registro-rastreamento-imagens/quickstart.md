@@ -54,6 +54,15 @@ cd android
 ./gradlew :app:installDebug
 ```
 
+Aparelho por Wi-Fi: conecte por pareamento (`adb pair <ip>:<porta-de-pareamento> <código>`, em
+Opções do desenvolvedor → Depuração por Wi-Fi → Parear com código), não por
+`adb connect <ip>:<porta>`. Depois do pareamento o adb conecta sozinho pelo nome mDNS
+(`adb-<serial>-<id>._adb-tls-connect._tcp`); confira em `adb devices`. Com um serial `ip:porta`,
+o AGP 9.4.1 encerra `connectedDebugAndroidTest` com `BUILD FAILED` ("There were failing tests")
+mesmo com todos os testes passando: o `:` é codificado como `%3A` no id do teste e o resultado do
+aparelho não é encontrado (corrigido na linha 9.5 do AGP). Por USB ou no emulador o problema não
+ocorre.
+
 ## 4. Roteiro de validação
 
 ### US1 — Captura e registro

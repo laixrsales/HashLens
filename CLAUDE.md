@@ -56,6 +56,7 @@ ViewModel. Ao terminar previews, pare e mostre os screenshots gerados para aprov
 - Contrato: `cd contracts && forge build && forge test -vv`
 - App (testes unitários): `cd android && ./gradlew :app:testDebugUnitTest`
 - App (instrumentados, com aparelho): `cd android && ./gradlew :app:connectedDebugAndroidTest`
+  (por Wi-Fi, use aparelho pareado com `adb pair`, não `adb connect ip:porta`; ver quickstart §3)
 - Screenshots das telas: `cd android && ./gradlew :app:recordRoborazziDebug` (PNGs em `app/build/outputs/roborazzi/`)
 
 Segredos (`local.properties`, chaves de deploy) nunca entram no Git.
