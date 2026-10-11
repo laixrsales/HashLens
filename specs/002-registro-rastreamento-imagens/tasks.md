@@ -178,8 +178,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T067 [P] [US3] Teste instrumentado `$ITEST/core/imaging/FilterPipelineTest.kt` (cada filtro: dimensões, canais, determinismo; crop e rotate90 alteram dimensões corretamente)
-- [ ] T068 [P] [US3] Teste `$TEST/domain/usecase/EditAndRegisterUseCaseTest.kt` (recusa pai não `CONFIRMED`; `parentId` correto; operações serializadas na ordem; payload inclui `operationsHash`)
+- [X] T067 [P] [US3] Teste instrumentado `$ITEST/core/imaging/FilterPipelineTest.kt` (cada filtro: dimensões, canais, determinismo; crop e rotate90 alteram dimensões corretamente)
+- [X] T068 [P] [US3] Teste `$TEST/domain/usecase/EditAndRegisterUseCaseTest.kt` (recusa pai não `CONFIRMED`; `parentId` correto; operações serializadas na ordem; payload inclui `operationsHash`)
 
 ### Implementation for User Story 3
 
