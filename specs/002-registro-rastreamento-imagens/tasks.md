@@ -226,8 +226,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Implementation for User Story 5
 
-- [ ] T080 [P] [US5] Criar `$PKG/domain/model/Genealogy.kt`
-- [ ] T081 [US5] Implementar `$PKG/domain/usecase/TraceGenealogyUseCase.kt`
+- [X] T080 [P] [US5] Criar `$PKG/domain/model/Genealogy.kt`
+- [X] T081 [US5] Implementar `$PKG/domain/usecase/TraceGenealogyUseCase.kt`
 - [ ] T082 [US5] Criar `GenealogyScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.9 e screenshot tests; **revisão da autora**
 - [ ] T083 [US5] Ligar `$PKG/ui/genealogy/GenealogyScreen.kt` ao `GenealogyViewModel.kt` (caminho destacado + árvore; detalhes do nó)
 - [ ] T084 [US5] Adicionar navegação para genealogia a partir de `VerificationResultScreen` e do acervo em `$PKG/ui/navigation/HashLensNavHost.kt`
