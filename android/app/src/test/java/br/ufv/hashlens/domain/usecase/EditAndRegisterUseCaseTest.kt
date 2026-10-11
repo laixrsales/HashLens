@@ -241,6 +241,39 @@ class EditAndRegisterUseCaseTest {
     }
 
     @Test
+    fun `arquivo importado de outra pessoa vira versão com o pai e a original dele, sem passar pelo acervo`() =
+        runTest {
+            happyPath()
+            val imported = ImportedParent(
+                recordId = 7,
+                originalId = 1,
+                registrant = OTHER_WALLET,
+                originalRegistrant = OTHER_WALLET,
+                bytes = PARENT_JPEG
+            )
+
+            val result = useCase.editImported(imported, OPERATIONS, WALLET)
+
+            val image = edited()
+            result shouldBe EditResult.Registration(CaptureResult.Submitted(localId = image.localId, txHash = TX))
+            image.run {
+                origin shouldBe ImageOrigin.EDIT
+                parentRecordId shouldBe 7L
+                originalRecordId shouldBe 1L
+                // A versão é de quem editou, não do autor da original
+                walletAddress shouldBe WALLET.lowercase()
+            }
+            // Os bytes vêm do arquivo importado, não da galeria
+            coVerify(exactly = 0) { gallery.read(parentUri) }
+            coVerify(exactly = 1) {
+                wallet.sendTransaction(
+                    CONTRACT,
+                    RegistryTxBuilder.registerEdit(7, EDITED_SHA, EDITED_PHASH, DEVICE_ID, SIGNATURE, OPERATIONS_TEXT)
+                )
+            }
+        }
+
+    @Test
     fun `recusa se o arquivo do pai mudou na galeria`() = runTest {
         happyPath()
         val parentId = parent()
@@ -297,6 +330,7 @@ class EditAndRegisterUseCaseTest {
         val NOW: Instant = Instant.parse("2026-10-11T18:00:00Z")
         val CONTRACT = SignatureVectors.case("original").payload.contract
         const val WALLET = "0x1234567890AbcdEF1234567890aBcdef12345678"
+        const val OTHER_WALLET = "0xABCDEFabcdef0123456789ABCDEFabcdef012345"
         const val DEVICE_ID = 3
         const val PARENT_RECORD = 1L
         const val TX = "0x4444444444444444444444444444444444444444444444444444444444444444"

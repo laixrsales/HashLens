@@ -207,8 +207,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Implementation for User Story 4
 
-- [ ] T077 [US4] Implementar `$PKG/domain/usecase/ImportForEditUseCase.kt` (Photo Picker → SHA → `getIdBySha256` → registro pai; sem consulta por pHash)
-- [ ] T078 [US4] Adicionar ação "Importar para editar", banner "Editando imagem registrada por 0x…" e mensagem de recusa ("apenas cópias exatas de imagens registradas podem ser editadas") em `$PKG/ui/editor/EditorScreen.kt`
+- [X] T077 [US4] Implementar `$PKG/domain/usecase/ImportForEditUseCase.kt` (Photo Picker → SHA → `getIdBySha256` → registro pai; sem consulta por pHash)
+- [X] T078 [US4] Adicionar ação "Importar para editar", banner "Editando imagem registrada por 0x…" e mensagem de recusa ("apenas cópias exatas de imagens registradas podem ser editadas") em `$PKG/ui/editor/EditorScreen.kt`
 
 **Checkpoint**: genealogias mistas (autor A, editor B) registradas.
 

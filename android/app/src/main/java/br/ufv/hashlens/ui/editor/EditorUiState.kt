@@ -62,7 +62,13 @@ enum class IneligibleReason {
     NotRegistered,
 
     /** O arquivo saiu da galeria ou mudou desde o registro. */
-    FileUnavailable
+    FileUnavailable,
+
+    /** Importado: o registro existe, mas a assinatura do aparelho não confere. */
+    Tampered,
+
+    /** Importado: não foi possível consultar o contrato (sem conexão). */
+    ImportFailed
 }
 
 /**
@@ -108,6 +114,9 @@ sealed interface EditorAction {
     data object ConfirmSave : EditorAction
 
     data object DismissSave : EditorAction
+
+    /** Importação sem conexão: consulta o contrato de novo com o mesmo arquivo. */
+    data object RetryImport : EditorAction
 }
 
 /** Bordas com um controle só: a sensibilidade é o limiar inferior, e o superior é o triplo (Canny 1:3). */

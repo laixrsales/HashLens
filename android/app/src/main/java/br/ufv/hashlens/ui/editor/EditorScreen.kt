@@ -20,7 +20,9 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.GppBad
 import androidx.compose.material.icons.outlined.HideImage
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.BottomSheetDefaults
@@ -294,6 +296,20 @@ private fun NotEligible(reason: IneligibleReason, onAction: (EditorAction) -> Un
                         actionLabel = back,
                         onAction = { onAction(EditorAction.Close) }
                     )
+                    IneligibleReason.Tampered -> ErrorState(
+                        icon = Icons.Outlined.GppBad,
+                        title = stringResource(R.string.editor_tampered_title),
+                        message = stringResource(R.string.editor_tampered_message),
+                        actionLabel = back,
+                        onAction = { onAction(EditorAction.Close) }
+                    )
+                    IneligibleReason.ImportFailed -> ErrorState(
+                        icon = Icons.Outlined.CloudOff,
+                        title = stringResource(R.string.editor_import_failed_title),
+                        message = stringResource(R.string.editor_import_failed_message),
+                        actionLabel = stringResource(R.string.action_try_again),
+                        onAction = { onAction(EditorAction.RetryImport) }
+                    )
                     IneligibleReason.FileUnavailable -> ErrorState(
                         icon = Icons.Outlined.HideImage,
                         title = stringResource(R.string.editor_unavailable_title),
@@ -369,6 +385,14 @@ private fun EditorNotRegisteredPreview() = HashLensTheme { EditorScreen(EditorSa
 
 @Preview
 @Composable
+private fun EditorTamperedPreview() = HashLensTheme { EditorScreen(EditorSamples.tampered, onAction = {}) }
+
+@Preview
+@Composable
+private fun EditorImportFailedPreview() = HashLensTheme { EditorScreen(EditorSamples.importFailed, onAction = {}) }
+
+@Preview
+@Composable
 private fun EditorUnavailablePreview() = HashLensTheme { EditorScreen(EditorSamples.unavailable, onAction = {}) }
 
 /** Estados do Editor (ux.md §4.6), compartilhados por previews e screenshot tests. */
@@ -397,4 +421,6 @@ object EditorSamples {
     val registrationFailed: EditorUiState = EditorUiState.NotEligible(IneligibleReason.RegistrationFailed)
     val notRegistered: EditorUiState = EditorUiState.NotEligible(IneligibleReason.NotRegistered)
     val unavailable: EditorUiState = EditorUiState.NotEligible(IneligibleReason.FileUnavailable)
+    val tampered: EditorUiState = EditorUiState.NotEligible(IneligibleReason.Tampered)
+    val importFailed: EditorUiState = EditorUiState.NotEligible(IneligibleReason.ImportFailed)
 }

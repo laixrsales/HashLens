@@ -1,6 +1,9 @@
 package br.ufv.hashlens.ui.editor
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +25,8 @@ import br.ufv.hashlens.ui.capture.RegistrationProgressScreen
 
 /**
  * Rota "Editar": o Editor e, depois de "Salvar e registrar", o Acompanhamento do registro da
- * versão, na mesma tela (o mesmo [EditorViewModel] acompanha os dois).
+ * versão, na mesma tela (o mesmo [EditorViewModel] acompanha os dois). Em "Importar para editar",
+ * começa pelo Photo Picker do sistema, que não pede permissão de acesso às fotos.
  *
  * @param onClose volta à tela anterior.
  * @param onViewRecord abre o Resultado da verificação do registro ("Ver registro").
@@ -37,6 +41,7 @@ fun EditorRoute(
     val snackbar = remember { SnackbarHostState() }
     val resources = LocalResources.current
     val uriHandler = LocalUriHandler.current
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia(), viewModel::onImagePicked)
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -44,6 +49,8 @@ fun EditorRoute(
                 EditorEffect.Close -> onClose()
                 is EditorEffect.OpenUrl -> uriHandler.openUri(effect.url)
                 is EditorEffect.ViewRecord -> onViewRecord(effect.recordId)
+                EditorEffect.OpenPicker ->
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 is EditorEffect.Notice -> snackbar.showSnackbar(
                     effect.arg?.let { resources.getString(effect.text, it) } ?: resources.getString(effect.text)
                 )

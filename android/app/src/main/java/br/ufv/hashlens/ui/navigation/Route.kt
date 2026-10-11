@@ -13,6 +13,9 @@ enum class Route(val path: String) {
 
     /** Editor de uma imagem do acervo. */
     Editor("editor/{${EditorViewModel.PARENT_LOCAL_ID}}"),
+
+    /** "Importar para editar" (US4): o Editor começa pelo Photo Picker. */
+    ImportForEdit("import-for-edit"),
     Verify("verify"),
 
     /** Resultado de um registro já conhecido (ex.: "Ver registro" no Acompanhamento). */

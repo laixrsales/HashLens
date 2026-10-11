@@ -17,10 +17,14 @@ import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.domain.model.EditOperation
+import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
 import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.EditAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.EditResult
+import br.ufv.hashlens.domain.usecase.ImportForEditUseCase
+import br.ufv.hashlens.domain.usecase.ImportResult
+import br.ufv.hashlens.domain.usecase.ImportedParent
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
 import br.ufv.hashlens.ui.capture.RegistrationStage
 import br.ufv.hashlens.work.PendingTxReconciler
@@ -72,6 +76,7 @@ class EditorViewModelTest {
     private val previews = mockk<EditPreviewFactory>()
     private val preview = mockk<EditPreview>(relaxUnitFun = true)
     private val editAndRegister = mockk<EditAndRegisterUseCase>()
+    private val importForEdit = mockk<ImportForEditUseCase>()
     private val captureAndRegister = mockk<CaptureAndRegisterUseCase>()
     private val reconciler = mockk<PendingTxReconciler>(relaxUnitFun = true)
     private val reader = mockk<RegistryReader>()
@@ -122,12 +127,14 @@ class EditorViewModelTest {
             createdAt = NOW.toEpochMilli()
         )
 
-    private fun TestScope.viewModel() = EditorViewModel(
+    /** @param localId `null` abre o Editor em "Importar para editar". */
+    private fun TestScope.viewModel(localId: Long? = PARENT_ID) = EditorViewModel(
         images = images,
         gallery = gallery,
         sha256Hasher = Sha256Hasher(),
         previews = previews,
         editAndRegister = editAndRegister,
+        importForEdit = importForEdit,
         captureAndRegister = captureAndRegister,
         reconciler = reconciler,
         reader = reader,
@@ -137,7 +144,7 @@ class EditorViewModelTest {
         clock = clock,
         applicationScope = backgroundScope,
         defaultDispatcher = dispatcher,
-        savedStateHandle = SavedStateHandle(mapOf(EditorViewModel.PARENT_LOCAL_ID to PARENT_ID))
+        savedStateHandle = SavedStateHandle(localId?.let { mapOf(EditorViewModel.PARENT_LOCAL_ID to it) } ?: emptyMap())
     )
 
     private fun TestScope.effects(viewModel: EditorViewModel): List<EditorEffect> {
@@ -442,6 +449,94 @@ class EditorViewModelTest {
         effects shouldBe listOf(EditorEffect.ViewRecord(9))
     }
 
+    // T078: importar para editar (US4)
+
+    private fun imported(originalRegistrant: String = OTHER) = ImportedParent(
+        recordId = 7,
+        originalId = 1,
+        registrant = OTHER,
+        originalRegistrant = originalRegistrant,
+        bytes = BYTES
+    )
+
+    @Test
+    fun `importar abre o Photo Picker e fechar sem escolher fecha o Editor`() = runTest(dispatcher) {
+        val viewModel = viewModel(localId = null)
+        val effects = effects(viewModel)
+
+        viewModel.onImagePicked(null)
+
+        viewModel.ui.value.editor shouldBe EditorUiState.Loading
+        effects shouldBe listOf(EditorEffect.OpenPicker, EditorEffect.Close)
+    }
+
+    @Test
+    fun `cópia exata de um registro de outra pessoa abre com a faixa do autor da original`() = runTest(dispatcher) {
+        coEvery { importForEdit(BYTES) } returns ImportResult.Eligible(imported())
+        val viewModel = viewModel(localId = null)
+
+        viewModel.onImagePicked(mockk())
+
+        viewModel.editing().run {
+            originalAuthor shouldBe OTHER
+            preview shouldBeSameInstanceAs original
+        }
+    }
+
+    @Test
+    fun `cópia exata de uma original da própria carteira abre sem a faixa de autoria`() = runTest(dispatcher) {
+        coEvery { importForEdit(BYTES) } returns
+            ImportResult.Eligible(imported(originalRegistrant = ADDRESS.lowercase()))
+        val viewModel = viewModel(localId = null)
+
+        viewModel.onImagePicked(mockk())
+
+        viewModel.editing().originalAuthor.shouldBeNull()
+    }
+
+    @Test
+    fun `arquivo sem registro exato ou adulterado é recusado com a explicação`() = runTest(dispatcher) {
+        coEvery { importForEdit(BYTES) } returns ImportResult.NotRegistered
+        val viewModel = viewModel(localId = null)
+        viewModel.onImagePicked(mockk())
+        viewModel.ui.value.editor shouldBe EditorUiState.NotEligible(IneligibleReason.NotRegistered)
+
+        coEvery { importForEdit(BYTES) } returns ImportResult.Tampered(recordId = 7)
+        val other = viewModel(localId = null)
+        other.onImagePicked(mockk())
+        other.ui.value.editor shouldBe EditorUiState.NotEligible(IneligibleReason.Tampered)
+        verify(exactly = 0) { previews.open(any()) }
+    }
+
+    @Test
+    fun `sem conexão, tentar de novo confere o mesmo arquivo sem abrir o seletor`() = runTest(dispatcher) {
+        coEvery { importForEdit(BYTES) } returns ImportResult.Error(Reason.NETWORK)
+        val viewModel = viewModel(localId = null)
+        viewModel.onImagePicked(mockk())
+        viewModel.ui.value.editor shouldBe EditorUiState.NotEligible(IneligibleReason.ImportFailed)
+
+        coEvery { importForEdit(BYTES) } returns ImportResult.Eligible(imported())
+        viewModel.onAction(EditorAction.RetryImport)
+
+        viewModel.editing().originalAuthor shouldBe OTHER
+        coVerify(exactly = 1) { gallery.read(any()) }
+    }
+
+    @Test
+    fun `salvar a edição importada registra com o pai importado`() = runTest(dispatcher) {
+        val parent = imported()
+        coEvery { importForEdit(BYTES) } returns ImportResult.Eligible(parent)
+        coEvery { editAndRegister.editImported(parent, listOf(EditOperation.Sepia), ADDRESS, any()) } returns
+            EditResult.Registration(CaptureResult.AlreadyRegistered(9))
+        val viewModel = viewModel(localId = null)
+        viewModel.onImagePicked(mockk())
+
+        viewModel.act(EditorAction.SelectTool(EditorTool.Sepia), EditorAction.Save, EditorAction.ConfirmSave)
+
+        viewModel.ui.value.progress?.stage shouldBe RegistrationStage.AlreadyRegistered(9)
+        coVerify(exactly = 0) { editAndRegister(any(), any(), any(), any()) }
+    }
+
     private companion object {
         val NOW: Instant = Instant.parse("2026-10-11T18:00:00Z")
         const val CONTRACT = "0xF2f42B34414936e456c6AC10c4844f456CAD65Ba"
@@ -449,6 +544,7 @@ class EditorViewModelTest {
         val CONNECTED = WalletState.Connected(ADDRESS, chainId = ChainConfig.SEPOLIA_CHAIN_ID)
         const val PARENT_ID = 10L
         const val EDITED_ID = 11L
+        const val OTHER = "0xABCDEFabcdef0123456789ABCDEFabcdef012345"
         const val TX = "0x5555555555555555555555555555555555555555555555555555555555555555"
         val BYTES: ByteArray = "bytes-do-pai".encodeToByteArray()
         val SHA: String = MessageDigest.getInstance("SHA-256").digest(BYTES).toHexString()

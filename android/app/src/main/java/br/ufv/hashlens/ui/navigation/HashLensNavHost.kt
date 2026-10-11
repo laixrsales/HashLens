@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -71,16 +73,7 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
                     onOpenHistory = { navController.navigate(Route.Genealogy.path) }
                 )
             }
-            // Aberto pelo acervo (US6) com o localId da imagem; a importação de terceiros entra na US4
-            composable(
-                Route.Editor.path,
-                arguments = listOf(navArgument(EditorViewModel.PARENT_LOCAL_ID) { type = NavType.LongType })
-            ) {
-                EditorRoute(
-                    onClose = { navController.popBackStack() },
-                    onViewRecord = { navController.navigate(Route.verificationResult(it)) }
-                )
-            }
+            editorDestinations(navController)
             appKitGraph(navController)
             // Telas das próximas histórias (US3–US6): ainda vazias
             Route.entries.filter { it !in BUILT }.forEach { route ->
@@ -90,14 +83,34 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
     }
 }
 
+/** Editor aberto pelo acervo (US6), com o localId da imagem, ou pela importação (US4), sem ele. */
+private fun NavGraphBuilder.editorDestinations(navController: NavHostController) {
+    composable(Route.ImportForEdit.path) {
+        EditorRoute(
+            onClose = { navController.popBackStack() },
+            onViewRecord = { navController.navigate(Route.verificationResult(it)) }
+        )
+    }
+    composable(
+        Route.Editor.path,
+        arguments = listOf(navArgument(EditorViewModel.PARENT_LOCAL_ID) { type = NavType.LongType })
+    ) {
+        EditorRoute(
+            onClose = { navController.popBackStack() },
+            onViewRecord = { navController.navigate(Route.verificationResult(it)) }
+        )
+    }
+}
+
 /** Destinos que já têm tela; os demais ficam vazios até a sua história. */
-private val BUILT = setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult, Route.Editor)
+private val BUILT =
+    setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult, Route.Editor, Route.ImportForEdit)
 
 /** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */
 internal fun HomeAction.route(): Route? = when (this) {
     HomeAction.VerifyImage -> Route.Verify
     HomeAction.OpenLibrary -> Route.Library
     HomeAction.HowItWorks -> Route.Onboarding
-    // Importar para editar entra com a US4 (T077-T078)
-    HomeAction.RegisterPhoto, HomeAction.OpenWallet, HomeAction.ImportForEdit -> null
+    HomeAction.ImportForEdit -> Route.ImportForEdit
+    HomeAction.RegisterPhoto, HomeAction.OpenWallet -> null
 }
