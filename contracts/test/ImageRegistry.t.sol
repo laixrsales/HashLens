@@ -313,13 +313,39 @@ contract ImageRegistryTest is Test {
         uint256 original = _capture(alice, _device(alice, 1), SHA_A, PHASH_A);
         uint32 bobDevice = _device(bob, 2);
 
+        // O evento identifica Bob como responsável pela edição, com o aparelho dele
+        vm.expectEmit(true, true, true, true, address(registry));
+        emit ImageRegistered(2, SHA_B, original, original, PHASH_B, bob, bobDevice);
         uint256 id = _edit(bob, bobDevice, original, SHA_B, OPS);
 
         IImageRegistry.ImageRecord memory r = registry.getRecord(id);
         assertEq(r.registrant, bob);
         assertEq(r.deviceId, bobDevice);
+        assertEq(r.parentId, original);
         assertEq(r.originalId, original);
+        assertEq(r.operations, OPS);
+        // A original continua de Alice e passa a listar a edição de Bob
         assertEq(registry.getRecord(original).registrant, alice);
+        assertEq(registry.getChildren(original)[0], id);
+    }
+
+    /// Genealogia mista (checkpoint US4): Bob edita a original de Alice e Alice edita a versão de Bob.
+    function test_registerEdit_mixedEditors_keepEachRegistrantAndOriginal() public {
+        uint32 aliceDevice = _device(alice, 1);
+        uint32 bobDevice = _device(bob, 2);
+        uint256 original = _capture(alice, aliceDevice, SHA_A, PHASH_A);
+
+        uint256 bobVersion = _edit(bob, bobDevice, original, SHA_B, OPS);
+        uint256 aliceVersion = _edit(alice, aliceDevice, bobVersion, SHA_C, "rotate90:1");
+
+        IImageRegistry.ImageRecord memory byBob = registry.getRecord(bobVersion);
+        IImageRegistry.ImageRecord memory byAlice = registry.getRecord(aliceVersion);
+        assertEq(byBob.registrant, bob);
+        assertEq(byAlice.registrant, alice);
+        assertEq(byAlice.deviceId, aliceDevice);
+        assertEq(byAlice.parentId, bobVersion);
+        assertEq(byAlice.originalId, original);
+        assertEq(registry.getChildren(bobVersion)[0], aliceVersion);
     }
 
     function test_registerEdit_deviceOfOtherWallet_reverts() public {

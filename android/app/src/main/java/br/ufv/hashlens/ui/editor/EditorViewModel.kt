@@ -23,6 +23,9 @@ import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.EditAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.EditResult
+import br.ufv.hashlens.domain.usecase.ImportForEditUseCase
+import br.ufv.hashlens.domain.usecase.ImportResult
+import br.ufv.hashlens.domain.usecase.ImportedParent
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.ui.capture.RegistrationFailure
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
@@ -70,6 +73,9 @@ sealed interface EditorEffect {
 
     data class OpenUrl(val url: String) : EditorEffect
 
+    /** Importar para editar: abre o Photo Picker (US4). */
+    data object OpenPicker : EditorEffect
+
     /** Abre o Resultado da verificação do registro (versão que já estava registrada). */
     data class ViewRecord(val recordId: Long) : EditorEffect
 
@@ -81,6 +87,9 @@ sealed interface EditorEffect {
  * Editor → registro da versão → Acompanhamento (T073, ux.md §4.6 e §4.5), para uma imagem do
  * acervo ([PARENT_LOCAL_ID]). Só imagens `CONFIRMED`, cujo arquivo na galeria ainda é o
  * registrado, abrem para edição (T074, US3 cenários 3 e 5).
+ *
+ * Sem [PARENT_LOCAL_ID], "Importar para editar" (T078, US4): o arquivo vem do Photo Picker e só
+ * abre se for cópia exata de um registro ([ImportForEditUseCase]).
  *
  * As operações ficam numa lista com desfazer e refazer; o ajuste em curso aparece na prévia, em
  * resolução reduzida, e só entra na lista ao ser aplicado. O registro roda no [applicationScope],
@@ -95,6 +104,7 @@ class EditorViewModel @Inject constructor(
     private val sha256Hasher: Sha256Hasher,
     private val previews: EditPreviewFactory,
     private val editAndRegister: EditAndRegisterUseCase,
+    private val importForEdit: ImportForEditUseCase,
     private val captureAndRegister: CaptureAndRegisterUseCase,
     reconciler: PendingTxReconciler,
     reader: RegistryReader,
@@ -112,9 +122,14 @@ class EditorViewModel @Inject constructor(
     private val _effects = Channel<EditorEffect>(Channel.BUFFERED)
     val effects: Flow<EditorEffect> = _effects.receiveAsFlow()
 
-    private val parentLocalId: Long = requireNotNull(savedStateHandle.get<Long>(PARENT_LOCAL_ID)) {
-        "editor sem imagem: falta $PARENT_LOCAL_ID"
-    }
+    /** Imagem do acervo a editar; `null` em "Importar para editar", que começa pelo Photo Picker. */
+    private val parentLocalId: Long? = savedStateHandle.get<Long>(PARENT_LOCAL_ID)
+
+    /** Pai importado (US4): o registro que o arquivo escolhido reproduz exatamente. */
+    private var imported: ImportedParent? = null
+
+    /** Bytes do arquivo escolhido, para "Tentar de novo" sem abrir o seletor outra vez. */
+    private var pickedBytes: ByteArray? = null
     private val watcher = RegistrationWatcher(images, reconciler, reader, config, clock)
 
     private var preview: EditPreview? = null
@@ -129,21 +144,18 @@ class EditorViewModel @Inject constructor(
     private var tracking: Job? = null
 
     init {
-        viewModelScope.launch { open() }
+        if (parentLocalId != null) viewModelScope.launch { open(parentLocalId) } else send(EditorEffect.OpenPicker)
         viewModelScope.launch { renderRequests.filterNotNull().collectLatest(::render) }
         viewModelScope.launch { session.state.collect(::onWalletChanged) }
         addCloseable { preview?.close() }
     }
 
     fun onAction(action: EditorAction) {
-        val editing = editing()
-        if (editing == null) {
-            // Carregando ou não elegível: só fechar
-            if (action == EditorAction.Close) send(EditorEffect.Close)
-            return
-        }
+        val editing = editing() ?: return onActionWithoutPhoto(action)
         when (action) {
             EditorAction.Close -> send(EditorEffect.Close)
+            // Só existe na importação que falhou, antes de haver foto
+            EditorAction.RetryImport -> Unit
             is EditorAction.SelectTool -> selectTool(editing, action.tool)
             is EditorAction.UpdateDraft -> showDraft(editing, action.operation)
             EditorAction.ApplyDraft -> applyDraft(editing)
@@ -152,6 +164,15 @@ class EditorViewModel @Inject constructor(
             EditorAction.Redo -> redo(editing)
             is EditorAction.Compare -> updateEditing { it.copy(showingOriginal = action.showingOriginal) }
             EditorAction.Save, EditorAction.DismissSave, EditorAction.ConfirmSave -> onSaveAction(editing, action)
+        }
+    }
+
+    /** Carregando ou não elegível: só fechar ou tentar a importação de novo. */
+    private fun onActionWithoutPhoto(action: EditorAction) {
+        when (action) {
+            EditorAction.Close -> send(EditorEffect.Close)
+            EditorAction.RetryImport -> pickedBytes?.let { bytes -> viewModelScope.launch { import(bytes) } }
+            else -> Unit
         }
     }
 
@@ -194,18 +215,65 @@ class EditorViewModel @Inject constructor(
     }
 
     /** T074: só abre `CONFIRMED` com o arquivo registrado na galeria; senão, explica por quê. */
-    private suspend fun open() {
-        val image = images.getById(parentLocalId)
+    private suspend fun open(localId: Long) {
+        val image = images.getById(localId)
         val opened = image?.takeIf { ineligibility(it) == null }?.let { openPreview(it) }
         when {
-            opened != null -> {
-                preview = opened
-                _ui.update {
-                    it.copy(editor = EditorUiState.Editing(preview = opened.original, original = opened.original))
-                }
-            }
+            opened != null -> startEditing(opened)
             image == null -> showIneligible(IneligibleReason.FileUnavailable)
             else -> showIneligible(ineligibility(image) ?: IneligibleReason.FileUnavailable)
+        }
+    }
+
+    /** Volta do Photo Picker; fechar sem escolher fecha o Editor. */
+    fun onImagePicked(uri: Uri?) {
+        if (uri == null) return send(EditorEffect.Close)
+        viewModelScope.launch {
+            val bytes = try {
+                gallery.read(uri)
+            } catch (_: IOException) {
+                return@launch showIneligible(IneligibleReason.FileUnavailable)
+            }
+            pickedBytes = bytes
+            import(bytes)
+        }
+    }
+
+    /** US4: só uma cópia exata de um registro com assinatura válida abre no Editor (FR-015). */
+    private suspend fun import(bytes: ByteArray) {
+        _ui.value = EditorFlowUiState(editor = EditorUiState.Loading)
+        when (val result = importForEdit(bytes)) {
+            is ImportResult.Eligible -> openImported(result.parent)
+            ImportResult.NotRegistered -> showIneligible(IneligibleReason.NotRegistered)
+            is ImportResult.Tampered -> showIneligible(IneligibleReason.Tampered)
+            is ImportResult.Error -> showIneligible(IneligibleReason.ImportFailed)
+        }
+    }
+
+    private suspend fun openImported(parent: ImportedParent) {
+        val opened = try {
+            withContext(defaultDispatcher) { previews.open(parent.bytes) }
+        } catch (_: IllegalArgumentException) {
+            // Não decodifica: não pode ser uma imagem registrada pelo app
+            return showIneligible(IneligibleReason.NotRegistered)
+        }
+        imported = parent
+        // A faixa de autoria só aparece se a original é de outra carteira
+        val wallet = (session.state.value as? WalletState.Connected)?.address
+        val author = parent.originalRegistrant.takeUnless { it.equals(wallet, ignoreCase = true) }
+        startEditing(opened, author)
+    }
+
+    private fun startEditing(opened: EditPreview, originalAuthor: String? = null) {
+        preview = opened
+        _ui.update {
+            it.copy(
+                editor = EditorUiState.Editing(
+                    preview = opened.original,
+                    original = opened.original,
+                    originalAuthor = originalAuthor
+                )
+            )
         }
     }
 
@@ -297,7 +365,12 @@ class EditorViewModel @Inject constructor(
         val operations = editing.operations
         applicationScope.launch {
             val result = try {
-                editAndRegister(parentLocalId, operations, wallet, ::onProgress)
+                val parent = imported
+                if (parent != null) {
+                    editAndRegister.editImported(parent, operations, wallet, ::onProgress)
+                } else {
+                    editAndRegister(requireNotNull(parentLocalId), operations, wallet, ::onProgress)
+                }
             } catch (_: IOException) {
                 return@launch showStage(RegistrationStage.Failed(RegistrationFailure.SaveFailed))
             }
@@ -398,7 +471,7 @@ class EditorViewModel @Inject constructor(
     }
 
     companion object {
-        /** Argumento de navegação: a imagem do acervo a editar. */
+        /** Argumento de navegação: a imagem do acervo a editar; sem ele, o Editor importa um arquivo. */
         const val PARENT_LOCAL_ID = "localId"
     }
 }

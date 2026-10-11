@@ -77,24 +77,38 @@ class EditAndRegisterUseCase @Inject constructor(
             parent.status != RegistrationStatus.CONFIRMED || parentRecordId == null ->
                 EditResult.ParentNotConfirmed(parent.status)
             else -> readParent(parent)?.let { parentBytes ->
-                renderAndRegister(
-                    parent,
-                    parentRecordId,
-                    parentBytes,
-                    operations,
-                    operationsText,
-                    walletAddress,
-                    onProgress
-                )
+                // A original da cadeia: a do pai, ou o próprio pai quando ele é a captura
+                val base = Base(parentRecordId, parent.originalRecordId ?: parentRecordId, parentBytes)
+                renderAndRegister(base, operations, operationsText, walletAddress, onProgress)
             } ?: EditResult.ParentUnavailable
         }
     }
 
+    /**
+     * Edição de um arquivo importado (US4): o pai é o registro que o arquivo reproduz exatamente,
+     * já conferido na cadeia por [ImportForEditUseCase]. Não passa pelo acervo: arquivos de
+     * terceiros não viram linha local, só a versão editada (data-model §2.1).
+     *
+     * @throws IllegalArgumentException sem operações ou com operação inválida.
+     */
+    suspend fun editImported(
+        parent: ImportedParent,
+        operations: List<EditOperation>,
+        walletAddress: String,
+        onProgress: (RegistrationProgress) -> Unit = {}
+    ): EditResult {
+        require(operations.isNotEmpty()) { "edição sem operações" }
+        val operationsText = EditOperationCodec.encode(operations)
+        val base = Base(parent.recordId, parent.originalId, parent.bytes)
+        return renderAndRegister(base, operations, operationsText, walletAddress, onProgress)
+    }
+
+    /** O que a versão herda do pai: o registro dele, a original da cadeia e os bytes do arquivo. */
+    private class Base(val recordId: Long, val originalId: Long, val bytes: ByteArray)
+
     /** Versão em resolução cheia → galeria → releitura → vínculo e `registerEdit`. */
     private suspend fun renderAndRegister(
-        parent: LocalImageEntity,
-        parentRecordId: Long,
-        parentBytes: ByteArray,
+        base: Base,
         operations: List<EditOperation>,
         operationsText: String,
         walletAddress: String,
@@ -102,7 +116,7 @@ class EditAndRegisterUseCase @Inject constructor(
     ): EditResult {
         val editedAt = ZonedDateTime.ofInstant(clock.instant(), ZoneId.systemDefault())
         val (jpeg, sha256, pHash) = withContext(defaultDispatcher) {
-            val bytes = renderer.render(parentBytes, operations, editedAt)
+            val bytes = renderer.render(base.bytes, operations, editedAt)
             Triple(bytes, sha256Hasher.hash(bytes.inputStream()), perceptualHasher.hash(bytes))
         }
 
@@ -113,9 +127,8 @@ class EditAndRegisterUseCase @Inject constructor(
             sha256Hex = sha256.hex,
             pHashHex = pHash.hex,
             origin = ImageOrigin.EDIT,
-            parentRecordId = parentRecordId,
-            // A original da cadeia: a do pai, ou o próprio pai quando ele é a captura
-            originalRecordId = parent.originalRecordId ?: parentRecordId,
+            parentRecordId = base.recordId,
+            originalRecordId = base.originalId,
             operations = operationsText,
             walletAddress = walletAddress.lowercase(),
             createdAt = clock.millis()

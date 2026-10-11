@@ -50,5 +50,11 @@ class EditorScreenshotTest : ScreenshotTest() {
     fun notRegistered() = editor("nao_elegivel_sem_registro", EditorSamples.notRegistered)
 
     @Test
+    fun tampered() = editor("nao_elegivel_adulterado", EditorSamples.tampered)
+
+    @Test
+    fun importFailed() = editor("importacao_sem_conexao", EditorSamples.importFailed)
+
+    @Test
     fun unavailable() = editor("nao_elegivel_arquivo", EditorSamples.unavailable)
 }
