@@ -52,6 +52,8 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
                     onViewRecord = { navController.navigate(Route.verificationResult(it)) }
                 )
             }
+            // Verificação pública (FR-019): sem guarda de sessão, sem carteira e sem custo. Só
+            // "Registrar foto" passa pela carteira (WalletViewModel), antes de abrir a câmera.
             composable(Route.Verify.path) {
                 VerifyRoute(
                     onClose = { navController.popBackStack() },
@@ -79,7 +81,8 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
 /** Destinos que já têm tela; os demais ficam vazios até a sua história. */
 private val BUILT = setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult)
 
-private fun HomeAction.route(): Route? = when (this) {
+/** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */
+internal fun HomeAction.route(): Route? = when (this) {
     HomeAction.VerifyImage -> Route.Verify
     HomeAction.OpenLibrary -> Route.Library
     HomeAction.ImportForEdit -> Route.Editor
