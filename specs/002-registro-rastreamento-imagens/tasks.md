@@ -202,8 +202,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T075 [P] [US4] Teste `$TEST/domain/usecase/ImportForEditUseCaseTest.kt` (SHA exato → libera com pai; sem registro → recusa; somente correspondência visual → recusa mesmo com um único candidato — FR-015, research R18)
-- [ ] T076 [P] [US4] Garantir em `contracts/test/ImageRegistry.t.sol` o caso `test_registerEdit_byThirdParty_setsRegistrantToEditor`
+- [X] T075 [P] [US4] Teste `$TEST/domain/usecase/ImportForEditUseCaseTest.kt` (SHA exato → libera com pai; sem registro → recusa; somente correspondência visual → recusa mesmo com um único candidato — FR-015, research R18)
+- [X] T076 [P] [US4] Garantir em `contracts/test/ImageRegistry.t.sol` o caso `test_registerEdit_byThirdParty_setsRegistrantToEditor`
 
 ### Implementation for User Story 4
 
