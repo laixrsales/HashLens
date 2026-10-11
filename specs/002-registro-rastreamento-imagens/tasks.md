@@ -222,7 +222,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T079 [P] [US5] Teste `$TEST/domain/usecase/TraceGenealogyUseCaseTest.kt` (3 gerações, ramificações, percentuais pai/original, assinatura inválida sinalizada, limite de 10 níveis/200 nós)
+- [X] T079 [P] [US5] Teste `$TEST/domain/usecase/TraceGenealogyUseCaseTest.kt` (3 gerações, ramificações, percentuais pai/original, assinatura inválida sinalizada, limite de 10 níveis/200 nós)
 
 ### Implementation for User Story 5
 
