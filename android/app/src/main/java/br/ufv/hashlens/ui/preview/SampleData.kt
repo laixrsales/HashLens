@@ -1,5 +1,13 @@
 package br.ufv.hashlens.ui.preview
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.LinearGradientShader
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
 import br.ufv.hashlens.R
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.domain.model.EditOperation
@@ -49,6 +57,41 @@ object SampleData {
         /** Saldo de teste suficiente e baixo (ux.md §4.3 e §4.11). */
         val BALANCE_OK = BigDecimal("0.0421")
         val BALANCE_LOW = BigDecimal("0.00002")
+
+        /** Custo estimado de um registro (gás com margem × preço), em SepoliaETH. */
+        val REGISTRATION_COST = BigDecimal("0.000412")
+    }
+
+    /**
+     * Foto fictícia para miniaturas e visor: paisagem desenhada em código (céu, sol, morros), sem
+     * arquivo de imagem no app. Mesmo desenho a cada chamada, para screenshots determinísticos.
+     */
+    object Photo {
+        private const val WIDTH = 400
+        private const val HEIGHT = 300
+
+        fun landscape(): ImageBitmap = ImageBitmap(WIDTH, HEIGHT).also { bitmap ->
+            val canvas = Canvas(bitmap)
+            val w = WIDTH.toFloat()
+            val h = HEIGHT.toFloat()
+            canvas.drawRect(
+                Rect(0f, 0f, w, h),
+                Paint().apply {
+                    shader =
+                        LinearGradientShader(Offset.Zero, Offset(0f, h), listOf(Color(0xFF6FA8DC), Color(0xFFF3D9A4)))
+                }
+            )
+            canvas.drawCircle(Offset(w * 0.72f, h * 0.3f), h * 0.11f, Paint().apply { color = Color(0xFFF7C948) })
+            canvas.drawPath(hill(w, h, peak = 0.35f, height = 0.45f), Paint().apply { color = Color(0xFF5B8C51) })
+            canvas.drawPath(hill(w, h, peak = 0.8f, height = 0.6f), Paint().apply { color = Color(0xFF3E6B3A) })
+        }
+
+        private fun hill(w: Float, h: Float, peak: Float, height: Float) = Path().apply {
+            moveTo(0f, h)
+            quadraticTo(w * peak, h * height, w, h * (height + 0.15f))
+            lineTo(w, h)
+            close()
+        }
     }
 
     object Percent {

@@ -2,19 +2,62 @@ package br.ufv.hashlens.ui.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.navigation.ModalBottomSheetLayout
+import androidx.compose.material.navigation.rememberBottomSheetNavigator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import br.ufv.hashlens.ui.capture.CaptureRoute
+import br.ufv.hashlens.ui.home.HomeAction
+import br.ufv.hashlens.ui.home.HomeRoute
+import com.reown.appkit.ui.appKitGraph
+import com.reown.appkit.ui.openAppKit
 
+/**
+ * Navegação do app (ux.md §3). A lista de carteiras do AppKit é um bottom sheet de navegação
+ * ([appKitGraph]), por isso o `NavHost` fica dentro de um [ModalBottomSheetLayout].
+ */
 @Composable
-fun HashLensNavHost(modifier: Modifier = Modifier, navController: NavHostController = rememberNavController()) {
-    NavHost(navController = navController, startDestination = Route.Home.path, modifier = modifier) {
-        // Rotas vazias até as telas existirem (Fundação de UI e histórias US1–US6)
-        Route.entries.forEach { route ->
-            composable(route.path) { Box(Modifier.fillMaxSize()) }
+fun HashLensNavHost(modifier: Modifier = Modifier) {
+    val sheetNavigator = rememberBottomSheetNavigator()
+    val navController = rememberNavController(sheetNavigator)
+    val backStackEntry by navController.currentBackStackEntryAsState()
+
+    ModalBottomSheetLayout(
+        sheetNavigator,
+        modifier = modifier,
+        sheetBackgroundColor = MaterialTheme.colorScheme.surfaceContainer
+    ) {
+        NavHost(navController = navController, startDestination = Route.Home.path) {
+            composable(Route.Home.path) {
+                HomeRoute(
+                    walletListOpen = backStackEntry?.destination?.route != Route.Home.path,
+                    onOpenWalletList = { navController.openAppKit(shouldOpenChooseNetwork = false) },
+                    onRegisterPhoto = { navController.navigate(Route.Capture.path) },
+                    onNavigate = { action -> action.route()?.let { navController.navigate(it.path) } }
+                )
+            }
+            composable(Route.Capture.path) {
+                CaptureRoute(onClose = { navController.popBackStack(Route.Home.path, inclusive = false) })
+            }
+            appKitGraph(navController)
+            // Telas das próximas histórias (US2–US6): ainda vazias
+            Route.entries.filter { it != Route.Home && it != Route.Capture }.forEach { route ->
+                composable(route.path) { Box(Modifier.fillMaxSize()) }
+            }
         }
     }
+}
+
+private fun HomeAction.route(): Route? = when (this) {
+    HomeAction.VerifyImage -> Route.Verify
+    HomeAction.OpenLibrary -> Route.Library
+    HomeAction.ImportForEdit -> Route.Editor
+    HomeAction.HowItWorks -> Route.Onboarding
+    HomeAction.RegisterPhoto, HomeAction.OpenWallet -> null
 }

@@ -108,31 +108,36 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T039 [P] [US1] Teste instrumentado `$ITEST/core/crypto/DeviceKeyManagerTest.kt` (alias `hashlens-device-<endereço em minúsculas>`; carteiras diferentes geram chaves diferentes; chave não exportável; assinatura verificável com a pública; apagar o alias e pedir de novo gera chave nova) — research R4, R25
-- [ ] T040 [P] [US1] Teste instrumentado `$ITEST/data/gallery/GalleryRepositoryTest.kt` (bytes relidos == bytes gravados)
-- [ ] T041 [P] [US1] Teste `$TEST/domain/usecase/EnsureDeviceBoundUseCaseTest.kt` com `RegistryReader` falso (chave já em `getDevicesOf` → nenhuma transação; alias ausente → gera e chama `registerDevice`; chave nova com aparelho antigo on-chain → novo `deviceId`, antigo intacto; segunda carteira no mesmo aparelho → `deviceId` próprio; `DeviceBindingEntity.publicKeyHex` substituído quando a chave muda)
-- [ ] T042 [P] [US1] Teste `$TEST/domain/usecase/CaptureAndRegisterUseCaseTest.kt` (aborta se SHA relido diverge com `failureReason = HASH_MISMATCH`; transições `LOCAL_ONLY → AWAITING_WALLET → PENDING` gravando `txHash` e `submittedAt`; rejeição → `FAILED(REJECTED)`; SHA já registrado → nenhuma transação; resultado `AlreadyRegistered(recordId)`)
-- [ ] T043 [P] [US1] Teste `$TEST/data/chain/RegistryTxBuilderTest.kt` (calldata igual ao gerado por `cast calldata` para os mesmos argumentos)
-- [ ] T044 [P] [US1] Teste `$TEST/work/PendingTxWorkerTest.kt` com `Clock` falso (recibo status=1 → `CONFIRMED(recordId)`; status=0 com `getIdBySha256 = 0` → `FAILED(REVERTED)`; status=0 com `getIdBySha256 ≠ 0` (transação antiga confirmada depois do reenvio, nova reverte com `AlreadyRegistered`) → `CONFIRMED` com o `recordId` on-chain; 30 min desde `submittedAt` sem recibo e `getIdBySha256 = 0` → `FAILED(TIMEOUT)`; idem com `getIdBySha256 ≠ 0` → `CONFIRMED`; 29 min → continua `PENDING`; erro de rede na reconciliação → continua `PENDING`; registro em `FAILED(TIMEOUT)` reconciliado em ciclo posterior → `CONFIRMED`; prazo lido de `ChainConfig`) — data-model §2.3 — FR-014, research R23
+- [X] T039 [P] [US1] Teste instrumentado `$ITEST/core/crypto/DeviceKeyManagerTest.kt` (alias `hashlens-device-<endereço em minúsculas>`; carteiras diferentes geram chaves diferentes; chave não exportável; assinatura verificável com a pública; apagar o alias e pedir de novo gera chave nova) — research R4, R25
+- [X] T040 [P] [US1] Teste instrumentado `$ITEST/data/gallery/GalleryRepositoryTest.kt` (bytes relidos == bytes gravados)
+- [X] T041 [P] [US1] Teste `$TEST/domain/usecase/EnsureDeviceBoundUseCaseTest.kt` com `RegistryReader` falso (chave já em `getDevicesOf` → nenhuma transação; alias ausente → gera e chama `registerDevice`; chave nova com aparelho antigo on-chain → novo `deviceId`, antigo intacto; segunda carteira no mesmo aparelho → `deviceId` próprio; `DeviceBindingEntity.publicKeyHex` substituído quando a chave muda)
+- [X] T042 [P] [US1] Teste `$TEST/domain/usecase/CaptureAndRegisterUseCaseTest.kt` (aborta se SHA relido diverge com `failureReason = HASH_MISMATCH`; transições `LOCAL_ONLY → AWAITING_WALLET → PENDING` gravando `txHash` e `submittedAt`; rejeição → `FAILED(REJECTED)`; SHA já registrado → nenhuma transação; resultado `AlreadyRegistered(recordId)`)
+- [X] T043 [P] [US1] Teste `$TEST/data/chain/RegistryTxBuilderTest.kt` (calldata igual ao gerado por `cast calldata` para os mesmos argumentos)
+- [X] T044 [P] [US1] Teste `$TEST/work/PendingTxWorkerTest.kt` com `Clock` falso (recibo status=1 → `CONFIRMED(recordId)`; status=0 com `getIdBySha256 = 0` → `FAILED(REVERTED)`; status=0 com `getIdBySha256 ≠ 0` (transação antiga confirmada depois do reenvio, nova reverte com `AlreadyRegistered`) → `CONFIRMED` com o `recordId` on-chain; 30 min desde `submittedAt` sem recibo e `getIdBySha256 = 0` → `FAILED(TIMEOUT)`; idem com `getIdBySha256 ≠ 0` → `CONFIRMED`; 29 min → continua `PENDING`; erro de rede na reconciliação → continua `PENDING`; registro em `FAILED(TIMEOUT)` reconciliado em ciclo posterior → `CONFIRMED`; prazo lido de `ChainConfig`) — data-model §2.3 — FR-014, research R23
 
 ### Implementation for User Story 1
 
-- [ ] T045 [P] [US1] Implementar `$PKG/core/crypto/DeviceKeyManager.kt` (Keystore P-256, um alias por carteira `hashlens-device-<endereço em minúsculas>`, StrongBox com fallback, exporta chave pública em 65 bytes `0x04 ‖ X ‖ Y`)
-- [ ] T046 [P] [US1] Implementar `$PKG/data/wallet/WalletSession.kt` (Reown AppKit: conectar, desconectar, `StateFlow` de conta/rede, troca para Sepolia, `eth_sendTransaction`)
-- [ ] T047 [P] [US1] Implementar Room em `$PKG/data/local/` (`AppDatabase`, DAOs, `RegistrationStatus`, `FailureReason` = `REJECTED`, `REVERTED`, `TIMEOUT`, `HASH_MISMATCH`, `NETWORK`; `LocalImageEntity` com `sha256Hex` "`String` (64) … Índice único", `pHashHex` "`String` (16)", `origin` "`CAPTURE`, `EDIT`", `signatureHex` "`r‖s` (128 hex), gerada uma vez e reutilizada em reenvios", `submittedAt` "epoch ms em que o `txHash` foi recebido", `fileAvailable`; `DeviceBindingEntity` com `walletAddress` (PK, minúsculo), `publicKeyHex` "`String` (130)", `deviceId` "Nulo até a confirmação") conforme `$SPEC/data-model.md` §2
-- [ ] T048 [P] [US1] Implementar `$PKG/data/gallery/GalleryRepository.kt` (MediaStore `Pictures/HashLens`, gravação e releitura)
-- [ ] T049 [P] [US1] Implementar `$PKG/data/chain/RegistryTxBuilder.kt` (calldata de `registerDevice`, `registerCapture`, `registerEdit`; estimativa de gás; checagem de saldo)
-- [ ] T050 [US1] Implementar `$PKG/data/chain/ReceiptTracker.kt` (polling de recibo, parse de `ImageRegistered`/`DeviceRegistered`)
-- [ ] T051 [US1] Implementar `$PKG/domain/usecase/EnsureDeviceBoundUseCase.kt` até T041 passar (alias da carteira → procura a chave em `getDevicesOf` → `registerDevice` se ausente; nunca revoga vínculos)
-- [ ] T052 [US1] Implementar `$PKG/domain/usecase/RegisterLocalImageUseCase.kt` (monta payload, assina uma vez, envia, grava `txHash` e `submittedAt`, atualiza status; reutilizado por edição e reenvio)
-- [ ] T053 [US1] Implementar `$PKG/domain/usecase/CaptureAndRegisterUseCase.kt` (encode → hashes → galeria → releitura → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase`)
-- [ ] T054 [US1] Implementar `$PKG/work/PendingTxWorker.kt` até T044 passar (acompanha `PENDING` e `FAILED(TIMEOUT)`; reconcilia por `getIdBySha256` antes de qualquer transição para `FAILED`; aplica o prazo de `ChainConfig`)
-- [ ] T055 [US1] Criar telas sem estado `WalletSheet`, `CaptureScreen` e `RegistrationProgressScreen` com previews de todos os estados de `docs/referencia/ux.md` 4.3–4.5 (inclusive vínculo de aparelho e falha por prazo) e screenshot tests; **revisão da autora antes da ligação**
-- [ ] T056 [US1] Ligar `$PKG/ui/wallet/WalletSheet.kt` ao `WalletViewModel.kt` (conexão, endereço abreviado, aviso de rede, saldo, link para faucet)
-- [ ] T057 [US1] Ligar `$PKG/ui/capture/CaptureScreen.kt` e `RegistrationProgressScreen.kt` ao `CaptureViewModel.kt` (CameraX, captura, etapas do registro, link do Etherscan nos detalhes técnicos; em `AlreadyRegistered`, mostrar "Esta imagem já está registrada" com o botão "Ver registro", que abre `VerificationResultScreen` desse registro — spec Edge Cases)
-- [ ] T058 [US1] Tratar saldo insuficiente, transação rejeitada e troca de conta/rede durante a operação em `CaptureViewModel.kt`, com textos em `android/app/src/main/res/values/strings.xml`
+- [X] T045 [P] [US1] Implementar `$PKG/core/crypto/DeviceKeyManager.kt` (Keystore P-256, um alias por carteira `hashlens-device-<endereço em minúsculas>`, StrongBox com fallback, exporta chave pública em 65 bytes `0x04 ‖ X ‖ Y`)
+- [X] T046 [P] [US1] Implementar `$PKG/data/wallet/WalletSession.kt` (Reown AppKit: conectar, desconectar, `StateFlow` de conta/rede, troca para Sepolia, `eth_sendTransaction`)
+- [X] T047 [P] [US1] Implementar Room em `$PKG/data/local/` (`AppDatabase`, DAOs, `RegistrationStatus`, `FailureReason` = `REJECTED`, `REVERTED`, `TIMEOUT`, `HASH_MISMATCH`, `NETWORK`; `LocalImageEntity` com `sha256Hex` "`String` (64) … Índice único", `pHashHex` "`String` (16)", `origin` "`CAPTURE`, `EDIT`", `signatureHex` "`r‖s` (128 hex), gerada uma vez e reutilizada em reenvios", `submittedAt` "epoch ms em que o `txHash` foi recebido", `fileAvailable`; `DeviceBindingEntity` com `walletAddress` (PK, minúsculo), `publicKeyHex` "`String` (130)", `deviceId` "Nulo até a confirmação") conforme `$SPEC/data-model.md` §2
+- [X] T048 [P] [US1] Implementar `$PKG/data/gallery/GalleryRepository.kt` (MediaStore `Pictures/HashLens`, gravação e releitura)
+- [X] T049 [P] [US1] Implementar `$PKG/data/chain/RegistryTxBuilder.kt` (calldata de `registerDevice`, `registerCapture`, `registerEdit`; estimativa de gás; checagem de saldo)
+- [X] T050 [US1] Implementar `$PKG/data/chain/ReceiptTracker.kt` (polling de recibo, parse de `ImageRegistered`/`DeviceRegistered`)
+- [X] T051 [US1] Implementar `$PKG/domain/usecase/EnsureDeviceBoundUseCase.kt` até T041 passar (alias da carteira → procura a chave em `getDevicesOf` → `registerDevice` se ausente; nunca revoga vínculos)
+- [X] T052 [US1] Implementar `$PKG/domain/usecase/RegisterLocalImageUseCase.kt` (monta payload, assina uma vez, envia, grava `txHash` e `submittedAt`, atualiza status; reutilizado por edição e reenvio)
+- [X] T053 [US1] Implementar `$PKG/domain/usecase/CaptureAndRegisterUseCase.kt` (encode → hashes → galeria → releitura → `EnsureDeviceBoundUseCase` → `RegisterLocalImageUseCase`)
+- [X] T054 [US1] Implementar `$PKG/work/PendingTxWorker.kt` até T044 passar (acompanha `PENDING` e `FAILED(TIMEOUT)`; reconcilia por `getIdBySha256` antes de qualquer transição para `FAILED`; aplica o prazo de `ChainConfig`)
+- [X] T055 [US1] Criar telas sem estado `WalletSheet`, `CaptureScreen` e `RegistrationProgressScreen` com previews de todos os estados de `docs/referencia/ux.md` 4.3–4.5 (inclusive vínculo de aparelho e falha por prazo) e screenshot tests; **revisão da autora antes da ligação**
+- [X] T056 [US1] Ligar `$PKG/ui/wallet/WalletSheet.kt` ao `WalletViewModel.kt` (conexão, endereço abreviado, aviso de rede, saldo, link para faucet)
+- [X] T057 [US1] Ligar `$PKG/ui/capture/CaptureScreen.kt` e `RegistrationProgressScreen.kt` ao `CaptureViewModel.kt` (CameraX, captura, etapas do registro, link do Etherscan nos detalhes técnicos; em `AlreadyRegistered`, mostrar "Esta imagem já está registrada" com o botão "Ver registro", que abre `VerificationResultScreen` desse registro — spec Edge Cases)
+- [X] T103 [US1] Checar saldo antes de abrir a carteira (FR-003, US1 cenário 4): `RegistryTxBuilder.estimate` em `EnsureDeviceBoundUseCase` (lança `InsufficientFundsException`) e em `RegisterLocalImageUseCase` (`SubmissionResult.InsufficientFunds`), `CaptureResult.InsufficientFunds(localId, cost)` e `FailureReason.INSUFFICIENT_FUNDS`; estimativa que reverteria → `FAILED(REVERTED)` sem abrir a carteira; testes em `EnsureDeviceBoundUseCaseTest` e `CaptureAndRegisterUseCaseTest`
+- [X] T058 [US1] Tratar saldo insuficiente (`CaptureResult.InsufficientFunds` de T103: custo estimado em SepoliaETH e link do faucet), transação rejeitada e troca de conta/rede durante a operação em `CaptureViewModel.kt`, com textos em `android/app/src/main/res/values/strings.xml`
 
 **Checkpoint**: US1 funcional e demonstrável (MVP).
+
+### Manutenção após a US1
+
+- [ ] T102 Investigar e corrigir `connectedDebugAndroidTest` terminando com `BUILD FAILED` ("There were failing tests") mesmo com todos os testes instrumentados passando (relatório com 0 falhas; ocorre também no `PerceptualHasherTest`, com ou sem filtro de classe). Suspeita: AGP 9 + plugin `android-junit5` em `android/app/build.gradle.kts`. Critério: tarefa termina com `BUILD SUCCESSFUL` quando os testes passam e falha quando um teste falha. Branch própria `chore/<NNN>-...`
 
 ---
 
@@ -279,6 +284,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 - **US4 (6)**: depende de US3.
 - **US5 (7)**: depende de 2; exercitado plenamente após US3.
 - **US6 (8)**: depende de US1 (T052, T054).
+- **Manutenção (T102)**: após a US1, antes da US2; não depende de nenhuma história.
 - **Polish (9)**: após as histórias desejadas.
 
 ### Within Each User Story

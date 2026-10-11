@@ -48,6 +48,19 @@ data class StatusColors(
     val all: List<StatusColor> get() = listOf(original, edited, visualMatch, tampered, notRegistered, pending, failed)
 }
 
+/**
+ * Câmera: o visor é sempre escuro, nos dois temas, para a foto ser o centro. Controles e
+ * cantoneiras do visor em Papel (direção visual §5); [scrim] cobre o visor atrás de textos.
+ */
+@Immutable
+data class CameraColors(val background: Color, val content: Color, val scrim: Color)
+
+internal val HashLensCameraColors = CameraColors(
+    background = Color(0xFF0B0B0C),
+    content = PaperLight,
+    scrim = Color(0x99000000)
+)
+
 private val OxideRedLight = StatusColor(content = Color(0xFFAE2F29), container = Color(0xFFF8DFDC))
 private val OxideRedDark = StatusColor(content = Color(0xFFFF9F95), container = Color(0xFF47201C))
 

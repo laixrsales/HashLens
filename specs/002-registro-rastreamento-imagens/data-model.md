@@ -65,27 +65,27 @@ ser registrada duas vezes (`mapping(bytes32 keccakPubKey => uint32)`).
 
 ### 2.1 LocalImageEntity
 
-| Campo              | Tipo Kotlin          | Descrição                                                               |
-| ------------------ | -------------------- | ----------------------------------------------------------------------- |
-| `localId`          | `Long` (PK, autogen) |                                                                         |
-| `contentUri`       | `String`             | URI MediaStore do arquivo na galeria.                                   |
-| `sha256Hex`        | `String` (64)        | Calculado conforme `hashing-spec.md`. Índice único.                     |
-| `pHashHex`         | `String` (16)        |                                                                         |
-| `origin`           | `ImageOrigin`        | `CAPTURE`, `EDIT`.                                                      |
-| `parentRecordId`   | `Long?`              | `recordId` do pai (edições).                                            |
-| `originalRecordId` | `Long?`              | Preenchido após confirmação.                                            |
-| `operations`       | `String?`            | Operações aplicadas (edições).                                          |
-| `walletAddress`    | `String`             | Carteira que solicitou o registro.                                      |
-| `deviceId`         | `Int?`               |                                                                         |
-| `signatureHex`     | `String?`            | `r‖s` (128 hex), gerada uma vez e reutilizada em reenvios.              |
-| `status`           | `RegistrationStatus` | Ver máquina de estados.                                                 |
-| `txHash`           | `String?`            |                                                                         |
-| `recordId`         | `Long?`              | Lido do evento `ImageRegistered` no recibo.                             |
-| `submittedAt`      | `Long?`              | epoch ms em que o `txHash` foi recebido; base do prazo de 30 min (R23). |
-| `failureReason`    | `FailureReason?`     | `REJECTED`, `REVERTED`, `TIMEOUT`, `HASH_MISMATCH`, `NETWORK`.          |
-| `errorMessage`     | `String?`            |                                                                         |
-| `createdAt`        | `Long`               | epoch ms.                                                               |
-| `fileAvailable`    | `Boolean`            | Falso se o arquivo foi removido da galeria.                             |
+| Campo              | Tipo Kotlin          | Descrição                                                                            |
+| ------------------ | -------------------- | ------------------------------------------------------------------------------------ |
+| `localId`          | `Long` (PK, autogen) |                                                                                      |
+| `contentUri`       | `String`             | URI MediaStore do arquivo na galeria.                                                |
+| `sha256Hex`        | `String` (64)        | Calculado conforme `hashing-spec.md`. Índice único.                                  |
+| `pHashHex`         | `String` (16)        |                                                                                      |
+| `origin`           | `ImageOrigin`        | `CAPTURE`, `EDIT`.                                                                   |
+| `parentRecordId`   | `Long?`              | `recordId` do pai (edições).                                                         |
+| `originalRecordId` | `Long?`              | Preenchido após confirmação.                                                         |
+| `operations`       | `String?`            | Operações aplicadas (edições).                                                       |
+| `walletAddress`    | `String`             | Carteira que solicitou o registro.                                                   |
+| `deviceId`         | `Int?`               |                                                                                      |
+| `signatureHex`     | `String?`            | `r‖s` (128 hex), gerada uma vez e reutilizada em reenvios.                           |
+| `status`           | `RegistrationStatus` | Ver máquina de estados.                                                              |
+| `txHash`           | `String?`            |                                                                                      |
+| `recordId`         | `Long?`              | Lido do evento `ImageRegistered` no recibo.                                          |
+| `submittedAt`      | `Long?`              | epoch ms em que o `txHash` foi recebido; base do prazo de 30 min (R23).              |
+| `failureReason`    | `FailureReason?`     | `REJECTED`, `REVERTED`, `TIMEOUT`, `HASH_MISMATCH`, `NETWORK`, `INSUFFICIENT_FUNDS`. |
+| `errorMessage`     | `String?`            |                                                                                      |
+| `createdAt`        | `Long`               | epoch ms.                                                                            |
+| `fileAvailable`    | `Boolean`            | Falso se o arquivo foi removido da galeria.                                          |
 
 Arquivos importados de terceiros para edição não são persistidos como `LocalImageEntity`;
 apenas a versão editada resultante (`origin = EDIT`).
@@ -104,6 +104,8 @@ apenas a versão editada resultante (`origin = EDIT`).
 
 ```text
 LOCAL_ONLY ──(usuário solicita registro)──▶ AWAITING_WALLET
+LOCAL_ONLY ──(estimativa de gás: saldo insuficiente)──▶ FAILED   (failureReason = INSUFFICIENT_FUNDS, sem abrir a carteira)
+LOCAL_ONLY ──(estimativa de gás: transação reverteria)──▶ FAILED (failureReason = REVERTED, sem abrir a carteira)
 AWAITING_WALLET ──(aprovada)──▶ PENDING          (txHash definido)
 AWAITING_WALLET ──(rejeitada / timeout)──▶ FAILED
 PENDING ──(recibo status=1)──▶ CONFIRMED          (recordId definido)
@@ -117,6 +119,11 @@ FAILED ──(reenviar; getIdBySha256(sha) = 0)──▶ AWAITING_WALLET
 ```
 
 `CONFIRMED` é terminal. Só imagens `CONFIRMED` podem ser editadas (FR-015).
+
+**Saldo (FR-003)**: antes de abrir a carteira, o app estima o gás (`eth_estimateGas`, margem de
+20%) e compara `gasLimit × gasPrice` com o saldo, tanto para `registerDevice` quanto para o
+registro da imagem. Com saldo insuficiente, nada é enviado e a UI informa o custo estimado e o
+faucet; a assinatura do aparelho já gerada fica guardada para o reenvio.
 
 **Reenvio e carteira**: o reenvio exige a mesma carteira (`walletAddress`): `signatureHex` inclui
 o `registrant` no payload (signature-payload §1) e não vale para outra carteira. Com outra

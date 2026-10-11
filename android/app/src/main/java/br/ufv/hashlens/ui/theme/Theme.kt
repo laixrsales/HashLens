@@ -11,6 +11,7 @@ private val LocalStatusColors = staticCompositionLocalOf { LightStatusColors }
 private val LocalSpacing = staticCompositionLocalOf { Spacing() }
 private val LocalSizes = staticCompositionLocalOf { Sizes() }
 private val LocalExtendedTypography = staticCompositionLocalOf { HashLensExtendedTypography }
+private val LocalCameraColors = staticCompositionLocalOf { HashLensCameraColors }
 
 /**
  * Tema do HashLens (docs/design/direcao-visual.md), claro e escuro. Cor dinâmica (Material You)
@@ -25,7 +26,8 @@ fun HashLensTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composab
         LocalStatusColors provides if (darkTheme) DarkStatusColors else LightStatusColors,
         LocalSpacing provides Spacing(),
         LocalSizes provides Sizes(),
-        LocalExtendedTypography provides HashLensExtendedTypography
+        LocalExtendedTypography provides HashLensExtendedTypography,
+        LocalCameraColors provides HashLensCameraColors
     ) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
@@ -53,4 +55,8 @@ object HashLensTheme {
     val typography: ExtendedTypography
         @Composable @ReadOnlyComposable
         get() = LocalExtendedTypography.current
+
+    val cameraColors: CameraColors
+        @Composable @ReadOnlyComposable
+        get() = LocalCameraColors.current
 }

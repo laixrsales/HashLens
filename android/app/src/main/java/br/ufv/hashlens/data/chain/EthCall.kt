@@ -4,7 +4,6 @@ import java.io.IOException
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.protocol.core.methods.request.Transaction
-import org.web3j.protocol.http.HttpService
 
 /** Transporte de `eth_call` (bloqueante). Separado do [RegistryReader] para os testes. */
 fun interface EthCall {
@@ -17,9 +16,7 @@ fun interface EthCall {
 }
 
 /** [EthCall] via JSON-RPC HTTP com web3j, sem carteira (research R2). */
-class Web3jEthCall(rpcUrl: String) : EthCall {
-    private val web3j = Web3j.build(HttpService(rpcUrl))
-
+class Web3jEthCall(private val web3j: Web3j) : EthCall {
     override fun call(to: String, data: String): String {
         val response = try {
             web3j.ethCall(Transaction.createEthCallTransaction(null, to, data), DefaultBlockParameterName.LATEST)
