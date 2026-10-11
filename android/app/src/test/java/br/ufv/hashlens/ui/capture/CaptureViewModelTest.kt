@@ -260,7 +260,7 @@ class CaptureViewModelTest {
     }
 
     @Test
-    fun `já registrada leva ao registro no explorador enquanto a verificação não existe`() = runTest(dispatcher) {
+    fun `já registrada leva ao Resultado da verificação do registro`() = runTest(dispatcher) {
         capture(CaptureResult.AlreadyRegistered(recordId = 5))
         val viewModel = viewModel()
         val effects = effects(viewModel)
@@ -269,7 +269,7 @@ class CaptureViewModelTest {
         viewModel.onProgressAction(RegistrationProgressAction.ViewRecord(5))
 
         viewModel.stage() shouldBe RegistrationStage.AlreadyRegistered(5)
-        effects shouldBe listOf(CaptureEffect.OpenUrl(config.addressUrl(CONTRACT)))
+        effects shouldBe listOf(CaptureEffect.ViewRecord(5))
     }
 
     @Test

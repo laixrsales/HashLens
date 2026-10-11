@@ -8,13 +8,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import br.ufv.hashlens.ui.capture.CaptureRoute
 import br.ufv.hashlens.ui.home.HomeAction
 import br.ufv.hashlens.ui.home.HomeRoute
+import br.ufv.hashlens.ui.verify.VerifyRoute
+import br.ufv.hashlens.ui.verify.VerifyViewModel
 import com.reown.appkit.ui.appKitGraph
 import com.reown.appkit.ui.openAppKit
 
@@ -43,16 +47,37 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
                 )
             }
             composable(Route.Capture.path) {
-                CaptureRoute(onClose = { navController.popBackStack(Route.Home.path, inclusive = false) })
+                CaptureRoute(
+                    onClose = { navController.popBackStack(Route.Home.path, inclusive = false) },
+                    onViewRecord = { navController.navigate(Route.verificationResult(it)) }
+                )
+            }
+            composable(Route.Verify.path) {
+                VerifyRoute(
+                    onClose = { navController.popBackStack() },
+                    onOpenHistory = { navController.navigate(Route.Genealogy.path) }
+                )
+            }
+            composable(
+                Route.VerificationResult.path,
+                arguments = listOf(navArgument(VerifyViewModel.RECORD_ID) { type = NavType.LongType })
+            ) {
+                VerifyRoute(
+                    onClose = { navController.popBackStack() },
+                    onOpenHistory = { navController.navigate(Route.Genealogy.path) }
+                )
             }
             appKitGraph(navController)
-            // Telas das próximas histórias (US2–US6): ainda vazias
-            Route.entries.filter { it != Route.Home && it != Route.Capture }.forEach { route ->
+            // Telas das próximas histórias (US3–US6): ainda vazias
+            Route.entries.filter { it !in BUILT }.forEach { route ->
                 composable(route.path) { Box(Modifier.fillMaxSize()) }
             }
         }
     }
 }
+
+/** Destinos que já têm tela; os demais ficam vazios até a sua história. */
+private val BUILT = setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult)
 
 private fun HomeAction.route(): Route? = when (this) {
     HomeAction.VerifyImage -> Route.Verify

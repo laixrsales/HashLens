@@ -163,7 +163,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 - [X] T062 [P] [US2] Criar `$PKG/domain/model/VerificationResult.kt`
 - [X] T063 [US2] Implementar `$PKG/domain/usecase/VerifyImageUseCase.kt` conforme algoritmo de `$SPEC/contracts/verification-result.md` §1
 - [X] T064 [US2] Criar telas sem estado `VerifyScreen` e `VerificationResultScreen` com previews dos seis resultados, de versão alterada com 0%, do estado analisando e de arquivo não suportado (`docs/referencia/ux.md` 4.7–4.8) e screenshot tests; **revisão da autora**
-- [ ] T065 [US2] Ligar `$PKG/ui/verify/VerifyScreen.kt` e `VerificationResultScreen.kt` ao `VerifyViewModel.kt` (Photo Picker como único ponto de entrada, etapas da análise, resultado, rodapé fixo)
+- [X] T065 [US2] Ligar `$PKG/ui/verify/VerifyScreen.kt` e `VerificationResultScreen.kt` ao `VerifyViewModel.kt` (Photo Picker como único ponto de entrada, etapas da análise, resultado, rodapé fixo)
 - [ ] T066 [US2] Garantir rota de verificação sem guarda de sessão em `$PKG/ui/navigation/HashLensNavHost.kt`
 
 **Checkpoint**: US1 e US2 funcionam independentemente.

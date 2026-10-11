@@ -35,8 +35,11 @@ class VerifyImageUseCase @Inject constructor(
     private val signatureVerifier: DeviceSignatureVerifier,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
-    /** @param bytes conteúdo exato do arquivo escolhido. */
-    suspend operator fun invoke(bytes: ByteArray): VerificationResult {
+    /**
+     * @param bytes conteúdo exato do arquivo escolhido.
+     * @param onQuerying avisado quando a imagem já foi lida e começam as consultas ao contrato.
+     */
+    suspend operator fun invoke(bytes: ByteArray, onQuerying: () -> Unit = {}): VerificationResult {
         // O pHash decodifica a imagem: calculado já no passo 1, serve de teste de formato sem decodificar duas vezes
         val pHash = withContext(defaultDispatcher) {
             try {
@@ -46,16 +49,25 @@ class VerifyImageUseCase @Inject constructor(
             }
         } ?: return VerificationResult.Error(Reason.UNSUPPORTED_FILE)
         val sha256 = withContext(defaultDispatcher) { sha256Hasher.hash(bytes.inputStream()) }
+        onQuerying()
 
-        return try {
-            with(Lookup()) { byExactHash(sha256) ?: byPerceptualHash(pHash) }
-        } catch (_: RegistryException.Network) {
-            VerificationResult.Error(Reason.NETWORK)
-        } catch (_: RegistryException) {
-            VerificationResult.Error(Reason.UNKNOWN)
-        } catch (_: InconsistentRegistryException) {
-            VerificationResult.Error(Reason.UNKNOWN)
-        }
+        return classifying { byExactHash(sha256) ?: byPerceptualHash(pHash) }
+    }
+
+    /**
+     * Resultado de um registro já conhecido pelo [id] (ex.: "Ver registro" quando a foto já estava
+     * registrada): original, versão alterada ou adulterado, com a mesma validação da assinatura.
+     */
+    suspend fun verifyRecord(id: Long): VerificationResult = classifying { byId(id) }
+
+    private suspend fun classifying(block: suspend Lookup.() -> VerificationResult): VerificationResult = try {
+        Lookup().block()
+    } catch (_: RegistryException.Network) {
+        VerificationResult.Error(Reason.NETWORK)
+    } catch (_: RegistryException) {
+        VerificationResult.Error(Reason.UNKNOWN)
+    } catch (_: InconsistentRegistryException) {
+        VerificationResult.Error(Reason.UNKNOWN)
     }
 
     /** Consultas de uma verificação, com os registros já lidos guardados (várias versões partilham a original). */
@@ -63,8 +75,10 @@ class VerifyImageUseCase @Inject constructor(
         private val records = mutableMapOf<Long, ImageRecord>()
 
         /** Passos 2 a 4; `null` se o SHA-256 não está registrado. */
-        suspend fun byExactHash(sha256: Sha256): VerificationResult? {
-            val id = reader.getIdBySha256(sha256) ?: return null
+        suspend fun byExactHash(sha256: Sha256): VerificationResult? = reader.getIdBySha256(sha256)?.let { byId(it) }
+
+        /** Passo 4: assinatura, depois original ou versão alterada. */
+        suspend fun byId(id: Long): VerificationResult {
             val record = record(id)
             return when {
                 !hasValidSignature(record) -> VerificationResult.Tampered(record.toView())

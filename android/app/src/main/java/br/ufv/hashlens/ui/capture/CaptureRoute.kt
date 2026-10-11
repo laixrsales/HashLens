@@ -29,9 +29,14 @@ import br.ufv.hashlens.ui.common.rememberCameraPermissionState
  * (o mesmo [CaptureViewModel] acompanha os dois).
  *
  * @param onClose volta ao Início (fechar, "Concluir", "Voltar ao início").
+ * @param onViewRecord abre o Resultado da verificação do registro ("Ver registro").
  */
 @Composable
-fun CaptureRoute(onClose: () -> Unit, viewModel: CaptureViewModel = hiltViewModel()) {
+fun CaptureRoute(
+    onClose: () -> Unit,
+    onViewRecord: (recordId: Long) -> Unit,
+    viewModel: CaptureViewModel = hiltViewModel()
+) {
     val state by viewModel.ui.collectAsStateWithLifecycle()
     val permission = rememberCameraPermissionState()
     val camera = rememberCameraController()
@@ -44,6 +49,7 @@ fun CaptureRoute(onClose: () -> Unit, viewModel: CaptureViewModel = hiltViewMode
             when (effect) {
                 CaptureEffect.Close -> onClose()
                 is CaptureEffect.OpenUrl -> uriHandler.openUri(effect.url)
+                is CaptureEffect.ViewRecord -> onViewRecord(effect.recordId)
                 is CaptureEffect.Notice -> snackbar.showSnackbar(
                     effect.arg?.let { resources.getString(effect.text, it) } ?: resources.getString(effect.text)
                 )

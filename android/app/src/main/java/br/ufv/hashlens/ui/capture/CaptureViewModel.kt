@@ -58,6 +58,9 @@ sealed interface CaptureEffect {
 
     data class OpenUrl(val url: String) : CaptureEffect
 
+    /** Abre o Resultado da verificação do registro (foto que já estava registrada). */
+    data class ViewRecord(val recordId: Long) : CaptureEffect
+
     /** Aviso curto (snackbar); [arg] preenche o `%1$s` do texto. */
     data class Notice(@StringRes val text: Int, val arg: String? = null) : CaptureEffect
 }
@@ -145,10 +148,7 @@ class CaptureViewModel @Inject constructor(
                 _ui.update { it.copy(progress = null, camera = it.camera.copy(camera = CameraState.Ready)) }
             }
             RegistrationProgressAction.OpenFaucet -> send(CaptureEffect.OpenUrl(config.faucetUrl))
-            // Até a tela de verificação existir (US2), o registro abre no explorador da rede
-            is RegistrationProgressAction.ViewRecord -> send(
-                CaptureEffect.OpenUrl(config.addressUrl(config.registryAddress))
-            )
+            is RegistrationProgressAction.ViewRecord -> send(CaptureEffect.ViewRecord(action.recordId))
             is RegistrationProgressAction.OpenUrl -> send(CaptureEffect.OpenUrl(action.url))
         }
     }

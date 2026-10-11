@@ -305,6 +305,39 @@ class VerifyImageUseCaseTest {
     }
 
     @Test
+    fun `avisa o início das consultas depois de ler a imagem`() = runTest {
+        var queried = false
+        coEvery { reader.getIdBySha256(sha256Of(FILE)) } answers {
+            queried shouldBe true
+            null
+        }
+
+        useCase(FILE, onQuerying = { queried = true })
+
+        queried shouldBe true
+    }
+
+    @Test
+    fun `registro pelo id é classificado como na busca pelo arquivo`() = runTest {
+        val original = register(id = 1, sha256 = sha(1), pHash = ORIGINAL_PHASH)
+        val edition = register(id = 2, sha256 = sha(2), pHash = QUERY_PHASH, parentId = 1, originalId = 1)
+        val tampered = register(id = 3, sha256 = sha(3), pHash = QUERY_PHASH, validSignature = false)
+
+        useCase.verifyRecord(1) shouldBe VerificationResult.RegisteredOriginal(view(original))
+        useCase.verifyRecord(2) shouldBe VerificationResult.RegisteredEdited(view(edition), view(original), 12.5)
+        useCase.verifyRecord(3) shouldBe VerificationResult.Tampered(view(tampered))
+    }
+
+    @Test
+    fun `registro pelo id inexistente é Error UNKNOWN e falha de rede é NETWORK`() = runTest {
+        useCase.verifyRecord(99) shouldBe VerificationResult.Error(Reason.UNKNOWN)
+
+        coEvery { reader.getRecord(any()) } throws RegistryException.Network(IOException("offline"))
+
+        useCase.verifyRecord(1) shouldBe VerificationResult.Error(Reason.NETWORK)
+    }
+
+    @Test
     fun `arquivo que não decodifica é Formato não suportado, sem consultar o contrato`() = runTest {
         every { perceptualHasher.hash(any()) } throws IllegalArgumentException("arquivo não é uma imagem decodificável")
 
