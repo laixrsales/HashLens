@@ -38,6 +38,26 @@
     <string name="verification_network_message">Sem conexão com a rede. Tente novamente.</string>
     <string name="verification_unsupported_title">Formato não suportado</string>
     <string name="verification_unsupported_message">Não foi possível ler este arquivo. Use uma imagem JPEG, PNG ou WebP; fotos em HEIC não são aceitas.</string>
+    <string name="verification_unknown_message">A rede respondeu com dados inesperados. Tente novamente em alguns minutos.</string>
+    <string name="verification_footer">O registro comprova quando e por quem o arquivo foi registrado, não que a cena retratada seja real.</string>
+
+    <!-- Verificar imagem e Resultado da verificação (ux.md §4.7 e §4.8; direção visual §7.2) -->
+    <string name="verify_title">Verificar imagem</string>
+    <string name="verify_intro">Escolha uma imagem da galeria para saber se ela está registrada, por quem e quanto mudou desde a original.</string>
+    <string name="verify_image_description">Imagem escolhida para verificar</string>
+    <string name="action_choose_image">Escolher imagem</string>
+    <string name="action_back">Voltar</string>
+    <string name="verification_result_title">Resultado</string>
+    <string name="fact_registered_by">Registrada por</string>
+    <string name="fact_edited_by">Editada por</string>
+    <string name="fact_when">Em</string>
+    <string name="fact_original_by">Original de</string>
+    <string name="fact_device">Aparelho</string>
+    <string name="fact_device_value">nº %1$d</string>
+    <string name="visual_match_candidates">Registros visualmente iguais</string>
+    <string name="visual_match_candidate_by">Registrada por %1$s</string>
+    <string name="action_view_history">Ver histórico da imagem</string>
+    <string name="action_verify_another">Verificar outra imagem</string>
 
     <!-- Acompanhamento do registro (ux.md §4.5) -->
     <string name="registration_pending_message">A rede está confirmando o registro. Você pode sair desta tela; o registro continua.</string>
@@ -75,6 +95,7 @@
     <string name="technical_wallet">Carteira</string>
     <string name="technical_device">Aparelho</string>
     <string name="technical_record">Registro</string>
+    <string name="technical_original_record">Registro original</string>
     <string name="technical_transaction">Transação</string>
     <string name="technical_open_explorer">Ver no Etherscan</string>
     <string name="state_expanded">expandido</string>

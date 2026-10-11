@@ -2,10 +2,11 @@ package br.ufv.hashlens.ui.verify
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
@@ -17,8 +18,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * T060: título e mensagem obrigatória de cada resultado (verification-result §3) e o rodapé fixo
+ * T060: título e mensagem obrigatória de cada resultado (verification-result §3) e o rodapé obrigatório
  * dos resultados positivos. Os textos são os do contrato, literalmente, em pt-BR.
+ *
+ * A quantidade da correspondência visual usa plural ("2 registros") em vez do "registro(s)" do
+ * contrato (hashlens-ui: plurais em `<plurals>`).
  *
  * Os resultados aparecem em [VerificationResultScreen]; o arquivo não suportado aparece na própria
  * [VerifyScreen], que nomeia os formatos aceitos (ux.md §4.7 e §4.8).
@@ -29,7 +33,7 @@ class VerifyScreenTest {
     val compose = createComposeRule()
 
     private fun showResult(result: VerificationResult) = compose.setContent {
-        HashLensTheme { VerificationResultScreen(result = result, onAction = {}) }
+        HashLensTheme { VerificationResultScreen(VerificationResultUiState(result), onAction = {}) }
     }
 
     private fun showVerify(state: VerifyUiState) = compose.setContent {
@@ -45,9 +49,9 @@ class VerifyScreenTest {
         compose.onAllNodesWithText(text, substring = substring).onFirst().assertExists()
     }
 
-    /** Rodapé fixo: visível sem rolar, em todo resultado positivo. */
+    /** Rodapé obrigatório de todo resultado positivo, ao fim da rolagem (direção visual §7.2). */
     private fun assertFooter() {
-        compose.onNodeWithText(FOOTER).assertIsDisplayed()
+        compose.onNodeWithText(FOOTER).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -88,7 +92,7 @@ class VerifyScreenTest {
 
         assertTitle("Correspondência visual")
         assertText(
-            "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a 2 registro(s). " +
+            "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a 2 registros. " +
                 "Pode ser uma cópia recomprimida."
         )
         assertFooter()
