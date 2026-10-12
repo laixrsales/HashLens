@@ -244,8 +244,8 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T085 [P] [US6] Teste `$TEST/domain/usecase/RetryRegistrationUseCaseTest.kt` (`getIdBySha256(sha) ≠ 0` → `CONFIRMED` com esse `recordId`, sem abrir a carteira; `= 0` → `AWAITING_WALLET` reutilizando `signatureHex`; erro de rede na checagem → permanece `FAILED(NETWORK)` sem enviar; carteira conectada ≠ `walletAddress` do registro → reenvio bloqueado com a mensagem "Conecte a carteira 0x…abcd usada neste registro para tentar de novo", sem abrir a carteira e sem nova assinatura) — FR-014, research R23, data-model §2.3
-- [ ] T086 [P] [US6] Teste `$TEST/ui/library/LibraryViewModelTest.kt` (agrupamento por original, arquivo indisponível, reenvio dispara `RetryRegistrationUseCase`, `FAILED(TIMEOUT)` exibido como "Não registrada – tentar de novo")
+- [X] T085 [P] [US6] Teste `$TEST/domain/usecase/RetryRegistrationUseCaseTest.kt` (`getIdBySha256(sha) ≠ 0` → `CONFIRMED` com esse `recordId`, sem abrir a carteira; `= 0` → `AWAITING_WALLET` reutilizando `signatureHex`; erro de rede na checagem → permanece `FAILED(NETWORK)` sem enviar; carteira conectada ≠ `walletAddress` do registro → reenvio bloqueado com a mensagem "Conecte a carteira 0x…abcd usada neste registro para tentar de novo", sem abrir a carteira e sem nova assinatura) — FR-014, research R23, data-model §2.3
+- [X] T086 [P] [US6] Teste `$TEST/ui/library/LibraryViewModelTest.kt` (agrupamento por original, arquivo indisponível, reenvio dispara `RetryRegistrationUseCase`, `FAILED(TIMEOUT)` exibido como "Não registrada – tentar de novo")
 
 ### Implementation for User Story 6
 
