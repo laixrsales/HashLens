@@ -7,14 +7,12 @@ import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.di.DefaultDispatcher
-import br.ufv.hashlens.domain.model.EditOperation
-import br.ufv.hashlens.domain.model.EditOperationCodec
 import br.ufv.hashlens.domain.model.ImageRecord
 import br.ufv.hashlens.domain.model.PHash
-import br.ufv.hashlens.domain.model.RecordView
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
+import br.ufv.hashlens.domain.model.toView
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -127,23 +125,4 @@ class VerifyImageUseCase @Inject constructor(
 
     /** O contrato apontou para um registro que não devolve (ex.: nó desatualizado). */
     private class InconsistentRegistryException(message: String) : Exception(message)
-
-    private fun ImageRecord.toView() = RecordView(
-        id = id,
-        sha256 = sha256.hex,
-        pHash = pHash.hex,
-        registrant = registrant,
-        deviceId = deviceId,
-        timestamp = timestamp,
-        operations = decodedOperations(),
-        // getRecord não informa a transação que criou o registro
-        txUrl = null
-    )
-
-    // O contrato só limita o tamanho; um texto fora do formato do app (hashing-spec §4) não invalida o registro
-    private fun ImageRecord.decodedOperations(): List<EditOperation> = try {
-        EditOperationCodec.decode(operations)
-    } catch (_: IllegalArgumentException) {
-        emptyList()
-    }
 }

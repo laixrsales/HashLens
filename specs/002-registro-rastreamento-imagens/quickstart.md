@@ -31,11 +31,12 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --gas-es
   contra ≈7,5 M exigido pela rede), e sem o multiplicador a transação falha com `OutOfGas`.
   Para conferir antes de enviar: `cast estimate --create $(forge inspect ImageRegistry bytecode) --from <carteira> --rpc-url $SEPOLIA_RPC_URL`.
 
-Anotar o endereço implantado na tabela abaixo.
+Anotar o endereço e o bloco do deploy na tabela abaixo. O bloco aparece como `blockNumber` (hex) no
+recibo em `contracts/broadcast/Deploy.s.sol/11155111/run-latest.json`.
 
-| Data       | Endereço `ImageRegistry` (Sepolia)           | Commit    |
-| ---------- | -------------------------------------------- | --------- |
-| 2026-10-06 | `0xF2f42B34414936e456c6AC10c4844f456CAD65Ba` | `ac29e33` |
+| Data       | Endereço `ImageRegistry` (Sepolia)           | Bloco do deploy | Commit    |
+| ---------- | -------------------------------------------- | --------------- | --------- |
+| 2026-10-06 | `0xF2f42B34414936e456c6AC10c4844f456CAD65Ba` | 11858572        | `ac29e33` |
 
 ## 3. Aplicativo
 
@@ -44,6 +45,9 @@ Anotar o endereço implantado na tabela abaixo.
 ```properties
 sepolia.rpcUrl=https://...
 registry.address=0x...
+# Bloco do deploy (tabela acima): a busca da transação de cada registro na genealogia começa nele.
+# Sem ele, a busca vai desde a origem da rede, e RPCs públicos costumam recusar o intervalo.
+registry.deployBlock=11858572
 reown.projectId=...
 ```
 

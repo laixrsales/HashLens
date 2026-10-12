@@ -49,5 +49,14 @@ data class Sizes(
     /** Lado maior da miniatura da foto no Acompanhamento do registro. */
     val thumbnail: Dp = 200.dp,
     /** Largura mínima de cada ferramenta na faixa de filtros do Editor. */
-    val toolButtonWidth: Dp = 72.dp
+    val toolButtonWidth: Dp = 72.dp,
+    /** Miniatura de uma versão no Histórico da imagem. */
+    val genealogyThumbnail: Dp = 64.dp,
+    /** Largura da trilha da linha do tempo do Histórico. */
+    val timelineRail: Dp = 24.dp,
+    /** Marcador de cada passo da linha do tempo; o da imagem consultada é maior. */
+    val timelineMarker: Dp = 10.dp,
+    val timelineMarkerLarge: Dp = 14.dp,
+    /** Altura do marcador a partir do topo do passo até o selo de status ser medido. */
+    val timelineMarkerOffset: Dp = 12.dp
 )

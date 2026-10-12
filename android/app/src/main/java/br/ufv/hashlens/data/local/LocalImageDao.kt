@@ -21,6 +21,10 @@ interface LocalImageDao {
     @Query("SELECT * FROM local_image WHERE sha256Hex = :sha256Hex")
     suspend fun getBySha256(sha256Hex: String): LocalImageEntity?
 
+    /** Imagens confirmadas com estes `recordId`s (transação e miniatura no Histórico da imagem). */
+    @Query("SELECT * FROM local_image WHERE status = 'CONFIRMED' AND recordId IN (:recordIds)")
+    suspend fun getConfirmedByRecordIds(recordIds: List<Long>): List<LocalImageEntity>
+
     @Query("SELECT * FROM local_image WHERE status IN (:statuses) ORDER BY createdAt")
     suspend fun getByStatus(statuses: List<RegistrationStatus>): List<LocalImageEntity>
 

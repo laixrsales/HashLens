@@ -17,6 +17,8 @@ data class ChainConfig(
     val explorerUrl: String = SEPOLIA_EXPLORER_URL,
     /** Onde pedir saldo de teste gratuito (FR-003). */
     val faucetUrl: String = SEPOLIA_FAUCET_URL,
+    /** Bloco do deploy do contrato: início da busca de eventos (`eth_getLogs`); 0 busca desde a origem. */
+    val deployBlock: Long = 0,
     /** Prazo sem recibo até a transação pendente passar a `FAILED(TIMEOUT)` (research R23). */
     val pendingTimeout: Duration = Duration.ofMinutes(DEFAULT_PENDING_TIMEOUT_MINUTES)
 ) {
@@ -34,6 +36,7 @@ data class ChainConfig(
             rpcUrl = BuildConfig.SEPOLIA_RPC_URL,
             registryAddress = BuildConfig.REGISTRY_ADDRESS,
             reownProjectId = BuildConfig.REOWN_PROJECT_ID,
+            deployBlock = BuildConfig.REGISTRY_DEPLOY_BLOCK,
             pendingTimeout = Duration.ofMinutes(BuildConfig.PENDING_TIMEOUT_MINUTES.toLong())
         )
     }

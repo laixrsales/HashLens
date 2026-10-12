@@ -17,3 +17,23 @@ data class RecordView(
     val operations: List<EditOperation>,
     val txUrl: String?
 )
+
+/** Registro on-chain pronto para exibição: hashes em hex e operações decodificadas. */
+fun ImageRecord.toView(): RecordView = RecordView(
+    id = id,
+    sha256 = sha256.hex,
+    pHash = pHash.hex,
+    registrant = registrant,
+    deviceId = deviceId,
+    timestamp = timestamp,
+    operations = decodedOperations(),
+    // getRecord não informa a transação que criou o registro
+    txUrl = null
+)
+
+// O contrato só limita o tamanho; um texto fora do formato do app (hashing-spec §4) não invalida o registro
+private fun ImageRecord.decodedOperations(): List<EditOperation> = try {
+    EditOperationCodec.decode(operations)
+} catch (_: IllegalArgumentException) {
+    emptyList()
+}
