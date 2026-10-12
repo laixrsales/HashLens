@@ -1,0 +1,6 @@
+# samsung SM-M526B (SM7325), Android 13; mediana de 7 execuções após 2 de aquecimento
+megapixels,largura,altura,bytes_jpeg,sha256_mediana_ms,phash_mediana_ms,total_mediana_ms,total_max_ms
+2,1632,1224,908017,0,24,24,26
+8,3264,2448,3626839,2,100,102,107
+12,4000,3000,5449771,4,167,171,172
+48,8000,6000,21776158,16,669,686,688

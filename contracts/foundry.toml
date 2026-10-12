@@ -9,6 +9,9 @@ evm_version = "cancun"
 optimizer = true
 optimizer_runs = 200
 remappings = ["forge-std/=lib/forge-std/src/"]
+# Testes de escala (T093) registram 10.000 imagens numa só chamada de teste, acima do limite padrão de
+# ~1,07 bilhão de gás por teste; na rede, cada registro é uma transação separada
+gas_limit = "max"
 
 [fuzz]
 runs = 256
