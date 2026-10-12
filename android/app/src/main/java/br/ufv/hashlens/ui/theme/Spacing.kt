@@ -58,5 +58,7 @@ data class Sizes(
     val timelineMarker: Dp = 10.dp,
     val timelineMarkerLarge: Dp = 14.dp,
     /** Altura do marcador a partir do topo do passo até o selo de status ser medido. */
-    val timelineMarkerOffset: Dp = 12.dp
+    val timelineMarkerOffset: Dp = 12.dp,
+    /** Largura mínima de cada foto na grade do acervo: duas colunas num telefone. */
+    val libraryCellMinWidth: Dp = 150.dp
 )

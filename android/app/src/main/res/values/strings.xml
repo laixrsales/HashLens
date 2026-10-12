@@ -184,6 +184,41 @@
     <!-- Estados vazios e de erro -->
     <string name="library_empty_title">Nenhuma foto registrada ainda</string>
     <string name="library_empty_message">As fotos que você registrar neste aparelho aparecem aqui.</string>
+
+    <!-- Meu acervo (ux.md §4.10) -->
+    <string name="library_title">Meu acervo</string>
+    <string name="library_loading">Abrindo o acervo…</string>
+    <string name="library_filter_all">Todas</string>
+    <string name="library_filter_pending">Pendentes</string>
+    <string name="library_filter_failed">Com falha</string>
+    <string name="library_filter_count">%1$s (%2$d)</string>
+    <string name="library_empty_pending_title">Nenhuma foto registrando agora</string>
+    <string name="library_empty_pending_message">As fotos aguardando a confirmação da rede aparecem aqui.</string>
+    <string name="library_empty_failed_title">Nenhuma foto com falha</string>
+    <string name="library_empty_failed_message">Todas as fotos deste aparelho foram registradas ou estão registrando.</string>
+    <string name="library_group_original">Original de %1$s</string>
+    <string name="library_group_imported">Versões de uma foto de outra pessoa</string>
+    <string name="library_file_unavailable">Não está mais na galeria</string>
+    <string name="library_retrying">Abrindo a carteira…</string>
+    <string name="library_open_item">Abrir opções da foto</string>
+    <string name="library_photo_description">Foto de %1$s</string>
+    <string name="library_item_taken">Salva em %1$s</string>
+    <string name="library_item_pending_message">O registro continua mesmo se você sair do app. O selo muda quando a rede confirmar.</string>
+    <string name="library_item_unavailable_message">O arquivo foi apagado ou alterado na galeria. O registro continua válido, mas não dá para editar esta foto.</string>
+    <string name="action_edit_photo">Editar foto</string>
+
+    <!-- Carteira (ux.md §4.11) -->
+    <string name="wallet_account_title">Carteira</string>
+    <string name="wallet_account_address">Endereço</string>
+    <string name="wallet_account_network">Rede</string>
+    <string name="wallet_account_sepolia">Sepolia, rede de testes</string>
+    <string name="wallet_account_balance">Saldo de teste</string>
+    <string name="wallet_account_balance_value">%1$s SepoliaETH</string>
+    <string name="wallet_account_balance_loading">Consultando saldo…</string>
+    <string name="wallet_account_copy">Copiar endereço completo</string>
+    <string name="wallet_account_disconnect">Desconectar</string>
+    <string name="wallet_account_disconnect_note">Ao desconectar, as fotos e os registros continuam no aparelho e na rede. Para registrar ou editar, conecte de novo.</string>
+    <string name="wallet_account_low_balance">Pouco para pagar a taxa de um registro. O saldo de teste é gratuito.</string>
     <string name="action_register_photo">Registrar foto</string>
     <string name="action_try_again">Tentar de novo</string>
     <string name="action_choose_another_image">Escolher outra imagem</string>

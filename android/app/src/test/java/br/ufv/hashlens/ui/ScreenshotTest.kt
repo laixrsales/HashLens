@@ -105,11 +105,13 @@ abstract class ScreenshotTest {
 
     /** Rola o conteúdo rolável até o fim e captura; não faz nada se a tela inteira coube. */
     private fun captureScrolledToEnd(name: String, variant: Variant) {
+        // O primeiro rolável na vertical: uma linha que rola na horizontal (ex.: filtros) não conta
         val scrollable = composeRule.onAllNodes(hasScrollAction()).fetchSemanticsNodes()
-        if (scrollable.isEmpty()) return
-        val max = scrollable[0].config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)?.maxValue?.invoke()
+        val index = scrollable.indexOfFirst { it.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange) != null }
+        if (index < 0) return
+        val max = scrollable[index].config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)?.maxValue?.invoke()
         if (max == null || max <= 0f) return
-        val node = composeRule.onAllNodes(hasScrollAction())[0]
+        val node = composeRule.onAllNodes(hasScrollAction())[index]
         node.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, max) }
         composeRule.mainClock.advanceTimeBy(SETTLE_MS)
         composeRule.waitForIdle()
