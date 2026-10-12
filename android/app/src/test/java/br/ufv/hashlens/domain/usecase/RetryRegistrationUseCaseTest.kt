@@ -208,7 +208,15 @@ class RetryRegistrationUseCaseTest {
     }
 
     @Test
-    fun `só registros que falharam são reenviados`() = runTest {
+    fun `imagem presa em LOCAL_ONLY (app fechado antes de enviar) também é retomada`() = runTest {
+        val localId = failed(status = RegistrationStatus.LOCAL_ONLY)
+
+        useCase(localId, WALLET) shouldBe CaptureResult.Submitted(localId, TX)
+        image(localId).status shouldBe RegistrationStatus.PENDING
+    }
+
+    @Test
+    fun `só registros que não foram enviados são reenviados`() = runTest {
         val pending = failed(status = RegistrationStatus.PENDING)
 
         shouldThrow<IllegalArgumentException> { useCase(pending, WALLET) }

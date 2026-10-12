@@ -318,5 +318,7 @@
     <string name="notice_wallet_account_changed">A carteira trocou de conta durante o registro. Volte para a conta %1$s para aprovar.</string>
     <string name="notice_wallet_network_changed">A carteira saiu da Sepolia durante o registro. Volte para a Sepolia para aprovar.</string>
     <string name="notice_wallet_disconnected">A carteira foi desconectada durante o registro. Conecte de novo e toque em Tentar de novo.</string>
+    <string name="notice_insufficient_funds_retry">Saldo de teste insuficiente para registrar. A carteira não foi aberta. Peça saldo gratuito na tela Carteira e tente de novo.</string>
+    <string name="notice_network_retry">Sem conexão com a rede. A carteira não foi aberta. Tente de novo.</string>
     <string name="notice_wrong_wallet_retry">Conecte a carteira %1$s usada neste registro para tentar de novo.</string>
 </resources>

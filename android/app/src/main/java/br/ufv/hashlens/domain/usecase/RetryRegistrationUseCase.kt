@@ -17,6 +17,9 @@ import javax.inject.Inject
  * abrir a carteira (a transação "perdida" foi confirmada depois do prazo); senão refaz o vínculo e
  * reabre a carteira com a mesma assinatura do aparelho. A assinatura cobre o `registrant`, por isso o
  * reenvio exige a carteira do registro: com outra conectada, é bloqueado antes de tudo.
+ *
+ * Também retoma uma imagem presa em `LOCAL_ONLY` (o app fechou entre salvar e enviar): nada foi
+ * enviado, como numa falha.
  */
 class RetryRegistrationUseCase @Inject constructor(
     private val reader: RegistryReader,
@@ -27,7 +30,7 @@ class RetryRegistrationUseCase @Inject constructor(
     /**
      * @param walletAddress carteira conectada; precisa ser a que pediu o registro.
      * @param onProgress etapas avisadas enquanto o reenvio não termina (vínculo, carteira).
-     * @throws IllegalArgumentException se a imagem não existir ou não estiver em `FAILED`.
+     * @throws IllegalArgumentException se a imagem não existir ou não estiver em `FAILED` ou `LOCAL_ONLY`.
      */
     suspend operator fun invoke(
         localId: Long,
@@ -35,7 +38,9 @@ class RetryRegistrationUseCase @Inject constructor(
         onProgress: (RegistrationProgress) -> Unit = {}
     ): CaptureResult {
         val image = requireNotNull(images.getById(localId)) { "imagem local inexistente: $localId" }
-        require(image.status == RegistrationStatus.FAILED) { "só registros que falharam são reenviados" }
+        require(image.status == RegistrationStatus.FAILED || image.status == RegistrationStatus.LOCAL_ONLY) {
+            "só registros que não foram enviados são reenviados"
+        }
         if (!image.walletAddress.equals(walletAddress, ignoreCase = true)) {
             return CaptureResult.WrongWallet(localId, image.walletAddress)
         }

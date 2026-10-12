@@ -23,6 +23,7 @@ import br.ufv.hashlens.ui.genealogy.GenealogyRoute
 import br.ufv.hashlens.ui.genealogy.GenealogyViewModel
 import br.ufv.hashlens.ui.home.HomeAction
 import br.ufv.hashlens.ui.home.HomeRoute
+import br.ufv.hashlens.ui.library.LibraryRoute
 import br.ufv.hashlens.ui.verify.VerifyRoute
 import br.ufv.hashlens.ui.verify.VerifyViewModel
 import com.reown.appkit.ui.appKitGraph
@@ -75,17 +76,7 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
                     onOpenHistory = { navController.navigate(Route.genealogy(it)) }
                 )
             }
-            // Pública como a verificação: só leituras do contrato. Cada versão da árvore abre o próprio
-            // Histórico por cima, e "voltar" retorna à anterior.
-            composable(
-                Route.Genealogy.path,
-                arguments = listOf(navArgument(GenealogyViewModel.RECORD_ID) { type = NavType.LongType })
-            ) {
-                GenealogyRoute(
-                    onClose = { navController.popBackStack() },
-                    onOpenRecord = { navController.navigate(Route.genealogy(it)) }
-                )
-            }
+            libraryDestinations(navController) { backStackEntry?.destination?.route != Route.Library.path }
             editorDestinations(navController)
             appKitGraph(navController)
             // Telas das próximas histórias (US6): ainda vazias
@@ -93,6 +84,36 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
                 composable(route.path) { Box(Modifier.fillMaxSize()) }
             }
         }
+    }
+}
+
+/**
+ * Histórico da imagem (US5) e Meu acervo (US6).
+ *
+ * @param walletListOpen a lista de carteiras do AppKit está por cima do acervo.
+ */
+private fun NavGraphBuilder.libraryDestinations(navController: NavHostController, walletListOpen: () -> Boolean) {
+    // Pública como a verificação: só leituras do contrato. Cada versão da árvore abre o próprio
+    // Histórico por cima, e "voltar" retorna à anterior.
+    composable(
+        Route.Genealogy.path,
+        arguments = listOf(navArgument(GenealogyViewModel.RECORD_ID) { type = NavType.LongType })
+    ) {
+        GenealogyRoute(
+            onClose = { navController.popBackStack() },
+            onOpenRecord = { navController.navigate(Route.genealogy(it)) }
+        )
+    }
+    // Meu acervo (US6): histórico e edição das fotos registradas; "Registrar foto" passa pela carteira
+    composable(Route.Library.path) {
+        LibraryRoute(
+            walletListOpen = walletListOpen(),
+            onOpenWalletList = { navController.openAppKit(shouldOpenChooseNetwork = false) },
+            onClose = { navController.popBackStack() },
+            onRegisterPhoto = { navController.navigate(Route.Capture.path) },
+            onOpenHistory = { navController.navigate(Route.genealogy(it)) },
+            onEdit = { navController.navigate(Route.editor(it)) }
+        )
     }
 }
 
@@ -123,7 +144,8 @@ private val BUILT = setOf(
     Route.VerificationResult,
     Route.Editor,
     Route.ImportForEdit,
-    Route.Genealogy
+    Route.Genealogy,
+    Route.Library
 )
 
 /** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */
