@@ -22,10 +22,11 @@ data class GenealogyNode(
  * Genealogia de um registro (verification-result §4; FR-027): a árvore a partir da original e o
  * caminho da original até o registro consultado.
  *
- * @property root a original, com as versões derivadas até o limite de exibição.
- * @property pathToQueried ids da original até o registro consultado, sempre completo (é a linha do
- *   tempo da tela), mesmo quando passa do limite da árvore.
- * @property truncated a árvore passou de [MAX_LEVELS] níveis ou [MAX_NODES] nós e foi cortada; a tela avisa.
+ * @property root a original, com as versões derivadas até o limite de exibição. Os nós do caminho
+ *   estão sempre nela, mesmo além do limite.
+ * @property pathToQueried ids da original até o registro consultado (a linha do tempo da tela).
+ * @property truncated outras versões passaram de [MAX_LEVELS] níveis ou [MAX_NODES] nós e ficaram de
+ *   fora; a tela avisa.
  */
 data class Genealogy(val root: GenealogyNode, val pathToQueried: List<Long>, val truncated: Boolean) {
     companion object {

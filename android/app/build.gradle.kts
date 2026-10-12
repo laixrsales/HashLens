@@ -27,6 +27,9 @@ val pendingTimeoutMinutes = localProperty("registry.pendingTimeoutMinutes")
     ?.takeIf { it > 0 }
     ?: defaultPendingTimeoutMinutes
 
+// Bloco do deploy do ImageRegistry: início da busca de eventos (transação de cada registro); 0 busca desde a origem
+val registryDeployBlock = localProperty("registry.deployBlock").toLongOrNull()?.takeIf { it >= 0 } ?: 0L
+
 android {
     namespace = "br.ufv.hashlens"
     compileSdk = 37
@@ -44,6 +47,7 @@ android {
         buildConfigField("String", "REGISTRY_ADDRESS", "\"${localProperty("registry.address")}\"")
         buildConfigField("String", "REOWN_PROJECT_ID", "\"${localProperty("reown.projectId")}\"")
         buildConfigField("int", "PENDING_TIMEOUT_MINUTES", pendingTimeoutMinutes.toString())
+        buildConfigField("long", "REGISTRY_DEPLOY_BLOCK", "${registryDeployBlock}L")
     }
 
     buildTypes {

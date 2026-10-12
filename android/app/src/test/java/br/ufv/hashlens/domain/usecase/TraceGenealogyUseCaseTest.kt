@@ -1,8 +1,14 @@
 package br.ufv.hashlens.domain.usecase
 
+import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
+import br.ufv.hashlens.data.chain.RegistrationTxFinder
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
+import br.ufv.hashlens.data.local.ImageOrigin
+import br.ufv.hashlens.data.local.LocalImageDao
+import br.ufv.hashlens.data.local.LocalImageEntity
+import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.domain.model.EditOperationCodec
 import br.ufv.hashlens.domain.model.Genealogy
@@ -17,6 +23,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.io.IOException
@@ -31,15 +38,30 @@ import org.junit.jupiter.api.Test
  * relação ao pai e à original e a assinatura de cada nó.
  *
  * Limite de exibição: 10 níveis (a original é o 1º) e 200 nós, percorridos em largura; acima disso
- * a árvore é cortada e sinalizada. O caminho até o registro consultado vem sempre completo.
+ * a árvore é cortada e sinalizada. Os nós do caminho até o registro consultado ficam sempre na
+ * árvore, porque a tela mostra a linha do tempo inteira.
+ *
+ * Cada nó traz o link da transação que o registrou (US5, critério 3). O contrato não guarda a
+ * transação, só o registro: ela vem dos eventos `ImageRegistered` da árvore e, se a consulta aos
+ * eventos falhar, do acervo local para as versões registradas neste aparelho. Sem transação, o nó
+ * aparece sem link, e a genealogia não falha por isso.
  *
  * O contrato é falso; a verificação da assinatura também (testada em `DeviceSignatureVerifierTest`).
  */
 class TraceGenealogyUseCaseTest {
     private val reader = mockk<RegistryReader>()
     private val signatureVerifier = mockk<DeviceSignatureVerifier>()
+    private val txFinder = mockk<RegistrationTxFinder>()
+    private val images = mockk<LocalImageDao>()
+    private val config = ChainConfig(rpcUrl = "", registryAddress = "0x0", reownProjectId = "")
 
-    private val useCase = TraceGenealogyUseCase(reader = reader, signatureVerifier = signatureVerifier)
+    private val useCase = TraceGenealogyUseCase(
+        reader = reader,
+        signatureVerifier = signatureVerifier,
+        txFinder = txFinder,
+        images = images,
+        config = config
+    )
 
     private val records = mutableMapOf<Long, ImageRecord>()
     private val invalidSignatures = mutableSetOf<Long>()
@@ -59,7 +81,25 @@ class TraceGenealogyUseCaseTest {
             }
         }
         every { signatureVerifier.verify(any(), any()) } answers { firstArg<ImageRecord>().id !in invalidSignatures }
+        // Sem transações conhecidas, a não ser nos testes do link
+        coEvery { txFinder.byOriginal(any()) } returns emptyMap()
+        coEvery { images.getConfirmedByRecordIds(any()) } returns emptyList()
     }
+
+    private fun confirmedLocally(recordId: Long, txHash: String) = LocalImageEntity(
+        contentUri = "content://media/$recordId",
+        sha256Hex = "%064x".format(recordId),
+        pHashHex = ORIGINAL_PHASH.hex,
+        origin = ImageOrigin.CAPTURE,
+        walletAddress = AUTHOR.lowercase(),
+        status = RegistrationStatus.CONFIRMED,
+        txHash = txHash,
+        recordId = recordId,
+        createdAt = 0
+    )
+
+    private fun GenealogyNode.txUrls(): Map<Long, String?> =
+        mapOf(record.id to record.txUrl) + children.flatMap { it.txUrls().entries }.associate { it.toPair() }
 
     private fun record(
         id: Long,
@@ -200,15 +240,19 @@ class TraceGenealogyUseCaseTest {
     }
 
     @Test
-    fun `cadeia com mais de 10 níveis corta a árvore no 10º e mantém o caminho completo`() = runTest {
+    fun `além de 10 níveis só o caminho continua, e as outras versões são cortadas`() = runTest {
         record(1)
         (2L..12L).forEach { record(it, parentId = it - 1) }
+        // Uma versão fora do caminho no 12º nível
+        record(13, parentId = 11)
 
         val genealogy = trace(12)
 
         genealogy.truncated shouldBe true
-        genealogy.root.depth() shouldBe 10
         genealogy.pathToQueried shouldContainExactly (1L..12L).toList()
+        // A cadeia inteira até o registro consultado continua na árvore; a versão 13 fica de fora
+        genealogy.root.depth() shouldBe 12
+        genealogy.root.count() shouldBe 12
     }
 
     @Test
@@ -232,6 +276,19 @@ class TraceGenealogyUseCaseTest {
         genealogy.truncated shouldBe true
         genealogy.root.count() shouldBe 200
         genealogy.root.children.map { it.record.id } shouldContainExactly (2L..200L).toList()
+    }
+
+    @Test
+    fun `registro consultado além dos 200 nós continua na árvore`() = runTest {
+        record(1)
+        (2L..251L).forEach { record(it, parentId = 1) }
+
+        val genealogy = trace(251)
+
+        genealogy.truncated shouldBe true
+        genealogy.root.count() shouldBe 200
+        // O caminho entra primeiro na conta; as outras versões ocupam o espaço que sobra, em ordem
+        genealogy.root.children.map { it.record.id } shouldContainExactly (2L..199L).toList() + 251L
     }
 
     @Test
@@ -261,6 +318,51 @@ class TraceGenealogyUseCaseTest {
         useCase(1) shouldBe GenealogyResult.Error(Reason.UNKNOWN)
     }
 
+    @Test
+    fun `cada nó traz o link da transação, lido dos eventos da árvore`() = runTest {
+        record(1)
+        record(2, parentId = 1)
+        record(3, parentId = 1)
+        coEvery { txFinder.byOriginal(1) } returns mapOf(1L to TX_A, 2L to TX_B, 3L to TX_C)
+
+        trace(2).root.txUrls() shouldBe mapOf(
+            1L to config.transactionUrl(TX_A),
+            2L to config.transactionUrl(TX_B),
+            3L to config.transactionUrl(TX_C)
+        )
+        // Uma consulta só, pela original
+        coVerify(exactly = 1) { txFinder.byOriginal(any()) }
+    }
+
+    @Test
+    fun `sem os eventos, usa a transação das versões registradas neste aparelho`() = runTest {
+        record(1)
+        record(2, parentId = 1)
+        coEvery { txFinder.byOriginal(any()) } throws
+            RegistryException.Rpc(-32005, "query returned more than 10000 results")
+        coEvery { images.getConfirmedByRecordIds(any()) } returns listOf(confirmedLocally(2, TX_B))
+
+        trace(2).root.txUrls() shouldBe mapOf(1L to null, 2L to config.transactionUrl(TX_B))
+    }
+
+    @Test
+    fun `os eventos prevalecem sobre o acervo local`() = runTest {
+        record(1)
+        coEvery { txFinder.byOriginal(1) } returns mapOf(1L to TX_A)
+        coEvery { images.getConfirmedByRecordIds(any()) } returns listOf(confirmedLocally(1, TX_C))
+
+        trace(1).root.record.txUrl shouldBe config.transactionUrl(TX_A)
+    }
+
+    @Test
+    fun `falha de rede ao buscar as transações não impede a genealogia`() = runTest {
+        record(1)
+        record(2, parentId = 1)
+        coEvery { txFinder.byOriginal(any()) } throws RegistryException.Network(IOException("offline"))
+
+        trace(2).root.txUrls() shouldBe mapOf(1L to null, 2L to null)
+    }
+
     private companion object {
         const val AUTHOR = "0x1234567890AbcdEF1234567890aBcdef12345678"
         const val EDITOR = "0xABCDEFabcdef0123456789ABCDEFabcdef012345"
@@ -272,5 +374,9 @@ class TraceGenealogyUseCaseTest {
         // 8 bits trocados em relação à original; a terceira geração troca mais 4
         val SECOND_PHASH = PHash(ORIGINAL_PHASH.value xor 0xffuL)
         val THIRD_PHASH = PHash(ORIGINAL_PHASH.value xor 0xfffuL)
+
+        const val TX_A = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        const val TX_B = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        const val TX_C = "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
     }
 }

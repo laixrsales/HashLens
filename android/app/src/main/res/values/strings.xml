@@ -89,6 +89,32 @@
     <string name="editor_unavailable_title">A foto não está mais na galeria</string>
     <string name="editor_unavailable_message">O arquivo foi apagado ou alterado desde o registro. Edite a partir de uma cópia idêntica à registrada.</string>
 
+    <!-- Histórico da imagem (ux.md §4.9) -->
+    <string name="genealogy_title">Histórico da imagem</string>
+    <string name="genealogy_loading">Montando o histórico…</string>
+    <string name="genealogy_error_title">Não foi possível carregar o histórico</string>
+    <string name="genealogy_queried">Imagem consultada</string>
+    <string name="genealogy_registered_by">Registrada por %1$s</string>
+    <string name="genealogy_edited_by">Editada por %1$s</string>
+    <string name="genealogy_device">Aparelho nº %1$d</string>
+    <string name="genealogy_from_parent">≈ %1$s%% de alteração em relação à versão anterior</string>
+    <string name="genealogy_from_original">≈ %1$s%% de alteração em relação à original</string>
+    <string name="genealogy_none_from_parent">Sem alteração visual em relação à versão anterior</string>
+    <string name="genealogy_none_from_original">Sem alteração visual em relação à original</string>
+    <string name="genealogy_invalid_signature">A assinatura do aparelho não confere com os dados registrados.</string>
+    <string name="genealogy_truncated">Esta imagem tem mais versões do que cabem aqui. Mostrando até %1$d gerações e %2$d versões.</string>
+    <string name="genealogy_photo_description">Foto desta versão, salva neste aparelho</string>
+    <string name="genealogy_open_record">Ver histórico desta versão</string>
+    <string name="genealogy_open_transaction">Ver registro na rede</string>
+    <plurals name="genealogy_other_versions">
+        <item quantity="one">+%1$d outra versão</item>
+        <item quantity="other">+%1$d outras versões</item>
+    </plurals>
+    <plurals name="genealogy_derived_versions">
+        <item quantity="one">+%1$d versão derivada</item>
+        <item quantity="other">+%1$d versões derivadas</item>
+    </plurals>
+
     <!-- Verificar imagem e Resultado da verificação (ux.md §4.7 e §4.8; direção visual §7.2) -->
     <string name="verify_title">Verificar imagem</string>
     <string name="verify_intro">Escolha uma imagem da galeria para saber se ela está registrada, por quem e quanto mudou desde a original.</string>
