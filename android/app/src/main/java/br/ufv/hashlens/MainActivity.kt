@@ -5,8 +5,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import br.ufv.hashlens.data.local.OnboardingPreferences
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.ui.navigation.HashLensNavHost
+import br.ufv.hashlens.ui.navigation.startRoute
 import br.ufv.hashlens.ui.theme.HashLensTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -21,13 +23,18 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var walletSession: WalletSession
 
+    @Inject
+    lateinit var onboardingPreferences: OnboardingPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         handleWalletReturn(intent)
+        // "Como funciona" no primeiro uso (FR-037); lido uma vez, antes de montar a navegação
+        val start = startRoute(onboardingPreferences)
         setContent {
             HashLensTheme {
-                HashLensNavHost()
+                HashLensNavHost(startRoute = start)
             }
         }
     }
