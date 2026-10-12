@@ -16,6 +16,7 @@ import br.ufv.hashlens.di.ApplicationScope
 import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
+import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
 import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.work.PendingTxReconciler
 import br.ufv.hashlens.work.PendingTxScheduler
@@ -72,6 +73,7 @@ sealed interface CaptureEffect {
 @HiltViewModel
 class CaptureViewModel @Inject constructor(
     private val captureAndRegister: CaptureAndRegisterUseCase,
+    private val retryRegistration: RetryRegistrationUseCase,
     private val reconciler: PendingTxReconciler,
     private val images: LocalImageDao,
     private val reader: RegistryReader,
@@ -157,7 +159,7 @@ class CaptureViewModel @Inject constructor(
             return
         }
         operationWallet = wallet
-        run { captureAndRegister.resubmit(id, wallet, ::onProgress) }
+        run { retryRegistration(id, wallet, ::onProgress) }
     }
 
     /** Roda o registro fora da tela e mostra o resultado; falha na galeria pede outra foto. */

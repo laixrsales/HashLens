@@ -244,17 +244,17 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T085 [P] [US6] Teste `$TEST/domain/usecase/RetryRegistrationUseCaseTest.kt` (`getIdBySha256(sha) ≠ 0` → `CONFIRMED` com esse `recordId`, sem abrir a carteira; `= 0` → `AWAITING_WALLET` reutilizando `signatureHex`; erro de rede na checagem → permanece `FAILED(NETWORK)` sem enviar; carteira conectada ≠ `walletAddress` do registro → reenvio bloqueado com a mensagem "Conecte a carteira 0x…abcd usada neste registro para tentar de novo", sem abrir a carteira e sem nova assinatura) — FR-014, research R23, data-model §2.3
-- [ ] T086 [P] [US6] Teste `$TEST/ui/library/LibraryViewModelTest.kt` (agrupamento por original, arquivo indisponível, reenvio dispara `RetryRegistrationUseCase`, `FAILED(TIMEOUT)` exibido como "Não registrada – tentar de novo")
+- [X] T085 [P] [US6] Teste `$TEST/domain/usecase/RetryRegistrationUseCaseTest.kt` (`getIdBySha256(sha) ≠ 0` → `CONFIRMED` com esse `recordId`, sem abrir a carteira; `= 0` → `AWAITING_WALLET` reutilizando `signatureHex`; erro de rede na checagem → permanece `FAILED(NETWORK)` sem enviar; carteira conectada ≠ `walletAddress` do registro → reenvio bloqueado com a mensagem "Conecte a carteira 0x…abcd usada neste registro para tentar de novo", sem abrir a carteira e sem nova assinatura) — FR-014, research R23, data-model §2.3
+- [X] T086 [P] [US6] Teste `$TEST/ui/library/LibraryViewModelTest.kt` (agrupamento por original, arquivo indisponível, reenvio dispara `RetryRegistrationUseCase`, `FAILED(TIMEOUT)` exibido como "Não registrada – tentar de novo")
 
 ### Implementation for User Story 6
 
-- [ ] T087 [US6] Implementar `$PKG/domain/usecase/RetryRegistrationUseCase.kt` até T085 passar
-- [ ] T088 [US6] Criar `LibraryScreen` e `WalletAccountScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.10–4.11 e screenshot tests; **revisão da autora**
-- [ ] T089 [US6] Ligar `$PKG/ui/library/LibraryScreen.kt` ao `LibraryViewModel.kt` (grupos por original, status, reenviar via `RetryRegistrationUseCase`, abrir editor/genealogia). Inclui a entrada do acervo para o Histórico da imagem, que ficou de fora da T084 porque o acervo ainda não existia: em `$PKG/ui/navigation/HashLensNavHost.kt`, a ação de abrir a genealogia de uma imagem confirmada navega para `Route.genealogy(recordId)`; imagem sem `recordId` (não confirmada) não oferece a ação. Testar em `LibraryViewModelTest` (a ação emite o efeito com o `recordId` certo e não aparece para imagens não confirmadas) e no aparelho (roteiro US5 do `$SPEC/quickstart.md` partindo do acervo)
-- [ ] T090 [US6] Verificar existência do arquivo na galeria ao abrir o acervo e atualizar `fileAvailable` em `$PKG/ui/library/LibraryViewModel.kt`
-- [ ] T091 [US6] Desconexão em `$PKG/ui/wallet/WalletAccountScreen.kt` e guarda de sessão para captura/edição em `$PKG/ui/navigation/HashLensNavHost.kt`
-- [ ] T092 [US6] Reagendar `PendingTxWorker` na inicialização em `$PKG/HashLensApp.kt`
+- [X] T087 [US6] Implementar `$PKG/domain/usecase/RetryRegistrationUseCase.kt` até T085 passar
+- [X] T088 [US6] Criar `LibraryScreen` e `WalletAccountScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.10–4.11 e screenshot tests; **revisão da autora**
+- [X] T089 [US6] Ligar `$PKG/ui/library/LibraryScreen.kt` ao `LibraryViewModel.kt` (grupos por original, status, reenviar via `RetryRegistrationUseCase`, abrir editor/genealogia). Inclui a entrada do acervo para o Histórico da imagem, que ficou de fora da T084 porque o acervo ainda não existia: em `$PKG/ui/navigation/HashLensNavHost.kt`, a ação de abrir a genealogia de uma imagem confirmada navega para `Route.genealogy(recordId)`; imagem sem `recordId` (não confirmada) não oferece a ação. Testar em `LibraryViewModelTest` (a ação emite o efeito com o `recordId` certo e não aparece para imagens não confirmadas) e no aparelho (roteiro US5 do `$SPEC/quickstart.md` partindo do acervo)
+- [X] T090 [US6] Verificar existência do arquivo na galeria ao abrir o acervo e atualizar `fileAvailable` em `$PKG/ui/library/LibraryViewModel.kt`
+- [X] T091 [US6] Desconexão em `$PKG/ui/wallet/WalletAccountScreen.kt` e guarda de sessão para captura/edição em `$PKG/ui/navigation/HashLensNavHost.kt`
+- [X] T092 [US6] Reagendar `PendingTxWorker` na inicialização em `$PKG/HashLensApp.kt`
 
 **Checkpoint**: todas as histórias funcionais.
 

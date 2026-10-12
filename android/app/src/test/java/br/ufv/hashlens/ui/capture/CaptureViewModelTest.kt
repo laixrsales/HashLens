@@ -20,6 +20,7 @@ import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
+import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
 import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.work.PendingTxReconciler
 import br.ufv.hashlens.work.PendingTxScheduler
@@ -65,6 +66,7 @@ class CaptureViewModelTest {
         every { events } returns MutableSharedFlow<WalletEvent>()
     }
     private val captureAndRegister = mockk<CaptureAndRegisterUseCase>()
+    private val retryRegistration = mockk<RetryRegistrationUseCase>()
     private val reconciler = mockk<PendingTxReconciler>(relaxUnitFun = true)
     private val images = mockk<LocalImageDao>()
     private val reader = mockk<RegistryReader>()
@@ -83,6 +85,7 @@ class CaptureViewModelTest {
 
     private fun TestScope.viewModel() = CaptureViewModel(
         captureAndRegister = captureAndRegister,
+        retryRegistration = retryRegistration,
         reconciler = reconciler,
         images = images,
         reader = reader,
@@ -228,7 +231,7 @@ class CaptureViewModelTest {
     @Test
     fun `recusa na carteira e tentar de novo reenvia com a mesma carteira`() = runTest(dispatcher) {
         capture(CaptureResult.Failed(LOCAL_ID, FailureReason.REJECTED))
-        coEvery { captureAndRegister.resubmit(LOCAL_ID, ADDRESS, any()) } returns
+        coEvery { retryRegistration(LOCAL_ID, ADDRESS, any()) } returns
             CaptureResult.Submitted(LOCAL_ID, TX)
         coEvery { images.getById(LOCAL_ID) } returns image(RegistrationStatus.PENDING)
         val viewModel = viewModel()
@@ -238,13 +241,13 @@ class CaptureViewModelTest {
         viewModel.onProgressAction(RegistrationProgressAction.Retry)
 
         viewModel.stage() shouldBe RegistrationStage.Pending
-        coVerify { captureAndRegister.resubmit(LOCAL_ID, ADDRESS, any()) }
+        coVerify { retryRegistration(LOCAL_ID, ADDRESS, any()) }
     }
 
     @Test
     fun `tentar de novo com outra conta avisa qual carteira conectar`() = runTest(dispatcher) {
         capture(CaptureResult.Failed(LOCAL_ID, FailureReason.REJECTED))
-        coEvery { captureAndRegister.resubmit(LOCAL_ID, OTHER, any()) } returns
+        coEvery { retryRegistration(LOCAL_ID, OTHER, any()) } returns
             CaptureResult.WrongWallet(LOCAL_ID, ADDRESS.lowercase())
         val viewModel = viewModel()
         val effects = effects(viewModel)

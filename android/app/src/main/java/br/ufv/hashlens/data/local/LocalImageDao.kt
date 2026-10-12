@@ -15,6 +15,13 @@ interface LocalImageDao {
     @Update
     suspend fun update(image: LocalImageEntity)
 
+    /**
+     * Só o campo [LocalImageEntity.fileAvailable]: a conferência da galeria (acervo) não sobrescreve
+     * o status que o `PendingTxWorker` pode estar mudando ao mesmo tempo.
+     */
+    @Query("UPDATE local_image SET fileAvailable = :available WHERE localId = :localId")
+    suspend fun setFileAvailable(localId: Long, available: Boolean)
+
     @Query("SELECT * FROM local_image WHERE localId = :localId")
     suspend fun getById(localId: Long): LocalImageEntity?
 

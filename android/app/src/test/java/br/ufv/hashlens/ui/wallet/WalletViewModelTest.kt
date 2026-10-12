@@ -30,7 +30,11 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** T056: folha "Conectar carteira" a partir da sessão, da rede e do saldo (ux.md §4.3, FR-003). */
+/**
+ * T056 e T091: folha "Conectar carteira" a partir da sessão, da rede e do saldo (ux.md §4.3, FR-003)
+ * e a guarda de sessão: câmera, edição de uma foto do acervo e importação para editar só abrem com a
+ * carteira pronta; sem ela, a folha aparece e o destino segue depois de conectar.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WalletViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
@@ -69,7 +73,7 @@ class WalletViewModelTest {
     fun `sem carteira, registrar abre a folha inicial`() = runTest(dispatcher) {
         val viewModel = viewModel()
 
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
 
         viewModel.ui.value.sheet shouldBe WalletSheetUiState.Initial
         viewModel.ui.value.chip shouldBe WalletChipState.Disconnected
@@ -79,7 +83,7 @@ class WalletViewModelTest {
     fun `conectar abre a lista de carteiras e mostra a espera`() = runTest(dispatcher) {
         val viewModel = viewModel()
         val effects = effects(viewModel)
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
 
         viewModel.onAction(WalletSheetAction.Connect)
 
@@ -92,7 +96,7 @@ class WalletViewModelTest {
         hasWalletApp = false
         val viewModel = viewModel()
         val effects = effects(viewModel)
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
 
         viewModel.onAction(WalletSheetAction.Connect)
         viewModel.ui.value.sheet shouldBe WalletSheetUiState.NotInstalled
@@ -106,7 +110,7 @@ class WalletViewModelTest {
     @Test
     fun `recusa na carteira mostra conexão recusada`() = runTest(dispatcher) {
         val viewModel = viewModel()
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
         viewModel.onAction(WalletSheetAction.Connect)
 
         walletEvents.emit(WalletEvent.ConnectionRejected)
@@ -119,7 +123,7 @@ class WalletViewModelTest {
         chain(balanceWei = ENOUGH)
         val viewModel = viewModel()
         val effects = effects(viewModel)
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
         viewModel.onAction(WalletSheetAction.Connect)
 
         walletState.value = WalletState.Connected(ADDRESS, ChainConfig.SEPOLIA_CHAIN_ID)
@@ -128,7 +132,7 @@ class WalletViewModelTest {
         viewModel.ui.value.chip shouldBe WalletChipState.Connected(ADDRESS)
         viewModel.onAction(WalletSheetAction.Continue)
         viewModel.ui.value.sheet shouldBe null
-        effects shouldBe listOf(WalletEffect.OpenWalletList, WalletEffect.ProceedToCapture)
+        effects shouldBe listOf(WalletEffect.OpenWalletList, WalletEffect.Proceed(WalletGate.Capture))
     }
 
     @Test
@@ -136,7 +140,7 @@ class WalletViewModelTest {
         walletState.value = WalletState.Connected(ADDRESS, chainId = 1)
         val viewModel = viewModel()
 
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
 
         viewModel.ui.value.sheet shouldBe WalletSheetUiState.WrongNetwork(ADDRESS)
         viewModel.ui.value.chip shouldBe WalletChipState.WrongNetwork(ADDRESS)
@@ -152,7 +156,7 @@ class WalletViewModelTest {
         val viewModel = viewModel()
         val effects = effects(viewModel)
 
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
 
         viewModel.ui.value.sheet.shouldBeInstanceOf<WalletSheetUiState.LowBalance>().balance shouldBe
             BigDecimal("0.0001")
@@ -167,10 +171,10 @@ class WalletViewModelTest {
         val viewModel = viewModel()
         val effects = effects(viewModel)
 
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
 
         viewModel.ui.value.sheet shouldBe null
-        effects shouldBe listOf(WalletEffect.ProceedToCapture)
+        effects shouldBe listOf(WalletEffect.Proceed(WalletGate.Capture))
     }
 
     @Test
@@ -191,12 +195,69 @@ class WalletViewModelTest {
         chain(balanceWei = ENOUGH)
         val viewModel = viewModel()
         val effects = effects(viewModel)
-        viewModel.onRegisterPhoto()
+        viewModel.requireWallet(WalletGate.Capture)
         viewModel.onAction(WalletSheetAction.Dismiss)
 
         walletState.value = WalletState.Connected(ADDRESS, ChainConfig.SEPOLIA_CHAIN_ID)
 
         viewModel.ui.value.sheet shouldBe null
+        effects shouldBe emptyList()
+    }
+
+    @Test
+    fun `sem carteira, editar uma foto do acervo abre a folha e segue para o Editor depois de conectar`() =
+        runTest(dispatcher) {
+            chain(balanceWei = ENOUGH)
+            val viewModel = viewModel()
+            val effects = effects(viewModel)
+
+            viewModel.requireWallet(WalletGate.Edit(7))
+            viewModel.ui.value.sheet shouldBe WalletSheetUiState.Initial
+            viewModel.onAction(WalletSheetAction.Connect)
+            walletState.value = WalletState.Connected(ADDRESS, ChainConfig.SEPOLIA_CHAIN_ID)
+            viewModel.onAction(WalletSheetAction.Continue)
+
+            effects shouldBe listOf(WalletEffect.OpenWalletList, WalletEffect.Proceed(WalletGate.Edit(7)))
+        }
+
+    @Test
+    fun `carteira pronta libera a importação para editar direto`() = runTest(dispatcher) {
+        chain(balanceWei = ENOUGH)
+        walletState.value = WalletState.Connected(ADDRESS, ChainConfig.SEPOLIA_CHAIN_ID)
+        val viewModel = viewModel()
+        val effects = effects(viewModel)
+
+        viewModel.requireWallet(WalletGate.ImportForEdit)
+
+        viewModel.ui.value.sheet shouldBe null
+        effects shouldBe listOf(WalletEffect.Proceed(WalletGate.ImportForEdit))
+    }
+
+    @Test
+    fun `depois de desconectar, câmera e edição voltam a pedir a carteira`() = runTest(dispatcher) {
+        chain(balanceWei = ENOUGH)
+        walletState.value = WalletState.Connected(ADDRESS, ChainConfig.SEPOLIA_CHAIN_ID)
+        val viewModel = viewModel()
+        val effects = effects(viewModel)
+
+        walletState.value = WalletState.Disconnected
+        viewModel.requireWallet(WalletGate.Capture)
+        viewModel.onAction(WalletSheetAction.Dismiss)
+        viewModel.requireWallet(WalletGate.Edit(7))
+
+        viewModel.ui.value.sheet shouldBe WalletSheetUiState.Initial
+        effects shouldBe emptyList()
+    }
+
+    @Test
+    fun `em outra rede, a edição também fica bloqueada até trocar para Sepolia`() = runTest(dispatcher) {
+        walletState.value = WalletState.Connected(ADDRESS, chainId = 1)
+        val viewModel = viewModel()
+        val effects = effects(viewModel)
+
+        viewModel.requireWallet(WalletGate.Edit(7))
+
+        viewModel.ui.value.sheet shouldBe WalletSheetUiState.WrongNetwork(ADDRESS)
         effects shouldBe emptyList()
     }
 

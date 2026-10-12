@@ -1,12 +1,9 @@
 package br.ufv.hashlens.data.chain
 
-import java.io.IOException
 import java.math.BigInteger
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameter
 import org.web3j.protocol.core.DefaultBlockParameterName
-import org.web3j.protocol.core.Request
-import org.web3j.protocol.core.Response
 import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.core.methods.response.EthLog
@@ -50,15 +47,16 @@ interface ChainRpc {
 /** [ChainRpc] via JSON-RPC HTTP com web3j (research R2). */
 class Web3jChainRpc(private val web3j: Web3j) : ChainRpc {
     override fun estimateGas(from: String, to: String, data: String): BigInteger =
-        send(web3j.ethEstimateGas(Transaction.createEthCallTransaction(from, to, data))).amountUsed
+        web3j.ethEstimateGas(Transaction.createEthCallTransaction(from, to, data)).sendChecked().amountUsed
 
-    override fun gasPrice(): BigInteger = send(web3j.ethGasPrice()).gasPrice
+    override fun gasPrice(): BigInteger = web3j.ethGasPrice().sendChecked().gasPrice
 
     override fun getBalance(address: String): BigInteger =
-        send(web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST)).balance
+        web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).sendChecked().balance
 
     override fun getTransactionReceipt(txHash: String): RawReceipt? {
-        val receipt = send(web3j.ethGetTransactionReceipt(txHash)).transactionReceipt.orElse(null) ?: return null
+        val receipt =
+            web3j.ethGetTransactionReceipt(txHash).sendChecked().transactionReceipt.orElse(null) ?: return null
         return RawReceipt(
             success = receipt.isStatusOK,
             logs = receipt.logs.map { RawLog(it.address, it.topics, it.data) }
@@ -72,18 +70,8 @@ class Web3jChainRpc(private val web3j: Web3j) : ChainRpc {
             address
         )
         topics.forEach { if (it == null) filter.addNullTopic() else filter.addSingleTopic(it) }
-        return send(web3j.ethGetLogs(filter)).logs
+        return web3j.ethGetLogs(filter).sendChecked().logs
             .filterIsInstance<EthLog.LogObject>()
             .map { RawLog(it.address, it.topics, it.data, it.transactionHash) }
-    }
-
-    private fun <T : Response<*>> send(request: Request<*, T>): T {
-        val response = try {
-            request.send()
-        } catch (e: IOException) {
-            throw RegistryException.Network(e)
-        }
-        response.error?.let { throw RegistryException.Rpc(it.code, it.message.orEmpty()) }
-        return response
     }
 }

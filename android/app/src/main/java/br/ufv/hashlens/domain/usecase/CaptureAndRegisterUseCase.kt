@@ -113,53 +113,6 @@ class CaptureAndRegisterUseCase @Inject constructor(
         )
     }
 
-    /**
-     * "Tentar de novo" de um registro que falhou (data-model §2.3, research R23): consulta o hash
-     * on-chain antes de qualquer transação. Já registrado → confirma sem abrir a carteira; senão,
-     * refaz o vínculo e reabre a carteira com a mesma assinatura do aparelho.
-     *
-     * @throws IllegalArgumentException se a imagem não existir ou não estiver em `FAILED`.
-     */
-    suspend fun resubmit(
-        localId: Long,
-        walletAddress: String,
-        onProgress: (RegistrationProgress) -> Unit = {}
-    ): CaptureResult {
-        val image = requireNotNull(images.getById(localId)) { "imagem local inexistente: $localId" }
-        require(image.status == RegistrationStatus.FAILED) { "só registros que falharam são reenviados" }
-        if (!image.walletAddress.equals(walletAddress, ignoreCase = true)) {
-            return CaptureResult.WrongWallet(localId, image.walletAddress)
-        }
-        return lookup(Sha256(image.sha256Hex)).fold(
-            onSuccess = { recordId ->
-                if (recordId != null) {
-                    images.update(
-                        image.copy(
-                            status = RegistrationStatus.CONFIRMED,
-                            recordId = recordId,
-                            originalRecordId = if (image.origin ==
-                                ImageOrigin.CAPTURE
-                            ) {
-                                recordId
-                            } else {
-                                image.originalRecordId
-                            },
-                            failureReason = null,
-                            errorMessage = null
-                        )
-                    )
-                    CaptureResult.Confirmed(localId, recordId)
-                } else {
-                    submit(localId, walletAddress, onProgress)
-                }
-            },
-            onFailure = {
-                images.update(image.copy(failureReason = FailureReason.NETWORK, errorMessage = it.message))
-                CaptureResult.Failed(localId, FailureReason.NETWORK)
-            }
-        )
-    }
-
     private suspend fun submit(
         localId: Long,
         walletAddress: String,

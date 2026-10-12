@@ -42,8 +42,24 @@ sealed interface WalletEffect {
 
     data class OpenUrl(val url: String) : WalletEffect
 
-    /** Carteira pronta depois de "Registrar foto": segue para a câmera. */
-    data object ProceedToCapture : WalletEffect
+    /** Carteira pronta: segue para onde a pessoa ia ([gate]). */
+    data class Proceed(val gate: WalletGate) : WalletEffect
+}
+
+/**
+ * Guarda de sessão (T091): o que só abre com a carteira conectada na Sepolia. Sem ela, a folha
+ * "Conectar carteira" aparece e o destino segue depois de conectar. A verificação nunca passa por
+ * aqui (FR-019).
+ */
+sealed interface WalletGate {
+    /** "Registrar foto": a câmera. */
+    data object Capture : WalletGate
+
+    /** "Editar foto" no acervo: o Editor com a foto [localId] como pai. */
+    data class Edit(val localId: Long) : WalletGate
+
+    /** "Importar para editar" no Início. */
+    data object ImportForEdit : WalletGate
 }
 
 /**
@@ -68,8 +84,8 @@ class WalletViewModel @Inject constructor(
     private val _effects = Channel<WalletEffect>(Channel.BUFFERED)
     val effects: Flow<WalletEffect> = _effects.receiveAsFlow()
 
-    /** A folha foi aberta por "Registrar foto": com a carteira pronta, segue para a câmera. */
-    private var wantsToCapture = false
+    /** Destino que pediu a carteira: com ela pronta, segue para ele. */
+    private var pending: WalletGate? = null
 
     init {
         viewModelScope.launch {
@@ -88,14 +104,14 @@ class WalletViewModel @Inject constructor(
         }
     }
 
-    /** "Registrar foto": segue direto se a carteira estiver pronta; senão, abre a folha. */
-    fun onRegisterPhoto() {
-        wantsToCapture = true
+    /** Segue direto para [gate] se a carteira estiver pronta; senão, abre a folha. */
+    fun requireWallet(gate: WalletGate) {
+        pending = gate
         viewModelScope.launch {
             val sheet = sheetFor(session.state.value)
             if (sheet is WalletSheetUiState.Connected) {
-                wantsToCapture = false
-                _effects.send(WalletEffect.ProceedToCapture)
+                pending = null
+                _effects.send(WalletEffect.Proceed(gate))
             } else {
                 showSheet(sheet)
             }
@@ -104,7 +120,7 @@ class WalletViewModel @Inject constructor(
 
     /** Toque no chip da carteira. */
     fun onOpenWallet() {
-        wantsToCapture = false
+        pending = null
         viewModelScope.launch { showSheet(sheetFor(session.state.value)) }
     }
 
@@ -114,8 +130,8 @@ class WalletViewModel @Inject constructor(
             WalletSheetAction.Cancel -> showSheet(WalletSheetUiState.Initial)
             WalletSheetAction.Continue -> {
                 hideSheet()
-                if (wantsToCapture) send(WalletEffect.ProceedToCapture)
-                wantsToCapture = false
+                pending?.let { send(WalletEffect.Proceed(it)) }
+                pending = null
             }
             WalletSheetAction.SwitchToSepolia -> viewModelScope.launch {
                 // Recusa ou rede desconhecida na carteira: a folha segue pedindo a troca
@@ -129,7 +145,7 @@ class WalletViewModel @Inject constructor(
             WalletSheetAction.RefreshBalance -> viewModelScope.launch { refreshSheet() }
             WalletSheetAction.Dismiss -> {
                 hideSheet()
-                wantsToCapture = false
+                pending = null
             }
         }
     }
@@ -169,7 +185,7 @@ class WalletViewModel @Inject constructor(
         }
         val (balance, gasPrice) = reading ?: return WalletSheetUiState.Connected(address, balance = null)
         val balanceEth = SepoliaEthFormat.fromWei(balance).stripTrailingZeros()
-        return if (balance < gasPrice * TYPICAL_REGISTRATION_GAS) {
+        return if (RegistrationCost.isLow(balance, gasPrice)) {
             WalletSheetUiState.LowBalance(address, balanceEth)
         } else {
             WalletSheetUiState.Connected(address, balanceEth)
@@ -189,9 +205,12 @@ class WalletViewModel @Inject constructor(
         is WalletState.Connected ->
             if (isSepolia) WalletChipState.Connected(address) else WalletChipState.WrongNetwork(address)
     }
+}
 
-    private companion object {
-        /** `registerCapture` gasta até ~300 mil de gás (forge --gas-report), mais 20% de margem. */
-        val TYPICAL_REGISTRATION_GAS: BigInteger = BigInteger.valueOf(360_000)
-    }
+/** Custo típico de um registro, para avisar cedo do saldo baixo (FR-003) na folha e na tela Carteira. */
+internal object RegistrationCost {
+    /** `registerCapture` gasta até ~300 mil de gás (forge --gas-report), mais 20% de margem. */
+    private val TYPICAL_GAS: BigInteger = BigInteger.valueOf(360_000)
+
+    fun isLow(balanceWei: BigInteger, gasPriceWei: BigInteger): Boolean = balanceWei < gasPriceWei * TYPICAL_GAS
 }

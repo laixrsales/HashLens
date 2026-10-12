@@ -277,68 +277,6 @@ class CaptureAndRegisterUseCaseTest {
         )
     }
 
-    @Test
-    fun `reenvio com o hash já na rede confirma sem abrir a carteira`() = runTest {
-        happyPath()
-        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
-        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
-        // A transação foi confirmada por outro caminho (ex.: reenvio anterior que estourou o prazo)
-        coEvery { reader.getIdBySha256(SHA) } returns EXISTING_RECORD
-
-        val result = useCase.resubmit(localId, WALLET)
-
-        result shouldBe CaptureResult.Confirmed(localId, EXISTING_RECORD)
-        onlyImage().run {
-            status shouldBe RegistrationStatus.CONFIRMED
-            recordId shouldBe EXISTING_RECORD
-            originalRecordId shouldBe EXISTING_RECORD
-            failureReason.shouldBeNull()
-        }
-        coVerify(exactly = 1) { wallet.sendTransaction(any(), any()) }
-    }
-
-    @Test
-    fun `reenvio sem o hash na rede reabre a carteira com a mesma assinatura`() = runTest {
-        happyPath()
-        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
-        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
-        coEvery { wallet.sendTransaction(any(), any()) } returns TX
-
-        val result = useCase.resubmit(localId, WALLET)
-
-        result shouldBe CaptureResult.Submitted(localId, TX)
-        onlyImage().status shouldBe RegistrationStatus.PENDING
-        // Assinada uma vez só, na primeira tentativa
-        coVerify(exactly = 1) { keyManager.sign(any(), any()) }
-    }
-
-    @Test
-    fun `reenvio com outra carteira conectada é bloqueado`() = runTest {
-        happyPath()
-        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
-        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
-
-        val result = useCase.resubmit(localId, OTHER_WALLET)
-
-        result shouldBe CaptureResult.WrongWallet(localId, expected = WALLET.lowercase())
-        onlyImage().failureReason shouldBe FailureReason.REJECTED
-        coVerify(exactly = 1) { ensureDeviceBound(any(), any()) }
-    }
-
-    @Test
-    fun `reenvio sem rede na checagem mantém a falha sem abrir a carteira`() = runTest {
-        happyPath()
-        coEvery { wallet.sendTransaction(any(), any()) } throws WalletException.Rejected()
-        val localId = (useCase(photo, ROTATION, WALLET) as CaptureResult.Failed).localId
-        coEvery { reader.getIdBySha256(SHA) } throws RegistryException.Network(IOException("sem conexão"))
-
-        val result = useCase.resubmit(localId, WALLET)
-
-        result shouldBe CaptureResult.Failed(localId, FailureReason.NETWORK)
-        onlyImage().status shouldBe RegistrationStatus.FAILED
-        coVerify(exactly = 1) { wallet.sendTransaction(any(), any()) }
-    }
-
     private companion object {
         val NOW: Instant = Instant.parse("2026-10-09T18:00:00Z")
         val CONTRACT = SignatureVectors.case("original").payload.contract
