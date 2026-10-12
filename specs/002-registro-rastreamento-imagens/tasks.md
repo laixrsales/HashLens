@@ -258,6 +258,16 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 **Checkpoint**: todas as histórias funcionais.
 
+### Manutenção após a US6: "Como funciona" no primeiro uso (FR-037)
+
+A T038 criou a tela "Como funciona" sem estado (aprovada), mas nenhuma task a ligava: ela não aparece
+no primeiro uso e o botão "Como funciona" do Início leva a um destino vazio. Branch própria
+`feature/016-tela-como-funciona`.
+
+- [ ] T104 [P] Teste `$TEST/ui/onboarding/OnboardingViewModelTest.kt` com preferências falsas: primeiro uso → destino inicial "Como funciona"; "Começar" e "Pular" gravam que a tela foi vista e levam ao Início, e na abertura seguinte o destino inicial é o Início; aberta pelo botão "Como funciona" do Início (já vista), "Começar" e "Pular" só voltam ao Início, sem regravar — FR-037, ux.md §4.1
+- [ ] T105 Implementar `$PKG/data/local/OnboardingPreferences.kt` (`SharedPreferences`, chave "como funciona vista"), `$PKG/ui/onboarding/OnboardingViewModel.kt` e `OnboardingRoute.kt` até T104 passar; em `$PKG/ui/navigation/HashLensNavHost.kt`, destino inicial pela preferência e `Route.Onboarding` ligado (sai dos destinos vazios), com o botão "Como funciona" do Início abrindo a tela por cima e o primeiro uso substituindo-a pelo Início ao sair (voltar não reabre)
+- [ ] T106 Teste instrumentado `$ITEST/ui/onboarding/OnboardingScreenTest.kt` (as três ideias, aviso de rede de testes e formatos aceitos e não aceitos de FR-040 em pt-BR; "Começar" e "Pular") e roteiro no aparelho: primeiro uso (preferência limpa sem apagar o acervo), "Pular", reabrir o app sem a tela, "Como funciona" pelo Início e voltar; acrescentar esse roteiro ao `$SPEC/quickstart.md`
+
 ---
 
 ## Phase 9: Polish & Cross-Cutting Concerns
@@ -290,6 +300,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 - **US5 (7)**: depende de 2; exercitado plenamente após US3.
 - **US6 (8)**: depende de US1 (T052, T054).
 - **Manutenção (T102)**: após a US1, antes da US2; não depende de nenhuma história.
+- **Manutenção (T104–T106)**: após a US6; depende só da tela da T038.
 - **Polish (9)**: após as histórias desejadas.
 
 ### Within Each User Story
