@@ -26,6 +26,7 @@ import br.ufv.hashlens.ui.home.HomeRoute
 import br.ufv.hashlens.ui.library.LibraryRoute
 import br.ufv.hashlens.ui.verify.VerifyRoute
 import br.ufv.hashlens.ui.verify.VerifyViewModel
+import br.ufv.hashlens.ui.wallet.WalletAccountRoute
 import com.reown.appkit.ui.appKitGraph
 import com.reown.appkit.ui.openAppKit
 
@@ -45,14 +46,7 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
         sheetBackgroundColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
         NavHost(navController = navController, startDestination = Route.Home.path) {
-            composable(Route.Home.path) {
-                HomeRoute(
-                    walletListOpen = backStackEntry?.destination?.route != Route.Home.path,
-                    onOpenWalletList = { navController.openAppKit(shouldOpenChooseNetwork = false) },
-                    onRegisterPhoto = { navController.navigate(Route.Capture.path) },
-                    onNavigate = { action -> action.route()?.let { navController.navigate(it.path) } }
-                )
-            }
+            homeDestinations(navController) { backStackEntry?.destination?.route != Route.Home.path }
             composable(Route.Capture.path) {
                 CaptureRoute(
                     onClose = { navController.popBackStack(Route.Home.path, inclusive = false) },
@@ -79,7 +73,7 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
             libraryDestinations(navController) { backStackEntry?.destination?.route != Route.Library.path }
             editorDestinations(navController)
             appKitGraph(navController)
-            // Telas das próximas histórias (US6): ainda vazias
+            // Destinos ainda sem tela: vazios
             Route.entries.filter { it !in BUILT }.forEach { route ->
                 composable(route.path) { Box(Modifier.fillMaxSize()) }
             }
@@ -117,6 +111,28 @@ private fun NavGraphBuilder.libraryDestinations(navController: NavHostController
     }
 }
 
+/**
+ * Início e tela Carteira. Registrar e importar para editar passam pela carteira (guarda de sessão,
+ * T091) antes de navegar.
+ *
+ * @param walletListOpen a lista de carteiras do AppKit está por cima do Início.
+ */
+private fun NavGraphBuilder.homeDestinations(navController: NavHostController, walletListOpen: () -> Boolean) {
+    composable(Route.Home.path) {
+        HomeRoute(
+            walletListOpen = walletListOpen(),
+            onOpenWalletList = { navController.openAppKit(shouldOpenChooseNetwork = false) },
+            onRegisterPhoto = { navController.navigate(Route.Capture.path) },
+            onImportForEdit = { navController.navigate(Route.ImportForEdit.path) },
+            onOpenWalletAccount = { navController.navigate(Route.Wallet.path) },
+            onNavigate = { action -> action.route()?.let { navController.navigate(it.path) } }
+        )
+    }
+    composable(Route.Wallet.path) {
+        WalletAccountRoute(onClose = { navController.popBackStack() })
+    }
+}
+
 /** Editor aberto pelo acervo (US6), com o localId da imagem, ou pela importação (US4), sem ele. */
 private fun NavGraphBuilder.editorDestinations(navController: NavHostController) {
     composable(Route.ImportForEdit.path) {
@@ -145,7 +161,8 @@ private val BUILT = setOf(
     Route.Editor,
     Route.ImportForEdit,
     Route.Genealogy,
-    Route.Library
+    Route.Library,
+    Route.Wallet
 )
 
 /** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */
@@ -153,6 +170,5 @@ internal fun HomeAction.route(): Route? = when (this) {
     HomeAction.VerifyImage -> Route.Verify
     HomeAction.OpenLibrary -> Route.Library
     HomeAction.HowItWorks -> Route.Onboarding
-    HomeAction.ImportForEdit -> Route.ImportForEdit
-    HomeAction.RegisterPhoto, HomeAction.OpenWallet -> null
+    HomeAction.RegisterPhoto, HomeAction.ImportForEdit, HomeAction.OpenWallet -> null
 }

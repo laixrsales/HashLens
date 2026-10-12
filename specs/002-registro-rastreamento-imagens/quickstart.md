@@ -51,6 +51,17 @@ registry.deployBlock=11858572
 reown.projectId=...
 ```
 
+**RPC e link da transação.** O contrato não guarda a transação de um registro; o Histórico da
+imagem busca os eventos `ImageRegistered` com `eth_getLogs` desde `registry.deployBlock`. Planos
+gratuitos de alguns provedores recusam essa busca (ex.: Chainstack responde HTTP 403, "Archive …
+requests are not available on your current plan"). Nesse caso o Histórico continua funcionando, e o
+link "Ver registro na rede" aparece só para as fotos registradas neste aparelho (vem do acervo
+local). Para ter o link em todos os nós, troque `sepolia.rpcUrl` por um RPC da Sepolia que aceite
+`eth_getLogs` num intervalo grande e reinstale o app (`./gradlew :app:installDebug`; o valor entra
+no `BuildConfig`). `registry.address` e `registry.deployBlock` continuam os mesmos. Alguns provedores
+limitam o intervalo de blocos (10 mil, 50 mil): como o intervalo cresce desde o deploy, a busca pode
+passar a ser recusada com o tempo; aí ela precisa ser feita em partes no `RegistrationTxFinder`.
+
 ```bash
 cd android
 ./gradlew :app:testDebugUnitTest          # unitários (hashing, payload, classificador)

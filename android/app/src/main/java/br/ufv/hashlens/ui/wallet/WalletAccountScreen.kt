@@ -42,13 +42,15 @@ import java.math.BigDecimal
 /**
  * Estado da tela Carteira (ux.md §4.11).
  *
- * @property balance saldo de teste; `null` enquanto consulta.
+ * @property balance saldo de teste; `null` enquanto consulta ou se não foi possível consultar.
+ * @property balanceUnavailable sem rede para consultar o saldo.
  * @property lowBalance o saldo não paga a taxa de um registro (FR-003).
  */
 data class WalletAccountUiState(
     val address: String,
     val onSepolia: Boolean = true,
     val balance: BigDecimal? = null,
+    val balanceUnavailable: Boolean = false,
     val lowBalance: Boolean = false
 )
 
@@ -155,6 +157,8 @@ private fun Balance(state: WalletAccountUiState) {
     Fact(stringResource(R.string.wallet_account_balance)) {
         val balance = state.balance
         when {
+            balance == null && state.balanceUnavailable ->
+                Secondary(stringResource(R.string.wallet_account_balance_unavailable))
             balance == null -> Secondary(stringResource(R.string.wallet_account_balance_loading))
             state.lowBalance -> {
                 Warning(stringResource(R.string.wallet_account_balance_value, SepoliaEthFormat.amount(balance)))
@@ -231,6 +235,7 @@ private fun FaucetLink(onClick: () -> Unit) {
 object WalletAccountSamples {
     val connected = WalletAccountUiState(SampleData.Wallets.AUTHOR, balance = SampleData.Chain.BALANCE_OK)
     val balanceLoading = WalletAccountUiState(SampleData.Wallets.AUTHOR)
+    val balanceUnavailable = WalletAccountUiState(SampleData.Wallets.AUTHOR, balanceUnavailable = true)
     val wrongNetwork =
         WalletAccountUiState(SampleData.Wallets.AUTHOR, onSepolia = false, balance = SampleData.Chain.BALANCE_OK)
     val lowBalance =

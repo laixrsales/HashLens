@@ -8,6 +8,8 @@ import br.ufv.hashlens.ui.verify.VerifyViewModel
 enum class Route(val path: String) {
     Onboarding("onboarding"),
     Home("home"),
+
+    /** Tela Carteira (US6), aberta pelo chip do Início com uma conta conectada. */
     Wallet("wallet"),
     Capture("capture"),
     RegistrationProgress("registration"),

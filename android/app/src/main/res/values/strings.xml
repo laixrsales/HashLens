@@ -215,7 +215,9 @@
     <string name="wallet_account_balance">Saldo de teste</string>
     <string name="wallet_account_balance_value">%1$s SepoliaETH</string>
     <string name="wallet_account_balance_loading">Consultando saldo…</string>
+    <string name="wallet_account_balance_unavailable">Sem conexão para consultar o saldo agora.</string>
     <string name="wallet_account_copy">Copiar endereço completo</string>
+    <string name="wallet_account_copied">Endereço copiado.</string>
     <string name="wallet_account_disconnect">Desconectar</string>
     <string name="wallet_account_disconnect_note">Ao desconectar, as fotos e os registros continuam no aparelho e na rede. Para registrar ou editar, conecte de novo.</string>
     <string name="wallet_account_low_balance">Pouco para pagar a taxa de um registro. O saldo de teste é gratuito.</string>

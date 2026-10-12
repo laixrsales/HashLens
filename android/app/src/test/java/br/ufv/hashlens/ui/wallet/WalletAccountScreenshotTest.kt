@@ -19,6 +19,9 @@ class WalletAccountScreenshotTest : ScreenshotTest() {
     fun balanceLoading() = account("consultando_saldo", WalletAccountSamples.balanceLoading)
 
     @Test
+    fun balanceUnavailable() = account("saldo_indisponivel", WalletAccountSamples.balanceUnavailable)
+
+    @Test
     fun wrongNetwork() = account("rede_errada", WalletAccountSamples.wrongNetwork)
 
     @Test

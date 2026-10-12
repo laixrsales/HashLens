@@ -19,12 +19,14 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.ufv.hashlens.ui.wallet.WalletEffect
+import br.ufv.hashlens.ui.wallet.WalletGate
 import br.ufv.hashlens.ui.wallet.WalletSheet
 import br.ufv.hashlens.ui.wallet.WalletViewModel
 
 /**
- * Rota "Meu acervo" (ux.md §4.10). "Registrar foto" do estado vazio passa pela carteira como no
- * Início (folha "Conectar carteira" quando preciso) e só então abre a câmera.
+ * Rota "Meu acervo" (ux.md §4.10). "Registrar foto" do estado vazio e "Editar foto" passam pela
+ * carteira como no Início (guarda de sessão, T091): a folha "Conectar carteira" aparece quando
+ * preciso, e só então abrem a câmera ou o Editor.
  *
  * @param walletListOpen a lista de carteiras do AppKit está por cima; a folha se esconde para não
  *   cobri-la e volta quando ela fecha.
@@ -54,9 +56,9 @@ fun LibraryRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 LibraryEffect.Close -> onClose()
-                LibraryEffect.RegisterPhoto -> walletViewModel.onRegisterPhoto()
+                LibraryEffect.RegisterPhoto -> walletViewModel.requireWallet(WalletGate.Capture)
                 is LibraryEffect.OpenHistory -> onOpenHistory(effect.recordId)
-                is LibraryEffect.Edit -> onEdit(effect.localId)
+                is LibraryEffect.Edit -> walletViewModel.requireWallet(WalletGate.Edit(effect.localId))
                 is LibraryEffect.Notice -> snackbar.showSnackbar(
                     effect.arg?.let { resources.getString(effect.text, it) } ?: resources.getString(effect.text)
                 )
@@ -68,7 +70,7 @@ fun LibraryRoute(
             when (effect) {
                 WalletEffect.OpenWalletList -> onOpenWalletList()
                 is WalletEffect.OpenUrl -> uriHandler.openUri(effect.url)
-                WalletEffect.ProceedToCapture -> onRegisterPhoto()
+                is WalletEffect.Proceed -> proceed(effect.gate, onRegisterPhoto, onEdit)
             }
         }
     }
@@ -85,4 +87,14 @@ fun LibraryRoute(
     }
     val sheet = wallet.sheet
     if (sheet != null && !walletListOpen) WalletSheet(sheet, onAction = walletViewModel::onAction)
+}
+
+/** Carteira pronta: segue para a câmera ou para o Editor com a foto do acervo. */
+private fun proceed(gate: WalletGate, onRegisterPhoto: () -> Unit, onEdit: (localId: Long) -> Unit) {
+    when (gate) {
+        WalletGate.Capture -> onRegisterPhoto()
+        is WalletGate.Edit -> onEdit(gate.localId)
+        // O acervo não importa fotos de fora
+        WalletGate.ImportForEdit -> Unit
+    }
 }
