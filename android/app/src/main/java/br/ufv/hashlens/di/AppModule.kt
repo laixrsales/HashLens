@@ -2,6 +2,8 @@ package br.ufv.hashlens.di
 
 import android.content.Context
 import androidx.work.WorkManager
+import br.ufv.hashlens.data.local.OnboardingPreferences
+import br.ufv.hashlens.data.local.SharedOnboardingPreferences
 import br.ufv.hashlens.data.wallet.PackageManagerWalletAppDetector
 import br.ufv.hashlens.data.wallet.WalletAppDetector
 import br.ufv.hashlens.work.PendingTxScheduler
@@ -31,6 +33,9 @@ annotation class ApplicationScope
 abstract class AppModule {
     @Binds
     abstract fun walletAppDetector(detector: PackageManagerWalletAppDetector): WalletAppDetector
+
+    @Binds
+    abstract fun onboardingPreferences(preferences: SharedOnboardingPreferences): OnboardingPreferences
 
     @Binds
     abstract fun pendingTxScheduler(scheduler: WorkManagerPendingTxScheduler): PendingTxScheduler

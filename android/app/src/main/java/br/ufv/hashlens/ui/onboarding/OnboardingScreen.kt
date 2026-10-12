@@ -6,11 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -50,26 +54,14 @@ fun OnboardingScreen(onStart: () -> Unit, onSkip: () -> Unit, modifier: Modifier
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.sm, vertical = spacing.xs)
-            ) {
-                TextButton(
-                    onClick = onSkip,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Text(stringResource(R.string.action_skip), style = MaterialTheme.typography.labelLarge)
-                }
-            }
-        },
+        topBar = { SkipBar(onSkip) },
         bottomBar = {
             PrimaryButton(
                 text = stringResource(R.string.action_start),
                 onClick = onStart,
-                modifier = Modifier.padding(spacing.lg)
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(spacing.lg)
             )
         }
     ) { padding ->
@@ -101,6 +93,28 @@ fun OnboardingScreen(onStart: () -> Unit, onSkip: () -> Unit, modifier: Modifier
             Spacer(Modifier.height(spacing.xl))
             Footnotes()
             Spacer(Modifier.height(spacing.lg))
+        }
+    }
+}
+
+/** "Pular" no topo, abaixo da barra de status. */
+@Composable
+private fun SkipBar(onSkip: () -> Unit) {
+    val spacing = HashLensTheme.spacing
+    // Barras próprias não aplicam as margens do sistema como a TopAppBar: sem isto, "Pular" ficava
+    // sob a barra de status (app de ponta a ponta) e não recebia o toque
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(horizontal = spacing.sm, vertical = spacing.xs)
+    ) {
+        TextButton(
+            onClick = onSkip,
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            Text(stringResource(R.string.action_skip), style = MaterialTheme.typography.labelLarge)
         }
     }
 }

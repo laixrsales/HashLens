@@ -24,6 +24,7 @@ import br.ufv.hashlens.ui.genealogy.GenealogyViewModel
 import br.ufv.hashlens.ui.home.HomeAction
 import br.ufv.hashlens.ui.home.HomeRoute
 import br.ufv.hashlens.ui.library.LibraryRoute
+import br.ufv.hashlens.ui.onboarding.OnboardingRoute
 import br.ufv.hashlens.ui.verify.VerifyRoute
 import br.ufv.hashlens.ui.verify.VerifyViewModel
 import br.ufv.hashlens.ui.wallet.WalletAccountRoute
@@ -35,7 +36,7 @@ import com.reown.appkit.ui.openAppKit
  * ([appKitGraph]), por isso o `NavHost` fica dentro de um [ModalBottomSheetLayout].
  */
 @Composable
-fun HashLensNavHost(modifier: Modifier = Modifier) {
+fun HashLensNavHost(modifier: Modifier = Modifier, startRoute: Route = Route.Home) {
     val sheetNavigator = rememberBottomSheetNavigator()
     val navController = rememberNavController(sheetNavigator)
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -45,7 +46,7 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
         modifier = modifier,
         sheetBackgroundColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
-        NavHost(navController = navController, startDestination = Route.Home.path) {
+        NavHost(navController = navController, startDestination = startRoute.path) {
             homeDestinations(navController) { backStackEntry?.destination?.route != Route.Home.path }
             composable(Route.Capture.path) {
                 CaptureRoute(
@@ -112,7 +113,7 @@ private fun NavGraphBuilder.libraryDestinations(navController: NavHostController
 }
 
 /**
- * Início e tela Carteira. Registrar e importar para editar passam pela carteira (guarda de sessão,
+ * Início, tela Carteira e "Como funciona". Registrar e importar para editar passam pela carteira (guarda de sessão,
  * T091) antes de navegar.
  *
  * @param walletListOpen a lista de carteiras do AppKit está por cima do Início.
@@ -130,6 +131,16 @@ private fun NavGraphBuilder.homeDestinations(navController: NavHostController, w
     }
     composable(Route.Wallet.path) {
         WalletAccountRoute(onClose = { navController.popBackStack() })
+    }
+    // "Como funciona" (FR-037): destino inicial no primeiro uso, que o Início substitui ao sair (voltar
+    // não a reabre); pelo botão do Início, abre por cima e volta
+    composable(Route.Onboarding.path) {
+        OnboardingRoute(
+            onFinishFirstUse = {
+                navController.navigate(Route.Home.path) { popUpTo(Route.Onboarding.path) { inclusive = true } }
+            },
+            onClose = { navController.popBackStack() }
+        )
     }
 }
 
@@ -162,7 +173,8 @@ private val BUILT = setOf(
     Route.ImportForEdit,
     Route.Genealogy,
     Route.Library,
-    Route.Wallet
+    Route.Wallet,
+    Route.Onboarding
 )
 
 /** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */

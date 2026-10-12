@@ -80,6 +80,16 @@ ocorre.
 
 ## 4. Roteiro de validação
 
+### Primeiro uso — "Como funciona" (FR-037)
+
+1. Ver de novo o primeiro uso sem apagar o acervo nem as chaves do aparelho: limpar só a
+   preferência (build de debug) e abrir o app:
+   `adb shell am force-stop br.ufv.hashlens && adb shell run-as br.ufv.hashlens rm -f shared_prefs/onboarding.xml`.
+   O app abre em **Como funciona**, com "Pular" no topo (abaixo da barra de status) e "Começar" embaixo.
+2. Tocar em "Pular" (ou "Começar") → Início. Voltar → o app fecha, sem reabrir a tela.
+3. Reabrir o app → começa pelo Início.
+4. No Início, "Como funciona" → a tela abre por cima; "Começar", "Pular" ou voltar → Início.
+
 ### US1 — Captura e registro
 
 1. Abrir o app sem sessão → tentar capturar → deve pedir conexão da carteira A.
