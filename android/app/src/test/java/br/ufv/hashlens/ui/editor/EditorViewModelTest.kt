@@ -18,13 +18,13 @@ import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.domain.model.EditOperation
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
-import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.EditAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.EditResult
 import br.ufv.hashlens.domain.usecase.ImportForEditUseCase
 import br.ufv.hashlens.domain.usecase.ImportResult
 import br.ufv.hashlens.domain.usecase.ImportedParent
+import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
 import br.ufv.hashlens.ui.capture.RegistrationStage
 import br.ufv.hashlens.work.PendingTxReconciler
@@ -77,7 +77,7 @@ class EditorViewModelTest {
     private val preview = mockk<EditPreview>(relaxUnitFun = true)
     private val editAndRegister = mockk<EditAndRegisterUseCase>()
     private val importForEdit = mockk<ImportForEditUseCase>()
-    private val captureAndRegister = mockk<CaptureAndRegisterUseCase>()
+    private val retryRegistration = mockk<RetryRegistrationUseCase>()
     private val reconciler = mockk<PendingTxReconciler>(relaxUnitFun = true)
     private val reader = mockk<RegistryReader>()
     private var tracked = 0
@@ -135,7 +135,7 @@ class EditorViewModelTest {
         previews = previews,
         editAndRegister = editAndRegister,
         importForEdit = importForEdit,
-        captureAndRegister = captureAndRegister,
+        retryRegistration = retryRegistration,
         reconciler = reconciler,
         reader = reader,
         scheduler = scheduler,

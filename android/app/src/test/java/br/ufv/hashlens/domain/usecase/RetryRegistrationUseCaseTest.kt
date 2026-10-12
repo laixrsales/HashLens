@@ -194,7 +194,7 @@ class RetryRegistrationUseCaseTest {
             status shouldBe RegistrationStatus.FAILED
             failureReason shouldBe FailureReason.TIMEOUT
         }
-        coVerify(exactly = 0) { reader.getIdBySha256(any()) }
+        coVerify(exactly = 0) { reader.getIdBySha256(SHA) }
         coVerify(exactly = 0) { ensureDeviceBound(any(), any()) }
         coVerify(exactly = 0) { keyManager.sign(any(), any()) }
         coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }

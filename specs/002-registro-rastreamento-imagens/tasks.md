@@ -249,7 +249,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 ### Implementation for User Story 6
 
-- [ ] T087 [US6] Implementar `$PKG/domain/usecase/RetryRegistrationUseCase.kt` até T085 passar
+- [X] T087 [US6] Implementar `$PKG/domain/usecase/RetryRegistrationUseCase.kt` até T085 passar
 - [ ] T088 [US6] Criar `LibraryScreen` e `WalletAccountScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.10–4.11 e screenshot tests; **revisão da autora**
 - [ ] T089 [US6] Ligar `$PKG/ui/library/LibraryScreen.kt` ao `LibraryViewModel.kt` (grupos por original, status, reenviar via `RetryRegistrationUseCase`, abrir editor/genealogia). Inclui a entrada do acervo para o Histórico da imagem, que ficou de fora da T084 porque o acervo ainda não existia: em `$PKG/ui/navigation/HashLensNavHost.kt`, a ação de abrir a genealogia de uma imagem confirmada navega para `Route.genealogy(recordId)`; imagem sem `recordId` (não confirmada) não oferece a ação. Testar em `LibraryViewModelTest` (a ação emite o efeito com o `recordId` certo e não aparece para imagens não confirmadas) e no aparelho (roteiro US5 do `$SPEC/quickstart.md` partindo do acervo)
 - [ ] T090 [US6] Verificar existência do arquivo na galeria ao abrir o acervo e atualizar `fileAvailable` em `$PKG/ui/library/LibraryViewModel.kt`

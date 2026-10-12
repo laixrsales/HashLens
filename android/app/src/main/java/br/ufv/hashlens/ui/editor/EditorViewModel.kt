@@ -19,7 +19,6 @@ import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.di.ApplicationScope
 import br.ufv.hashlens.di.DefaultDispatcher
 import br.ufv.hashlens.domain.model.EditOperation
-import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.EditAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.EditResult
@@ -27,6 +26,7 @@ import br.ufv.hashlens.domain.usecase.ImportForEditUseCase
 import br.ufv.hashlens.domain.usecase.ImportResult
 import br.ufv.hashlens.domain.usecase.ImportedParent
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
+import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
 import br.ufv.hashlens.ui.capture.RegistrationFailure
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
 import br.ufv.hashlens.ui.capture.RegistrationProgressUiState
@@ -105,7 +105,7 @@ class EditorViewModel @Inject constructor(
     private val previews: EditPreviewFactory,
     private val editAndRegister: EditAndRegisterUseCase,
     private val importForEdit: ImportForEditUseCase,
-    private val captureAndRegister: CaptureAndRegisterUseCase,
+    private val retryRegistration: RetryRegistrationUseCase,
     reconciler: PendingTxReconciler,
     reader: RegistryReader,
     private val scheduler: PendingTxScheduler,
@@ -389,7 +389,7 @@ class EditorViewModel @Inject constructor(
         operationWallet = wallet
         applicationScope.launch {
             val result = try {
-                captureAndRegister.resubmit(id, wallet, ::onProgress)
+                retryRegistration(id, wallet, ::onProgress)
             } catch (_: IOException) {
                 return@launch showStage(RegistrationStage.Failed(RegistrationFailure.SaveFailed))
             }
