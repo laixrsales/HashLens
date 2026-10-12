@@ -228,9 +228,9 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 - [X] T080 [P] [US5] Criar `$PKG/domain/model/Genealogy.kt`
 - [X] T081 [US5] Implementar `$PKG/domain/usecase/TraceGenealogyUseCase.kt`
-- [ ] T082 [US5] Criar `GenealogyScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.9 e screenshot tests; **revisão da autora**
-- [ ] T083 [US5] Ligar `$PKG/ui/genealogy/GenealogyScreen.kt` ao `GenealogyViewModel.kt` (caminho destacado + árvore; detalhes do nó)
-- [ ] T084 [US5] Adicionar navegação para genealogia a partir de `VerificationResultScreen` e do acervo em `$PKG/ui/navigation/HashLensNavHost.kt`
+- [X] T082 [US5] Criar `GenealogyScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.9 e screenshot tests; **revisão da autora**
+- [X] T083 [US5] Ligar `$PKG/ui/genealogy/GenealogyScreen.kt` ao `GenealogyViewModel.kt` (caminho destacado + árvore; detalhes do nó)
+- [X] T084 [US5] Adicionar navegação para genealogia a partir de `VerificationResultScreen` e do acervo em `$PKG/ui/navigation/HashLensNavHost.kt`
 
 **Checkpoint**: auditoria completa da genealogia disponível.
 
@@ -251,7 +251,7 @@ vínculo de aparelho (R4/R25) também são test-first.
 
 - [ ] T087 [US6] Implementar `$PKG/domain/usecase/RetryRegistrationUseCase.kt` até T085 passar
 - [ ] T088 [US6] Criar `LibraryScreen` e `WalletAccountScreen` sem estado com previews dos estados de `docs/referencia/ux.md` 4.10–4.11 e screenshot tests; **revisão da autora**
-- [ ] T089 [US6] Ligar `$PKG/ui/library/LibraryScreen.kt` ao `LibraryViewModel.kt` (grupos por original, status, reenviar via `RetryRegistrationUseCase`, abrir editor/genealogia)
+- [ ] T089 [US6] Ligar `$PKG/ui/library/LibraryScreen.kt` ao `LibraryViewModel.kt` (grupos por original, status, reenviar via `RetryRegistrationUseCase`, abrir editor/genealogia). Inclui a entrada do acervo para o Histórico da imagem, que ficou de fora da T084 porque o acervo ainda não existia: em `$PKG/ui/navigation/HashLensNavHost.kt`, a ação de abrir a genealogia de uma imagem confirmada navega para `Route.genealogy(recordId)`; imagem sem `recordId` (não confirmada) não oferece a ação. Testar em `LibraryViewModelTest` (a ação emite o efeito com o `recordId` certo e não aparece para imagens não confirmadas) e no aparelho (roteiro US5 do `$SPEC/quickstart.md` partindo do acervo)
 - [ ] T090 [US6] Verificar existência do arquivo na galeria ao abrir o acervo e atualizar `fileAvailable` em `$PKG/ui/library/LibraryViewModel.kt`
 - [ ] T091 [US6] Desconexão em `$PKG/ui/wallet/WalletAccountScreen.kt` e guarda de sessão para captura/edição em `$PKG/ui/navigation/HashLensNavHost.kt`
 - [ ] T092 [US6] Reagendar `PendingTxWorker` na inicialização em `$PKG/HashLensApp.kt`

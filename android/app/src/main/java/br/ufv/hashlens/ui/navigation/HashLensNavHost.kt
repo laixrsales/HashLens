@@ -19,6 +19,8 @@ import androidx.navigation.navArgument
 import br.ufv.hashlens.ui.capture.CaptureRoute
 import br.ufv.hashlens.ui.editor.EditorRoute
 import br.ufv.hashlens.ui.editor.EditorViewModel
+import br.ufv.hashlens.ui.genealogy.GenealogyRoute
+import br.ufv.hashlens.ui.genealogy.GenealogyViewModel
 import br.ufv.hashlens.ui.home.HomeAction
 import br.ufv.hashlens.ui.home.HomeRoute
 import br.ufv.hashlens.ui.verify.VerifyRoute
@@ -61,7 +63,7 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
             composable(Route.Verify.path) {
                 VerifyRoute(
                     onClose = { navController.popBackStack() },
-                    onOpenHistory = { navController.navigate(Route.Genealogy.path) }
+                    onOpenHistory = { navController.navigate(Route.genealogy(it)) }
                 )
             }
             composable(
@@ -70,12 +72,23 @@ fun HashLensNavHost(modifier: Modifier = Modifier) {
             ) {
                 VerifyRoute(
                     onClose = { navController.popBackStack() },
-                    onOpenHistory = { navController.navigate(Route.Genealogy.path) }
+                    onOpenHistory = { navController.navigate(Route.genealogy(it)) }
+                )
+            }
+            // Pública como a verificação: só leituras do contrato. Cada versão da árvore abre o próprio
+            // Histórico por cima, e "voltar" retorna à anterior.
+            composable(
+                Route.Genealogy.path,
+                arguments = listOf(navArgument(GenealogyViewModel.RECORD_ID) { type = NavType.LongType })
+            ) {
+                GenealogyRoute(
+                    onClose = { navController.popBackStack() },
+                    onOpenRecord = { navController.navigate(Route.genealogy(it)) }
                 )
             }
             editorDestinations(navController)
             appKitGraph(navController)
-            // Telas das próximas histórias (US3–US6): ainda vazias
+            // Telas das próximas histórias (US6): ainda vazias
             Route.entries.filter { it !in BUILT }.forEach { route ->
                 composable(route.path) { Box(Modifier.fillMaxSize()) }
             }
@@ -103,8 +116,15 @@ private fun NavGraphBuilder.editorDestinations(navController: NavHostController)
 }
 
 /** Destinos que já têm tela; os demais ficam vazios até a sua história. */
-private val BUILT =
-    setOf(Route.Home, Route.Capture, Route.Verify, Route.VerificationResult, Route.Editor, Route.ImportForEdit)
+private val BUILT = setOf(
+    Route.Home,
+    Route.Capture,
+    Route.Verify,
+    Route.VerificationResult,
+    Route.Editor,
+    Route.ImportForEdit,
+    Route.Genealogy
+)
 
 /** Destino de cada ação do Início; `null` quando a ação passa antes pela carteira ou é uma folha. */
 internal fun HomeAction.route(): Route? = when (this) {
