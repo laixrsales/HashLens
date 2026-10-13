@@ -1,0 +1,21 @@
+medida,operacao,condicao,valor,unidade
+registerCapture_1,registerCapture,1ª captura,302686,gás
+registerCapture_2,registerCapture,2ª captura,283074,gás
+registerCapture_1000,registerCapture,1.000ª captura,283074,gás
+registerCapture_10000,registerCapture,10.000ª captura,283074,gás
+registerCapture_same_pHash_2,registerCapture (mesmo pHash),2ª com o mesmo pHash,265974,gás
+registerCapture_same_pHash_1000,registerCapture (mesmo pHash),1.000ª com o mesmo pHash,265974,gás
+getIdBySha256_with_1000,getIdBySha256,com 1.000 registros,5619,gás
+getIdBySha256_with_10000,getIdBySha256,com 10.000 registros,5619,gás
+getRecord_with_1000,getRecord,com 1.000 registros,27369,gás
+getRecord_with_10000,getRecord,com 10.000 registros,27374,gás
+getIdsByPHash_10,getIdsByPHash,10 ids,26991,gás
+getIdsByPHash_100,getIdsByPHash,100 ids,235707,gás
+getIdsByPHash_1000,getIdsByPHash,1.000 ids,2338362,gás
+getIdsByPHash_gas_per_id,getIdsByPHash,por id adicional,2336,gás
+getIdsByPHash_max_ids_in_eth_call,getIdsByPHash,ids que cabem num eth_call (50 mi de gás),21404,ids
+registerEdit_child_2,registerEdit (versões da mesma original),2ª versão,353554,gás
+registerEdit_child_200,registerEdit (versões da mesma original),200ª versão,353554,gás
+getChildren_200,getChildren,200 versões,467726,gás
+registerEdit_generation_2,registerEdit (cadeia de gerações),2ª geração,370666,gás
+registerEdit_generation_10,registerEdit (cadeia de gerações),10ª geração,373157,gás

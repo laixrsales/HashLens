@@ -149,3 +149,38 @@ ocorre.
 Registrar em planilha: tempo de cálculo dos identificadores por resolução; tempo entre envio e
 confirmação de cada transação; gás usado por operação; tempo total de verificação; matriz de
 classificação (esperado × obtido) por tipo de edição.
+
+Onde cada dado é gerado:
+
+| Dado | Como gerar | Resultado em |
+| --- | --- | --- |
+| Gás por operação e escala até 10.000 registros (T093) | `cd contracts && forge test --match-contract ImageRegistryScaleTest -vv` | `contracts/snapshots/ImageRegistryScale.json`, `docs/resultados/escalabilidade-contrato.md` |
+| Tempo dos identificadores por resolução (T094, SC-006) | `HashingBenchmark` (instrumentado) | `docs/resultados/sc-006-hashing.md` |
+| Recompressão (T095, SC-004) | `RecompressionMatchTest` (instrumentado) | `docs/resultados/sc-004-recompressao.md` |
+| Tempo de verificação, de captura até o envio e de confirmação (T096, SC-007, SC-008) | uso normal do app | `metricas.csv` no aparelho (abaixo) |
+
+**Métricas de uso (T096).** O app grava uma linha por medida em
+`/sdcard/Android/data/br.ufv.hashlens/files/metrics/metricas.csv` (colunas `momento`, `medida`,
+`duracao_ms`, `resultado`; sem pixels, hashes ou endereços). Medidas: `verificacao` (imagem escolhida →
+resultado na tela, SC-007), `captura_ate_envio` e `edicao_ate_envio` (foto tirada ou "Salvar e
+registrar" → transação aprovada e enviada, SC-008; `:reenvio` no resultado marca um "Tentar de novo") e
+`confirmacao_rede` (envio → o app percebe a confirmação; precisão de ~4 s com o Acompanhamento aberto,
+do ciclo do worker com o app fechado). Para levar ao computador:
+
+```bash
+adb pull /sdcard/Android/data/br.ufv.hashlens/files/metrics/metricas.csv docs/resultados/dados/
+```
+
+O arquivo continua entre aberturas do app e é apagado ao desinstalá-lo (inclusive pelo
+`connectedDebugAndroidTest`): puxe antes.
+
+Para rodar um teste instrumentado de avaliação sem desinstalar o app:
+
+```bash
+cd android && ./gradlew :app:installDebug :app:installDebugAndroidTest
+adb shell am instrument -w -r -e class br.ufv.hashlens.benchmark.HashingBenchmark \
+  br.ufv.hashlens.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+O aparelho precisa estar desbloqueado e com a tela ligada durante os testes instrumentados.
+

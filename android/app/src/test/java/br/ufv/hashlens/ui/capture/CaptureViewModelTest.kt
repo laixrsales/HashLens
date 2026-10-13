@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.ui.graphics.ImageBitmap
 import br.ufv.hashlens.R
 import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.core.metrics.Metric
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.local.FailureReason
@@ -21,6 +22,8 @@ import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
+import br.ufv.hashlens.testing.MutableClock
+import br.ufv.hashlens.testing.RecordingMetrics
 import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.work.PendingTxReconciler
 import br.ufv.hashlens.work.PendingTxScheduler
@@ -35,9 +38,8 @@ import io.mockk.mockk
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Clock
+import java.time.Duration
 import java.time.Instant
-import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -73,7 +75,8 @@ class CaptureViewModelTest {
     private var tracked = 0
     private val scheduler = PendingTxScheduler { tracked++ }
     private val config = ChainConfig(rpcUrl = "", registryAddress = CONTRACT, reownProjectId = "")
-    private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
+    private val clock = MutableClock(NOW)
+    private val metrics = RecordingMetrics()
     private val photo = mockk<Bitmap>()
     private val thumbnail = mockk<ImageBitmap>()
 
@@ -93,6 +96,7 @@ class CaptureViewModelTest {
         scheduler = scheduler,
         config = config,
         clock = clock,
+        metrics = metrics,
         applicationScope = backgroundScope
     )
 
@@ -226,6 +230,41 @@ class CaptureViewModelTest {
 
         viewModel.stage() shouldBe RegistrationStage.InsufficientFunds(BigDecimal("0.0002"), BigDecimal("0.00001"))
         effects shouldBe listOf(CaptureEffect.OpenUrl(config.faucetUrl))
+    }
+
+    @Test
+    fun `mede da foto tirada até a transação aprovada e enviada (SC-008)`() = runTest(dispatcher) {
+        coEvery { captureAndRegister(photo, ROTATION, ADDRESS, any()) } coAnswers {
+            // Gravar, conferir e esperar a aprovação na carteira
+            clock.advance(Duration.ofSeconds(18))
+            CaptureResult.Submitted(LOCAL_ID, TX)
+        }
+        coEvery { images.getById(LOCAL_ID) } returns image(RegistrationStatus.PENDING)
+        val viewModel = viewModel()
+
+        viewModel.onPhotoTaken(photo, ROTATION, thumbnail)
+
+        metrics.records shouldBe
+            listOf(RecordingMetrics.Record(Metric.CAPTURE_TO_SUBMITTED, Duration.ofSeconds(18), "Submitted"))
+    }
+
+    @Test
+    fun `recusa na carteira também é medida, e o reenvio aparece como reenvio`() = runTest(dispatcher) {
+        capture(CaptureResult.Failed(LOCAL_ID, FailureReason.REJECTED))
+        coEvery { retryRegistration(LOCAL_ID, ADDRESS, any()) } coAnswers {
+            clock.advance(Duration.ofSeconds(7))
+            CaptureResult.Submitted(LOCAL_ID, TX)
+        }
+        coEvery { images.getById(LOCAL_ID) } returns image(RegistrationStatus.PENDING)
+        val viewModel = viewModel()
+
+        viewModel.onPhotoTaken(photo, ROTATION, thumbnail)
+        viewModel.onProgressAction(RegistrationProgressAction.Retry)
+
+        metrics.records shouldBe listOf(
+            RecordingMetrics.Record(Metric.CAPTURE_TO_SUBMITTED, Duration.ZERO, "Failed:REJECTED"),
+            RecordingMetrics.Record(Metric.CAPTURE_TO_SUBMITTED, Duration.ofSeconds(7), "Submitted:reenvio")
+        )
     }
 
     @Test

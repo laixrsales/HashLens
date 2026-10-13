@@ -8,6 +8,7 @@ import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.core.imaging.EditPreview
 import br.ufv.hashlens.core.imaging.EditPreviewFactory
+import br.ufv.hashlens.core.metrics.Metric
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.data.local.ImageOrigin
@@ -25,6 +26,8 @@ import br.ufv.hashlens.domain.usecase.ImportForEditUseCase
 import br.ufv.hashlens.domain.usecase.ImportResult
 import br.ufv.hashlens.domain.usecase.ImportedParent
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
+import br.ufv.hashlens.testing.MutableClock
+import br.ufv.hashlens.testing.RecordingMetrics
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
 import br.ufv.hashlens.ui.capture.RegistrationStage
 import br.ufv.hashlens.work.PendingTxReconciler
@@ -43,9 +46,8 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.io.FileNotFoundException
 import java.security.MessageDigest
-import java.time.Clock
+import java.time.Duration
 import java.time.Instant
-import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,7 +85,8 @@ class EditorViewModelTest {
     private var tracked = 0
     private val scheduler = PendingTxScheduler { tracked++ }
     private val config = ChainConfig(rpcUrl = "", registryAddress = CONTRACT, reownProjectId = "")
-    private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
+    private val clock = MutableClock(NOW)
+    private val metrics = RecordingMetrics()
 
     private val original = mockk<ImageBitmap>()
     private val rendered = mutableMapOf<List<EditOperation>, ImageBitmap>()
@@ -142,6 +145,7 @@ class EditorViewModelTest {
         session = session,
         config = config,
         clock = clock,
+        metrics = metrics,
         applicationScope = backgroundScope,
         defaultDispatcher = dispatcher,
         savedStateHandle = SavedStateHandle(localId?.let { mapOf(EditorViewModel.PARENT_LOCAL_ID to it) } ?: emptyMap())
@@ -397,6 +401,22 @@ class EditorViewModelTest {
         effects shouldBe listOf(EditorEffect.Notice(R.string.notice_wallet_not_ready))
         viewModel.editing().processing shouldBe false
         coVerify(exactly = 0) { editAndRegister(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `mede de Salvar e registrar até a transação aprovada e enviada`() = runTest(dispatcher) {
+        coEvery { editAndRegister(PARENT_ID, any(), ADDRESS, any()) } coAnswers {
+            clock.advance(Duration.ofSeconds(11))
+            EditResult.Registration(CaptureResult.Submitted(localId = EDITED_ID, txHash = TX))
+        }
+        coEvery { images.getById(EDITED_ID) } returns parent(RegistrationStatus.PENDING).copy(localId = EDITED_ID)
+        val viewModel = viewModel()
+        viewModel.act(EditorAction.SelectTool(EditorTool.Grayscale), EditorAction.Save)
+
+        viewModel.act(EditorAction.ConfirmSave)
+
+        metrics.records shouldBe
+            listOf(RecordingMetrics.Record(Metric.EDIT_TO_SUBMITTED, Duration.ofSeconds(11), "Submitted"))
     }
 
     @Test

@@ -6,6 +6,7 @@ import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.local.FailureReason
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.wallet.WalletState
+import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.ui.common.SepoliaEthFormat
@@ -70,3 +71,12 @@ internal fun FailureReason?.toFailure(): RegistrationFailure = when (this) {
 internal fun BigDecimal.normalized(): BigDecimal = stripTrailingZeros()
 
 internal fun FlashMode.next(): FlashMode = FlashMode.entries[(ordinal + 1) % FlashMode.entries.size]
+
+/** Marca, no resultado de uma medida, que ela veio de um "Tentar de novo" (T096). */
+internal const val RETRY_SUFFIX = ":reenvio"
+
+/** Como o envio terminou, para as medidas de tempo do TCC (T096): "Submitted", "Failed:REJECTED"… */
+internal fun CaptureResult.metricOutcome(): String = when (this) {
+    is CaptureResult.Failed -> "Failed:$reason"
+    else -> this::class.simpleName.orEmpty()
+}

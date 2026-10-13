@@ -6,6 +6,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.ufv.hashlens.core.imaging.ImageDecoder
+import br.ufv.hashlens.core.metrics.Metric
+import br.ufv.hashlens.core.metrics.MetricsLogger
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.di.DefaultDispatcher
 import br.ufv.hashlens.domain.model.VerificationResult
@@ -14,6 +16,9 @@ import br.ufv.hashlens.domain.usecase.VerifyImageUseCase
 import br.ufv.hashlens.ui.capture.toThumbnail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -61,6 +66,8 @@ class VerifyViewModel @Inject constructor(
     private val gallery: GalleryRepository,
     private val decoder: ImageDecoder,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    private val clock: Clock,
+    private val metrics: MetricsLogger,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _ui = MutableStateFlow(VerifyFlowUiState())
@@ -89,6 +96,7 @@ class VerifyViewModel @Inject constructor(
     /** Volta do Photo Picker; `null` quando a pessoa fechou sem escolher. */
     fun onImagePicked(uri: Uri?) {
         if (uri == null) return
+        val startedAt = clock.instant()
         running?.cancel()
         _ui.value = VerifyFlowUiState(verify = VerifyUiState.Analyzing(AnalysisStep.Reading))
         running = viewModelScope.launch {
@@ -101,7 +109,7 @@ class VerifyViewModel @Inject constructor(
             }
             val image = PickedImage(bytes, thumbnail(bytes))
             picked = image
-            verify(image)
+            verify(image, startedAt)
         }
     }
 
@@ -125,19 +133,25 @@ class VerifyViewModel @Inject constructor(
         when {
             image != null -> {
                 running?.cancel()
-                running = viewModelScope.launch { verify(image) }
+                val startedAt = clock.instant()
+                running = viewModelScope.launch { verify(image, startedAt) }
             }
             recordId != null -> runRecord(recordId)
         }
     }
 
-    private suspend fun verify(image: PickedImage) {
+    /** @param startedAt quando a pessoa pediu a verificação, para a medida do SC-007 (T096). */
+    private suspend fun verify(image: PickedImage, startedAt: Instant) {
         _ui.value = VerifyFlowUiState(verify = VerifyUiState.Analyzing(AnalysisStep.Reading, image.thumbnail))
         val result = verifyImage(image.bytes) {
             _ui.update { it.copy(verify = VerifyUiState.Analyzing(AnalysisStep.Querying, image.thumbnail)) }
         }
         show(result, image.thumbnail)
+        metrics.record(Metric.VERIFICATION, Duration.between(startedAt, clock.instant()), result.outcome())
     }
+
+    private fun VerificationResult.outcome(): String =
+        if (this is VerificationResult.Error) "Error:$reason" else this::class.simpleName.orEmpty()
 
     private fun runRecord(id: Long) {
         running?.cancel()

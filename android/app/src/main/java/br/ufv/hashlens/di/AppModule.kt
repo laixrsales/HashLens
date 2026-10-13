@@ -2,6 +2,8 @@ package br.ufv.hashlens.di
 
 import android.content.Context
 import androidx.work.WorkManager
+import br.ufv.hashlens.core.metrics.CsvMetricsLogger
+import br.ufv.hashlens.core.metrics.MetricsLogger
 import br.ufv.hashlens.data.local.OnboardingPreferences
 import br.ufv.hashlens.data.local.SharedOnboardingPreferences
 import br.ufv.hashlens.data.wallet.PackageManagerWalletAppDetector
@@ -14,6 +16,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.io.File
+import java.time.Clock
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -46,6 +50,26 @@ abstract class AppModule {
         @ApplicationScope
         fun applicationScope(@DefaultDispatcher dispatcher: CoroutineDispatcher): CoroutineScope =
             CoroutineScope(SupervisorJob() + dispatcher)
+
+        /**
+         * Métricas do TCC (T096) na pasta de arquivos do app no armazenamento externo, que o `adb pull`
+         * alcança sem root; sem armazenamento externo, na pasta interna.
+         */
+        @Provides
+        @Singleton
+        fun metricsLogger(
+            @ApplicationContext context: Context,
+            clock: Clock,
+            @IoDispatcher ioDispatcher: CoroutineDispatcher,
+            @ApplicationScope scope: CoroutineScope
+        ): MetricsLogger = CsvMetricsLogger(
+            directory = context.getExternalFilesDir(METRICS_DIR) ?: File(context.filesDir, METRICS_DIR),
+            clock = clock,
+            ioDispatcher = ioDispatcher,
+            scope = scope
+        )
+
+        private const val METRICS_DIR = "metrics"
 
         @Provides
         fun workManager(@ApplicationContext context: Context): WorkManager = WorkManager.getInstance(context)
