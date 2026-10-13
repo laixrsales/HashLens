@@ -279,7 +279,7 @@ no primeiro uso e o botão "Como funciona" do Início leva a um destino vazio. B
 - [ ] T097 [P] Auditoria de acessibilidade em todas as telas com o checklist de `docs/referencia/ux.md` 7 (TalkBack, fonte 200%, contraste, Accessibility Scanner) — FR-036
 - [ ] T098 Teste de usabilidade com ao menos 5 pessoas leigas em blockchain (verificar 3 imagens e explicar o resultado; fazer o primeiro registro), com roteiro e resultados em `docs/design/teste-usabilidade.md` — FR-032–FR-038
 - [ ] T099 Revisão de segurança e idioma: nenhum segredo em log, `local.properties` fora do Git, nenhuma chamada que envie pixels, nenhuma pasta `values-<idioma>` em `android/app/src/main/res/` (FR-039, research R24)
-- [ ] T100 [P] `README.md` na raiz com visão geral e link para `$SPEC/quickstart.md`
+- [X] T100 [P] `README.md` na raiz com visão geral e link para `$SPEC/quickstart.md`
 - [ ] T101 Executar o roteiro completo de `$SPEC/quickstart.md` e montar o conjunto rotulado (≥ 20 arquivos idênticos a registros, ≥ 20 não registrados, ≥ 3 registros com assinatura adulterada via `cast send` com `sigS` alterado), registrando a matriz esperado × obtido em `docs/resultados/matriz-classificacao.md` — SC-001, SC-002, SC-003
 
 ---
