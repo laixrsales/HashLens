@@ -272,13 +272,13 @@ no primeiro uso e o botão "Como funciona" do Início leva a um destino vazio. B
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T093 [P] Testes de escalabilidade em `contracts/test/ImageRegistryScale.t.sol` (1k e 10k registros, listas de pHash colidentes, custo de gás e de leitura) — seção 4.4.3 do TCC
-- [ ] T094 [P] Benchmark instrumentado `$ITEST/benchmark/HashingBenchmark.kt` (2, 8, 12, 48 MP) — SC-006
-- [ ] T095 [P] Avaliação de recompressão para SC-004 em `$ITEST/evaluation/RecompressionMatchTest.kt`: para cada imagem golden (copiada para `android/app/src/androidTest/assets/golden/`), recodificar com JPEG qualidade 70, 75, 80, 85, 90 e 95 (sem redimensionar), calcular o pHash com `PerceptualHasher` e medir a taxa de igualdade exata com o pHash do arquivo original; o teste falha se a taxa global for < 90% e grava a tabela por imagem × qualidade em CSV no diretório de saída do teste. Complementar com cópias reais enviadas por um app de mensagens (roteiro US2 passo 3 do `$SPEC/quickstart.md`) e registrar os resultados em `docs/resultados/sc-004-recompressao.md` — SC-004, research R11
-- [ ] T096 [P] `$PKG/core/metrics/MetricsLogger.kt` registrando tempos de transação e de verificação, com exportação CSV para o TCC — SC-007, SC-008
-- [ ] T097 [P] Auditoria de acessibilidade em todas as telas com o checklist de `docs/referencia/ux.md` 7 (TalkBack, fonte 200%, contraste, Accessibility Scanner) — FR-036
-- [ ] T098 Teste de usabilidade com ao menos 5 pessoas leigas em blockchain (verificar 3 imagens e explicar o resultado; fazer o primeiro registro), com roteiro e resultados em `docs/design/teste-usabilidade.md` — FR-032–FR-038
-- [ ] T099 Revisão de segurança e idioma: nenhum segredo em log, `local.properties` fora do Git, nenhuma chamada que envie pixels, nenhuma pasta `values-<idioma>` em `android/app/src/main/res/` (FR-039, research R24)
+- [X] T093 [P] Testes de escalabilidade em `contracts/test/ImageRegistryScale.t.sol` (1k e 10k registros, listas de pHash colidentes, custo de gás e de leitura) — seção 4.4.3 do TCC
+- [X] T094 [P] Benchmark instrumentado `$ITEST/benchmark/HashingBenchmark.kt` (2, 8, 12, 48 MP) — SC-006
+- [X] T095 [P] Avaliação de recompressão para SC-004 em `$ITEST/evaluation/RecompressionMatchTest.kt`: para cada imagem golden (copiada para `android/app/src/androidTest/assets/golden/`), recodificar com JPEG qualidade 70, 75, 80, 85, 90 e 95 (sem redimensionar), calcular o pHash com `PerceptualHasher` e medir a taxa de igualdade exata com o pHash do arquivo original; o teste falha se a taxa global for < 90% e grava a tabela por imagem × qualidade em CSV no diretório de saída do teste. Complementar com cópias reais enviadas por um app de mensagens (roteiro US2 passo 3 do `$SPEC/quickstart.md`) e registrar os resultados em `docs/resultados/sc-004-recompressao.md` — SC-004, research R11
+- [X] T096 [P] `$PKG/core/metrics/MetricsLogger.kt` registrando tempos de transação e de verificação, com exportação CSV para o TCC — SC-007, SC-008
+- [X] T097 [P] Auditoria de acessibilidade em todas as telas com o checklist de `docs/referencia/ux.md` 7 (TalkBack, fonte 200%, contraste, Accessibility Scanner) — FR-036
+- [X] T098 Teste de usabilidade com ao menos 5 pessoas leigas em blockchain (verificar 3 imagens e explicar o resultado; fazer o primeiro registro), com roteiro e resultados em `docs/design/teste-usabilidade.md` — FR-032–FR-038
+- [X] T099 Revisão de segurança e idioma: nenhum segredo em log, `local.properties` fora do Git, nenhuma chamada que envie pixels, nenhuma pasta `values-<idioma>` em `android/app/src/main/res/` (FR-039, research R24)
 - [ ] T100 [P] `README.md` na raiz com visão geral e link para `$SPEC/quickstart.md`
 - [ ] T101 Executar o roteiro completo de `$SPEC/quickstart.md` e montar o conjunto rotulado (≥ 20 arquivos idênticos a registros, ≥ 20 não registrados, ≥ 3 registros com assinatura adulterada via `cast send` com `sigS` alterado), registrando a matriz esperado × obtido em `docs/resultados/matriz-classificacao.md` — SC-001, SC-002, SC-003
 
