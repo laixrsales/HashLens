@@ -1,0 +1,22 @@
+{
+  "getChildren_200": "467726",
+  "getIdBySha256_with_1000": "5619",
+  "getIdBySha256_with_10000": "5619",
+  "getIdsByPHash_10": "26991",
+  "getIdsByPHash_100": "235707",
+  "getIdsByPHash_1000": "2338362",
+  "getIdsByPHash_gas_per_id": "2336",
+  "getIdsByPHash_max_ids_in_eth_call": "21404",
+  "getRecord_with_1000": "27369",
+  "getRecord_with_10000": "27374",
+  "registerCapture_1": "302686",
+  "registerCapture_1000": "283074",
+  "registerCapture_10000": "283074",
+  "registerCapture_2": "283074",
+  "registerCapture_same_pHash_1000": "265974",
+  "registerCapture_same_pHash_2": "265974",
+  "registerEdit_child_2": "353554",
+  "registerEdit_child_200": "353554",
+  "registerEdit_generation_10": "373157",
+  "registerEdit_generation_2": "370666"
+}
