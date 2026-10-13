@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import br.ufv.hashlens.R
 import br.ufv.hashlens.ui.common.DateFormat
 import br.ufv.hashlens.ui.components.EmptyState
@@ -61,7 +62,13 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            Column(Modifier.padding(horizontal = spacing.lg)) {
+            // Barra e filtros acima da grade (zIndex): o Compose não recorta os limites de acessibilidade das
+            // células roladas para cima, e elas "cobririam" a parte de baixo dos chips para o TalkBack (T097)
+            Column(
+                Modifier
+                    .zIndex(1f)
+                    .padding(horizontal = spacing.lg)
+            ) {
                 VerifyTopBar(title = stringResource(R.string.library_title), onBack = { onAction(LibraryAction.Back) })
             }
             when {
@@ -100,6 +107,7 @@ private fun Filters(state: LibraryUiState, onAction: (LibraryAction) -> Unit) {
     val spacing = HashLensTheme.spacing
     FlowRow(
         Modifier
+            .zIndex(1f)
             .fillMaxWidth()
             .padding(horizontal = spacing.lg, vertical = spacing.sm),
         horizontalArrangement = Arrangement.spacedBy(spacing.sm),
