@@ -139,7 +139,13 @@ private fun ColumnScope.Answer(
             items = items,
             expanded = expanded,
             onExpandedChange = { expanded = it },
-            onOpenUrl = { onAction(VerificationResultAction.OpenUrl(it)) }
+            onOpenUrl = { onAction(VerificationResultAction.OpenUrl(it)) },
+            // O que o percentual mede (avaliação heurística, P6)
+            note = if (result is VerificationResult.RegisteredEdited) {
+                stringResource(R.string.technical_alteration_note)
+            } else {
+                null
+            }
         )
     }
     if (result.isPositive) {

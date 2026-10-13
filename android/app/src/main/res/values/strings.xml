@@ -29,10 +29,10 @@
     <string name="verification_edited_message">Versão editada registrada. ≈ %1$s%% de alteração visual em relação à original.</string>
     <string name="verification_edited_zero_message">Versão editada registrada. Sem alteração visual detectável — mas este arquivo não é idêntico à original.</string>
     <plurals name="verification_visual_match_message">
-        <item quantity="one">O arquivo não é idêntico a nenhum registro, mas é visualmente igual a %1$d registro. Pode ser uma cópia recomprimida.</item>
-        <item quantity="other">O arquivo não é idêntico a nenhum registro, mas é visualmente igual a %1$d registros. Pode ser uma cópia recomprimida.</item>
+        <item quantity="one">O arquivo não é idêntico a nenhum registro, mas é visualmente igual a %1$d registro. Pode ser uma cópia enviada por um app de mensagens ou salva com outra qualidade.</item>
+        <item quantity="other">O arquivo não é idêntico a nenhum registro, mas é visualmente igual a %1$d registros. Pode ser uma cópia enviada por um app de mensagens ou salva com outra qualidade.</item>
     </plurals>
-    <string name="verification_tampered_message">A assinatura do aparelho não confere com os dados registrados.</string>
+    <string name="verification_tampered_message">Os dados deste registro não conferem com a assinatura do aparelho que o fez. Não confie nas informações dele.</string>
     <string name="verification_not_registered_message">Nenhum registro encontrado. Isso não significa que a imagem seja falsa.</string>
     <string name="verification_network_title">Não foi possível verificar</string>
     <string name="verification_network_message">Sem conexão com a rede. Tente novamente.</string>
@@ -81,7 +81,7 @@
     <string name="editor_failed_message">Só fotos com registro confirmado podem ser editadas. Tente registrar de novo pelo acervo e volte quando ele for confirmado.</string>
     <string name="notice_editor_limit">Esta versão já tem todas as alterações que cabem no registro. Salve e registre antes de continuar.</string>
     <string name="editor_tampered_title">O registro desta imagem foi adulterado</string>
-    <string name="editor_tampered_message">A assinatura do aparelho não confere com os dados registrados, então este registro não pode ser a base de uma nova versão.</string>
+    <string name="editor_tampered_message">Os dados deste registro não conferem com a assinatura do aparelho que o fez, então ele não pode ser a base de uma nova versão.</string>
     <string name="editor_import_failed_title">Não foi possível conferir o registro</string>
     <string name="editor_import_failed_message">Sem conexão com a rede. Tente novamente.</string>
     <string name="editor_not_registered_title">Esta imagem não pode ser editada</string>
@@ -101,7 +101,7 @@
     <string name="genealogy_from_original">≈ %1$s%% de alteração em relação à original</string>
     <string name="genealogy_none_from_parent">Sem alteração visual em relação à versão anterior</string>
     <string name="genealogy_none_from_original">Sem alteração visual em relação à original</string>
-    <string name="genealogy_invalid_signature">A assinatura do aparelho não confere com os dados registrados.</string>
+    <string name="genealogy_invalid_signature">Os dados deste registro não conferem com a assinatura do aparelho que o fez. Não confie nas informações dele.</string>
     <string name="genealogy_truncated">Esta imagem tem mais versões do que cabem aqui. Mostrando até %1$d gerações e %2$d versões.</string>
     <string name="genealogy_photo_description">Foto desta versão, salva neste aparelho</string>
     <string name="genealogy_open_record">Ver histórico desta versão</string>
@@ -130,11 +130,12 @@
     <string name="fact_device_value">nº %1$d</string>
     <string name="visual_match_candidates">Registros visualmente iguais</string>
     <string name="visual_match_candidate_by">Registrada por %1$s</string>
+    <string name="visual_match_candidate_edited_by">Editada por %1$s</string>
     <string name="action_view_history">Ver histórico da imagem</string>
     <string name="action_verify_another">Verificar outra imagem</string>
 
     <!-- Acompanhamento do registro (ux.md §4.5) -->
-    <string name="registration_pending_message">A rede está confirmando o registro. Você pode sair desta tela; o registro continua.</string>
+    <string name="registration_pending_message">A rede está confirmando o registro. Você pode sair desta tela: o registro continua e o andamento fica em Meu acervo.</string>
     <string name="registration_confirmed_message">Registrada em %1$s.</string>
     <string name="registration_failed_message">O registro não foi concluído. Nada foi registrado em seu nome.</string>
     <string name="step_device_binding">Vínculo do aparelho</string>
@@ -171,6 +172,7 @@
     <string name="technical_record">Registro</string>
     <string name="technical_original_record">Registro original</string>
     <string name="technical_transaction">Transação</string>
+    <string name="technical_alteration_note">A alteração visual compara o identificador visual (pHash) deste arquivo com o da original: mede o quanto a aparência geral mudou, não quantos pixels foram alterados.</string>
     <string name="technical_open_explorer">Ver no Etherscan</string>
     <string name="state_expanded">expandido</string>
     <string name="state_collapsed">recolhido</string>
@@ -278,7 +280,7 @@
     <string name="wallet_wrong_network_message">O HashLens registra na Sepolia, a rede de testes. Troque a rede da carteira para continuar.</string>
     <string name="action_switch_to_sepolia">Trocar para Sepolia</string>
     <string name="low_balance_title">Saldo de teste insuficiente</string>
-    <string name="wallet_low_balance_message">Sua carteira tem %1$s SepoliaETH, pouco para pagar a taxa de um registro. O saldo de teste é gratuito: peça em um faucet e volte.</string>
+    <string name="wallet_low_balance_message">Sua carteira tem %1$s SepoliaETH, pouco para pagar a taxa de um registro. O saldo de teste é gratuito: toque em “Obter saldo de teste”, peça no site que abrir e volte.</string>
     <string name="action_check_balance_again">Verificar saldo de novo</string>
     <string name="wallet_not_installed_title">Nenhuma carteira encontrada</string>
     <string name="wallet_not_installed_message">Instale uma carteira compatível com WalletConnect, como a MetaMask, e volte para conectar.</string>
@@ -301,8 +303,8 @@
     <string name="registration_photo_description">Foto capturada</string>
     <string name="registration_binding_message">A carteira vai pedir duas aprovações: vincular este aparelho e registrar a foto. As duas custam só saldo de teste.</string>
     <string name="registration_awaiting_message">A carteira vai pedir sua aprovação para registrar a foto. Custa só saldo de teste.</string>
-    <string name="registration_estimated_cost">Custo estimado: %1$s SepoliaETH (saldo de teste).</string>
-    <string name="registration_insufficient_message">O registro custa cerca de %1$s SepoliaETH, e sua carteira tem %2$s. A carteira não foi aberta. Peça saldo de teste gratuito em um faucet e tente de novo.</string>
+    <string name="registration_estimated_cost">Custo estimado: %1$s SepoliaETH.</string>
+    <string name="registration_insufficient_message">O registro custa cerca de %1$s SepoliaETH, e sua carteira tem %2$s. A carteira não foi aberta. Toque em “Obter saldo de teste”, peça o saldo gratuito no site que abrir e tente de novo.</string>
     <string name="registration_hash_mismatch_message">A foto salva na galeria não confere com a capturada, então nada foi assinado nem registrado. Fotografe de novo.</string>
     <string name="registration_timeout_message">A rede não confirmou o registro em 30 minutos e ele não consta na rede. Nada foi registrado em seu nome.</string>
     <string name="registration_already_title">Esta imagem já está registrada</string>

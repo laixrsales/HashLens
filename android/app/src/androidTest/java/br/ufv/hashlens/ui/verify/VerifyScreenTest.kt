@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import br.ufv.hashlens.domain.model.VerificationResult
@@ -73,6 +74,17 @@ class VerifyScreenTest {
     }
 
     @Test
+    fun detalhesTecnicosDaVersaoAlteradaExplicamOQueOPercentualMede() {
+        showResult(VerificationResult.RegisteredEdited(Records.edited, Records.original, Percent.EDITED))
+
+        compose.onNodeWithText("Detalhes técnicos").performScrollTo().performClick()
+
+        compose.onNodeWithText("mede o quanto a aparência geral mudou", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun versaoAlteradaComZeroPorCentoAvisaQueNaoEIdentica() {
         showResult(VerificationResult.RegisteredEdited(Records.editedZero, Records.original, Percent.ZERO))
 
@@ -93,7 +105,7 @@ class VerifyScreenTest {
         assertTitle("Correspondência visual")
         assertText(
             "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a 2 registros. " +
-                "Pode ser uma cópia recomprimida."
+                "Pode ser uma cópia enviada por um app de mensagens ou salva com outra qualidade."
         )
         assertFooter()
     }
@@ -103,7 +115,10 @@ class VerifyScreenTest {
         showResult(VerificationResult.Tampered(Records.tampered))
 
         assertTitle("Registro adulterado")
-        assertText("A assinatura do aparelho não confere com os dados registrados.")
+        assertText(
+            "Os dados deste registro não conferem com a assinatura do aparelho que o fez. " +
+                "Não confie nas informações dele."
+        )
     }
 
     @Test
