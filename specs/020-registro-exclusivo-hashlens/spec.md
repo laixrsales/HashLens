@@ -34,6 +34,17 @@ próprio" (constituição v2.0.0, princípios VII e IX).
 - Q: O aplicativo continua lendo o contrato anterior? → A: Não. Lê só o novo contrato; o anterior
   fica como histórico da avaliação anterior, e a matriz de classificação é refeita no novo
   (FR-018, SC-007).
+- Q: Como a avaliação testa "Registro adulterado", se o novo contrato recusa assinaturas
+  inválidas? → A: Na matriz, a 002 SC-003 passa a medir a recusa pela rede das tentativas de
+  registrar com assinatura adulterada (transações revertidas como evidência); a classificação
+  "Registro adulterado" é mantida no aplicativo como defesa redundante (atestador comprometido,
+  nó RPC que devolve dados alterados) e testada com dados simulados (FR-013, SC-007, SC-008).
+- Q: O atestador aceita aparelho com bootloader travado rodando sistema que não é do fabricante
+  (ex.: GrapheneOS)? → A: Não. Só o estado de boot verificado com o sistema original do
+  fabricante; os demais estados são recusados (FR-003).
+- Q: O atestador recusa aparelhos com atualização de segurança antiga? → A: Sim, recusa patch de
+  segurança com mais de 24 meses na data do vínculo; a data do patch aparece nos detalhes técnicos
+  da verificação (FR-003, FR-014).
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -78,8 +89,8 @@ autorização de outra carteira, autorização vencida, assinatura inválida), c
 ### User Story 2 - Aparelho sem integridade é informado com clareza (Priority: P2)
 
 Quando o HashLens está num aparelho que não passa na verificação de integridade (bootloader
-desbloqueado, sistema modificado, chave fora de hardware seguro, emulador ou certificado
-revogado), a pessoa entende por que não pode registrar e o que continua disponível.
+desbloqueado, sistema modificado, atualização de segurança com mais de 24 meses, chave fora de
+hardware seguro, emulador ou certificado revogado), a pessoa entende por que não pode registrar e o que continua disponível.
 
 **Why this priority**: sem isso a barreira do US1 aparece como um erro genérico de rede e a pessoa
 não sabe o que fazer; a verificação sem login continua sendo o uso principal para o público.
@@ -140,8 +151,9 @@ fora do aplicativo e chegar à mesma conclusão.
 
 - A chave do aparelho é perdida (reinstalação, dados apagados): a nova chave passa por nova
   atestação e novo vínculo; registros antigos continuam válidos (002, mantido).
-- O aparelho recebe atualização de sistema depois do vínculo: o vínculo continua válido; a
-  atestação reflete o estado no momento do vínculo.
+- O aparelho recebe atualização de sistema depois do vínculo, ou o patch de segurança passa de 24
+  meses depois do vínculo: o vínculo continua válido; a atestação reflete o estado no momento do
+  vínculo, e só um vínculo novo é avaliado de novo.
 - A pessoa desbloqueia o bootloader depois do vínculo: o desbloqueio apaga os dados do aparelho,
   inclusive a chave; o vínculo antigo continua on-chain com seus registros, e um vínculo novo
   nesse estado é recusado.
@@ -171,9 +183,11 @@ fora do aplicativo e chegar à mesma conclusão.
 - **FR-003**: O atestador MUST autorizar uma chave somente se todas as condições valerem: cadeia
   válida até uma raiz de atestação do Google; nenhum certificado da cadeia revogado; pacote
   `br.ufv.hashlens` com certificado de assinatura na lista do deploy (desenvolvimento: debug e
-  release; avaliação: só release); chave em hardware seguro (TEE ou
-  chip dedicado); boot verificado com bootloader travado; desafio emitido para aquela carteira e
-  ainda não usado; chave restrita a assinatura.
+  release; avaliação: só release); chave em hardware seguro (TEE ou chip dedicado); boot no estado
+  verificado (bootloader travado com o sistema original do fabricante; sistema assinado por outra
+  chave ou bootloader destravado são recusados); patch de segurança do sistema com no máximo 24
+  meses na data do vínculo; desafio emitido para aquela carteira e ainda não usado; chave restrita
+  a assinatura.
 - **FR-004**: A autorização MUST identificar a carteira, a chave pública do aparelho, a rede, o
   contrato e um prazo de validade de no máximo 15 minutos.
 - **FR-005**: O vínculo do aparelho MUST ser recusado pela rede sem autorização válida do
@@ -196,8 +210,8 @@ fora do aplicativo e chegar à mesma conclusão.
 **Aplicativo**
 
 - **FR-010**: Quando o atestador recusar a chave, o aplicativo MUST informar em linguagem leiga
-  o motivo (aparelho modificado, sem hardware seguro, aplicativo não original ou certificado
-  revogado), sem abrir a carteira, e manter a imagem como "não registrada".
+  o motivo (aparelho modificado, sistema desatualizado, sem hardware seguro, aplicativo não
+  original ou certificado revogado), sem abrir a carteira, e manter a imagem como "não registrada".
 - **FR-011**: Falha de comunicação com o atestador MUST ser diferenciada de recusa e permitir
   nova tentativa.
 - **FR-012**: O progresso do vínculo MUST incluir a etapa de verificação de integridade do
@@ -207,10 +221,12 @@ fora do aplicativo e chegar à mesma conclusão.
 
 - **FR-013**: A verificação MUST revalidar no aparelho, com os dados públicos, a cadeia de
   atestação do aparelho de cada registro exibido, além da assinatura (002 FR-022); falha em
-  qualquer uma resulta em "Registro adulterado".
+  qualquer uma resulta em "Registro adulterado". Essa conferência é redundante com a do contrato
+  (FR-005, FR-008) e MUST continuar existindo, para cobrir atestador comprometido e dados
+  alterados pelo nó de leitura.
 - **FR-014**: O resultado MUST indicar que o registro foi feito pelo HashLens genuíno em aparelho
-  atestado e, nos detalhes técnicos, o nível de segurança da chave, o estado do sistema atestado e
-  a data do vínculo.
+  atestado e, nos detalhes técnicos, o nível de segurança da chave, o estado do sistema atestado,
+  a data do patch de segurança atestado e a data do vínculo.
 - **FR-015**: O texto do resultado MUST afirmar apenas "registrado pelo HashLens genuíno segundo a
   atestação do Google", nunca que a cena fotografada é real (princípio V).
 - **FR-016**: A tela "Como funciona" (002 FR-037) MUST mencionar, em uma frase, que só o HashLens
@@ -261,8 +277,13 @@ fora do aplicativo e chegar à mesma conclusão.
 - **SC-006**: 100% dos registros do novo contrato mostram a origem atestada na verificação, e a
   validação independente dos dados públicos de cada aparelho de teste chega ao mesmo resultado do
   atestador.
-- **SC-007**: A matriz de classificação da 002 (SC-001 a SC-004) continua com os mesmos
-  resultados no novo contrato.
+- **SC-007**: A matriz de classificação da 002 é refeita no novo contrato: SC-001, SC-002 e
+  SC-004 continuam com os mesmos resultados; a 002 SC-003 passa a ser "100% das tentativas de
+  registrar com assinatura do aparelho adulterada são recusadas pela rede", com cada transação
+  revertida como evidência.
+- **SC-008**: 100% dos registros simulados com assinatura inválida ou atestação divergente
+  (dados devolvidos por um leitor falso do contrato) são classificados como "Registro
+  adulterado" pelo aplicativo.
 
 ## Assumptions
 
