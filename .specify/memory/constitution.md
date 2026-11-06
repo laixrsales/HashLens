@@ -1,14 +1,21 @@
 <!--
 Sync Impact Report
-- Version change: (template) → 1.1.1
-  Base: docs/referencia/constitution.md v1.1.0, adotada integralmente.
-  PATCH: correção de digitação ("ação e ser feita" → "ação a ser feita"); tipos de branch mantidos
-  como na referência, incluindo `chore`.
-- Modified principles: none (I–VIII mantidos)
-- Added sections: Restrições técnicas e de segurança; Fluxo de desenvolvimento
+- Version change: 1.1.1 → 2.0.0
+  MAJOR: o princípio VII é redefinido ("sem backend próprio" deixa de ser absoluto) para admitir o
+  atestador; novo princípio IX torna a origem exclusiva do HashLens não negociável.
+- Modified principles:
+  - III. Chaves nunca saem de seu custodiante: inclui a custódia da chave do atestador.
+  - VII. Simplicidade de prova de conceito: exceção restrita ao atestador; ganha racional.
+- Added principles: IX. Origem exclusiva do HashLens (NON-NEGOTIABLE)
+- Modified sections: Restrições técnicas e de segurança (atestação, P256VERIFY on-chain, EIP-712 do
+  atestador, segredo do atestador)
 - Removed sections: none
-- Templates requiring updates: none (plan-template já lê o Constitution Check em tempo de execução)
-- Follow-up TODOs: none
+- Templates requiring updates: none (plan-template lê o Constitution Check em tempo de execução)
+- Follow-up TODOs:
+  - research.md da 002: R5 (verificação off-chain apenas) e R19 (atestação fora do escopo) ficam
+    superados pela nova feature; registrar lá ao planejá-la.
+  - docs/referencia/constitution.md continua na v1.1.0 (documento de referência original).
+-->
 -->
 
 # HashLens Constitution
@@ -45,6 +52,8 @@ registros antigos inalcançáveis.
 A chave privada do dispositivo é gerada no Android Keystore como não exportável (StrongBox
 quando disponível). A chave da carteira permanece exclusivamente na carteira externa; o
 aplicativo NUNCA solicita, recebe, armazena ou registra em log frases-semente ou chaves privadas.
+A chave de assinatura do atestador (princípio IX) fica só no serviço atestador, fora do Git e do
+aplicativo; trocá-la exige atualizar o endereço do atestador no contrato.
 
 **Racional**: as duas assinaturas (dispositivo e pessoa) só atestam algo se as chaves não puderem
 ser copiadas.
@@ -78,9 +87,16 @@ gravados por padrão.
 
 ### VII. Simplicidade de prova de conceito
 
-Sem backend próprio: o aplicativo fala diretamente com a carteira e com um nó RPC da Sepolia.
-Preferir a solução mais simples que valide a arquitetura do TCC (YAGNI). Toda complexidade
-adicional deve ser justificada na seção _Complexity Tracking_ do plano.
+O aplicativo fala diretamente com a carteira e com um nó RPC da Sepolia. O único serviço próprio
+permitido é o **atestador** do princípio IX, mínimo e sem estado de negócio: ele não recebe
+imagens, hashes de imagem nem dados pessoais, e não participa do registro nem da verificação de
+imagens. Qualquer outro backend continua proibido. Preferir a solução mais simples que valide a
+arquitetura do TCC (YAGNI). Toda complexidade adicional deve ser justificada na seção
+_Complexity Tracking_ do plano.
+
+**Racional**: a garantia de origem (IX) não é verificável on-chain a custo viável sem um
+validador da atestação do Android; restringir esse validador ao vínculo do aparelho mantém o
+resto da arquitetura descentralizada.
 
 ### VIII. Experiência compreensível
 
@@ -93,17 +109,47 @@ pela autora; a direção visual é aprovada por ela antes da primeira tela.
 **Racional**: a prova de registro só tem valor se as pessoas entenderem o que ela diz e o que ela
 não diz; sem protótipo prévio, a revisão por previews substitui o protótipo.
 
+### IX. Origem exclusiva do HashLens (NON-NEGOTIABLE)
+
+Somente o aplicativo HashLens genuíno, em aparelho íntegro, consegue registrar imagens. O
+contrato DEVE recusar (reverter), sem depender de verificação posterior:
+
+- o vínculo de uma chave de aparelho sem autorização válida do atestador (EIP-712 ligada à
+  carteira, à chave pública, ao `chainId`, ao endereço do contrato e a um prazo de validade);
+- qualquer registro cuja assinatura P-256 do aparelho não confira com a chave vinculada,
+  verificada on-chain pelo pré-compilado P256VERIFY (EIP-7951).
+
+O atestador só autoriza uma chave após validar a cadeia Android Key Attestation até uma raiz do
+Google: `attestationApplicationId` com o pacote `br.ufv.hashlens` e o certificado de assinatura do
+APK de release, chave em TEE ou StrongBox, boot verificado com bootloader travado, certificados
+fora da lista de revogação do Google e challenge ligado à carteira. A cadeia de atestação de cada
+vínculo DEVE ficar pública (evento on-chain) para que qualquer pessoa possa refazer a decisão do
+atestador. O atestador NUNCA custodia chaves de aparelho e NUNCA consegue registrar imagens.
+
+**Limite residual declarado**: aparelhos com chaves de atestação de fabricante vazadas (keybox)
+ou comprometimento do TEE podem falsificar a atestação; a revogação do Google mitiga, mas não
+elimina. O sistema afirma "registrado pelo HashLens genuíno segundo a atestação do Google", nunca
+mais que isso (princípio V).
+
+**Racional**: a proposta do trabalho exige que a origem do registro seja o próprio aplicativo;
+sem essa barreira no contrato, qualquer pessoa com uma carteira poderia vincular uma chave
+qualquer e registrar imagens que a verificação apresentaria como autênticas.
+
 ## Restrições técnicas e de segurança
 
 - **Plataforma**: Android, Kotlin, Jetpack Compose com Material 3, OpenCV (Android SDK oficial).
 - **Diretrizes de interface**: skill de projeto `.claude/skills/hashlens-ui/` e `docs/referencia/ux.md`.
 - **Blockchain**: Ethereum Sepolia Testnet (chainId 11155111); contrato em Solidity.
-- **Assinatura do dispositivo**: ECDSA P-256 (secp256r1) com SHA-256, Android Keystore.
+- **Assinatura do dispositivo**: ECDSA P-256 (secp256r1) com SHA-256, Android Keystore, com
+  Android Key Attestation; verificada on-chain no registro (P256VERIFY, EIP-7951) e off-chain na
+  verificação.
+- **Vínculo do aparelho**: exige autorização EIP-712 (secp256k1) do atestador, cujo endereço é
+  definido no deploy do contrato.
 - **Assinatura da pessoa**: a transação assinada pela carteira (secp256k1); o contrato grava
   `msg.sender` como responsável pelo registro.
 - **Dados de teste**: apenas imagens produzidas pela autora.
 - **Segredos de configuração** (URL de RPC, Project ID da Reown, endereço do contrato) ficam em
-  `local.properties` e NUNCA são versionados.
+  `local.properties` e NUNCA são versionados; o mesmo vale para a chave do atestador.
 
 ## Fluxo de desenvolvimento
 
@@ -131,4 +177,4 @@ mudança, justificativa, atualização do Sync Impact Report e incremento de ver
 (MAJOR para remoção/redefinição de princípio, MINOR para princípio ou seção nova, PATCH para
 esclarecimentos). Toda revisão de plano (`plan.md`) DEVE executar o _Constitution Check_.
 
-**Version**: 1.1.1 | **Ratified**: 2026-10-01 | **Last Amended**: 2026-10-04
+**Version**: 2.0.0 | **Ratified**: 2026-10-01 | **Last Amended**: 2026-11-06
