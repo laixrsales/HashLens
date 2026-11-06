@@ -10,6 +10,8 @@ import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.core.imaging.EditPreview
 import br.ufv.hashlens.core.imaging.EditPreviewFactory
+import br.ufv.hashlens.core.metrics.Metric
+import br.ufv.hashlens.core.metrics.MetricsLogger
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.data.local.LocalImageDao
@@ -27,12 +29,14 @@ import br.ufv.hashlens.domain.usecase.ImportResult
 import br.ufv.hashlens.domain.usecase.ImportedParent
 import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
+import br.ufv.hashlens.ui.capture.RETRY_SUFFIX
 import br.ufv.hashlens.ui.capture.RegistrationFailure
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
 import br.ufv.hashlens.ui.capture.RegistrationProgressUiState
 import br.ufv.hashlens.ui.capture.RegistrationStage
 import br.ufv.hashlens.ui.capture.RegistrationWatcher
 import br.ufv.hashlens.ui.capture.WatchedStage
+import br.ufv.hashlens.ui.capture.metricOutcome
 import br.ufv.hashlens.ui.capture.toFailure
 import br.ufv.hashlens.ui.capture.toStage
 import br.ufv.hashlens.ui.capture.walletNotice
@@ -42,6 +46,8 @@ import br.ufv.hashlens.work.PendingTxScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
 import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -111,7 +117,8 @@ class EditorViewModel @Inject constructor(
     private val scheduler: PendingTxScheduler,
     private val session: WalletSession,
     private val config: ChainConfig,
-    clock: Clock,
+    private val clock: Clock,
+    private val metrics: MetricsLogger,
     @ApplicationScope private val applicationScope: CoroutineScope,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle
@@ -363,6 +370,7 @@ class EditorViewModel @Inject constructor(
         operationWallet = wallet
         updateEditing { it.copy(confirmingSave = false, processing = true) }
         val operations = editing.operations
+        val startedAt = clock.instant()
         applicationScope.launch {
             val result = try {
                 val parent = imported
@@ -377,7 +385,11 @@ class EditorViewModel @Inject constructor(
             when (result) {
                 is EditResult.ParentNotConfirmed -> showIneligible(result.status.toIneligible())
                 EditResult.ParentUnavailable -> showIneligible(IneligibleReason.FileUnavailable)
-                is EditResult.Registration -> onResult(result.result)
+                is EditResult.Registration -> {
+                    // De "Salvar e registrar" até o fim do envio (T096)
+                    measure(startedAt, result.result, retry = false)
+                    onResult(result.result)
+                }
             }
         }
     }
@@ -387,14 +399,21 @@ class EditorViewModel @Inject constructor(
         val wallet =
             (session.state.value as? WalletState.Connected)?.address ?: return notice(R.string.notice_wallet_not_ready)
         operationWallet = wallet
+        val startedAt = clock.instant()
         applicationScope.launch {
             val result = try {
                 retryRegistration(id, wallet, ::onProgress)
             } catch (_: IOException) {
                 return@launch showStage(RegistrationStage.Failed(RegistrationFailure.SaveFailed))
             }
+            measure(startedAt, result, retry = true)
             onResult(result)
         }
+    }
+
+    private fun measure(startedAt: Instant, result: CaptureResult, retry: Boolean) {
+        val outcome = result.metricOutcome() + if (retry) RETRY_SUFFIX else ""
+        metrics.record(Metric.EDIT_TO_SUBMITTED, Duration.between(startedAt, clock.instant()), outcome)
     }
 
     private fun onProgress(progress: RegistrationProgress) {

@@ -140,7 +140,11 @@ private fun CandidateRow(candidate: VerificationResult.VisualMatch.Candidate, zo
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
             StatusBadge(if (isOriginal) ImageStatus.Original else ImageStatus.Edited)
             Text(
-                stringResource(R.string.visual_match_candidate_by, shortAddress(candidate.record.registrant)),
+                stringResource(
+                    // Mesmo vocabulário do resultado e do histórico: versão é "editada por" (ux.md §6)
+                    if (isOriginal) R.string.visual_match_candidate_by else R.string.visual_match_candidate_edited_by,
+                    shortAddress(candidate.record.registrant)
+                ),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

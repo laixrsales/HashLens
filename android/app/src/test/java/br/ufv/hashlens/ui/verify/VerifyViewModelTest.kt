@@ -3,11 +3,16 @@ package br.ufv.hashlens.ui.verify
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import br.ufv.hashlens.core.imaging.ImageDecoder
+import br.ufv.hashlens.core.metrics.Metric
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
 import br.ufv.hashlens.domain.usecase.VerifyImageUseCase
+import br.ufv.hashlens.testing.MutableClock
+import br.ufv.hashlens.testing.RecordingMetrics
 import br.ufv.hashlens.ui.preview.SampleData.Records
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -15,6 +20,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.io.FileNotFoundException
+import java.time.Duration
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -40,6 +47,8 @@ class VerifyViewModelTest {
         every { decode(any()) } throws IllegalArgumentException("sem decodificador na JVM")
     }
     private val uri = mockk<Uri>()
+    private val clock = MutableClock(Instant.parse("2026-10-12T15:00:00Z"))
+    private val metrics = RecordingMetrics()
 
     @BeforeEach
     fun setMain() = Dispatchers.setMain(dispatcher)
@@ -52,6 +61,8 @@ class VerifyViewModelTest {
         gallery = gallery,
         decoder = decoder,
         defaultDispatcher = dispatcher,
+        clock = clock,
+        metrics = metrics,
         savedStateHandle = SavedStateHandle(recordId?.let { mapOf(VerifyViewModel.RECORD_ID to it) } ?: emptyMap())
     )
 
@@ -194,6 +205,39 @@ class VerifyViewModelTest {
         viewModel.onResultAction(VerificationResultAction.Retry)
 
         viewModel.ui.value shouldBe VerifyFlowUiState(result = VerificationResultUiState(result))
+    }
+
+    @Test
+    fun `mede da imagem escolhida até o resultado na tela (SC-007)`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        verifying(VerificationResult.RegisteredOriginal(Records.original)) { clock.advance(Duration.ofMillis(2_400)) }
+
+        viewModel.onImagePicked(uri)
+
+        metrics.records shouldContainExactly listOf(
+            RecordingMetrics.Record(Metric.VERIFICATION, Duration.ofMillis(2_400), "RegisteredOriginal")
+        )
+    }
+
+    @Test
+    fun `sem conexão também é medida, com o motivo`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        verifying(VerificationResult.Error(Reason.NETWORK)) { clock.advance(Duration.ofSeconds(5)) }
+
+        viewModel.onImagePicked(uri)
+
+        metrics.records shouldContainExactly listOf(
+            RecordingMetrics.Record(Metric.VERIFICATION, Duration.ofSeconds(5), "Error:NETWORK")
+        )
+    }
+
+    @Test
+    fun `resultado aberto por id de registro não entra na medida de verificação`() = runTest(dispatcher) {
+        coEvery { verifyImage.verifyRecord(2) } returns VerificationResult.RegisteredOriginal(Records.original)
+
+        viewModel(recordId = 2)
+
+        metrics.records.shouldBeEmpty()
     }
 
     private companion object {

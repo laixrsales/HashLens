@@ -7,6 +7,7 @@ import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.core.metrics.Metric
 import br.ufv.hashlens.data.chain.ReceiptTracker
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
@@ -17,6 +18,7 @@ import br.ufv.hashlens.data.local.ImageOrigin
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.domain.model.Sha256
+import br.ufv.hashlens.testing.RecordingMetrics
 import br.ufv.hashlens.testing.inMemoryDatabase
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -51,6 +53,7 @@ class PendingTxWorkerTest {
     private val receipts = mockk<ReceiptTracker>()
     private val reader = mockk<RegistryReader>()
     private val defaultConfig = ChainConfig(rpcUrl = "", registryAddress = CONTRACT, reownProjectId = "")
+    private val metrics = RecordingMetrics()
 
     @After
     fun closeDatabase() = db.close()
@@ -63,7 +66,7 @@ class PendingTxWorkerTest {
                 appContext: Context,
                 workerClassName: String,
                 workerParameters: WorkerParameters
-            ) = PendingTxWorker(appContext, workerParameters, images, receipts, reader, config, clock)
+            ) = PendingTxWorker(appContext, workerParameters, images, receipts, reader, config, clock, metrics)
         }
         return TestListenableWorkerBuilder<PendingTxWorker>(RuntimeEnvironment.getApplication())
             .setWorkerFactory(factory)
@@ -117,6 +120,39 @@ class PendingTxWorkerTest {
         runWorker(Duration.ofMinutes(1)) shouldBe ListenableWorker.Result.success()
 
         image(id).shouldBeConfirmed(recordId = 7)
+    }
+
+    @Test
+    fun `confirmação mede o tempo do envio até o app perceber, à parte do fluxo (SC-008)`() = runTest {
+        val id = insert()
+        receipt(TxReceipt(success = true, recordId = 7))
+
+        runWorker(elapsed = Duration.ofSeconds(42))
+
+        image(id).shouldBeConfirmed(7)
+        metrics.records shouldBe listOf(RecordingMetrics.Record(Metric.CONFIRMATION, Duration.ofSeconds(42), "recibo"))
+    }
+
+    @Test
+    fun `confirmação pelo hash depois de um FAILED(TIMEOUT) também é medida`() = runTest {
+        val id = insert(status = RegistrationStatus.FAILED, failureReason = FailureReason.TIMEOUT)
+        onChainId(7)
+
+        runWorker(elapsed = Duration.ofMinutes(45))
+
+        image(id).shouldBeConfirmed(7)
+        metrics.records shouldBe
+            listOf(RecordingMetrics.Record(Metric.CONFIRMATION, Duration.ofMinutes(45), "reconciliado"))
+    }
+
+    @Test
+    fun `sem confirmação nada é medido`() = runTest {
+        insert()
+        receipt(null)
+
+        runWorker(elapsed = Duration.ofMinutes(1))
+
+        metrics.records shouldBe emptyList()
     }
 
     @Test

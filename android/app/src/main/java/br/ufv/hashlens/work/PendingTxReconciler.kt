@@ -1,6 +1,8 @@
 package br.ufv.hashlens.work
 
 import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.core.metrics.Metric
+import br.ufv.hashlens.core.metrics.MetricsLogger
 import br.ufv.hashlens.data.chain.ReceiptTracker
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.local.FailureReason
@@ -10,6 +12,7 @@ import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.domain.model.Sha256
 import java.time.Clock
+import java.time.Duration
 import javax.inject.Inject
 
 /**
@@ -30,7 +33,8 @@ class PendingTxReconciler @Inject constructor(
     private val receipts: ReceiptTracker,
     private val reader: RegistryReader,
     private val config: ChainConfig,
-    private val clock: Clock
+    private val clock: Clock,
+    private val metrics: MetricsLogger
 ) {
     /**
      * Avança [image] se houver novidade; outros estados ficam como estão.
@@ -48,7 +52,7 @@ class PendingTxReconciler @Inject constructor(
     private suspend fun track(image: LocalImageEntity) {
         val receipt = image.txHash?.let { receipts.receipt(it) }
         when {
-            receipt?.success == true && receipt.recordId != null -> confirm(image, receipt.recordId)
+            receipt?.success == true && receipt.recordId != null -> confirm(image, receipt.recordId, OUTCOME_RECEIPT)
             receipt != null -> reconcile(image, failure = FailureReason.REVERTED.takeUnless { receipt.success })
             timedOut(image) -> reconcile(image, failure = FailureReason.TIMEOUT)
         }
@@ -58,12 +62,13 @@ class PendingTxReconciler @Inject constructor(
     private suspend fun reconcile(image: LocalImageEntity, failure: FailureReason?) {
         val recordId = reader.getIdBySha256(Sha256(image.sha256Hex))
         when {
-            recordId != null -> confirm(image, recordId)
+            recordId != null -> confirm(image, recordId, OUTCOME_RECONCILED)
             failure != null -> images.update(image.copy(status = RegistrationStatus.FAILED, failureReason = failure))
         }
     }
 
-    private suspend fun confirm(image: LocalImageEntity, recordId: Long) {
+    /** @param outcome como a confirmação foi percebida, para a medida de tempo (T096). */
+    private suspend fun confirm(image: LocalImageEntity, recordId: Long, outcome: String) {
         images.update(
             image.copy(
                 status = RegistrationStatus.CONFIRMED,
@@ -74,10 +79,20 @@ class PendingTxReconciler @Inject constructor(
                 errorMessage = null
             )
         )
+        // SC-008, à parte do fluxo: do envio até o app perceber a confirmação
+        image.submittedAt?.let { metrics.record(Metric.CONFIRMATION, Duration.ofMillis(clock.millis() - it), outcome) }
     }
 
     private fun timedOut(image: LocalImageEntity): Boolean {
         val submittedAt = image.submittedAt ?: return true
         return clock.millis() - submittedAt >= config.pendingTimeout.toMillis()
+    }
+
+    private companion object {
+        /** Confirmado pelo recibo da transação. */
+        const val OUTCOME_RECEIPT = "recibo"
+
+        /** Confirmado pelo hash on-chain (recibo revertido, prazo estourado ou `FAILED(TIMEOUT)`). */
+        const val OUTCOME_RECONCILED = "reconciliado"
     }
 }

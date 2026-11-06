@@ -52,15 +52,18 @@ data class RecordView(
 
 ## 3. Textos da UI (pt-BR)
 
-| Resultado                 | Título                       | Mensagem obrigatória                                                                                                    |
-| ------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `RegisteredOriginal`      | Registrada – original        | "Este arquivo é idêntico a uma captura registrada."                                                                     |
-| `RegisteredEdited`        | Registrada – versão alterada | "Versão editada registrada. ≈ X% de alteração visual em relação à original."                                            |
-| `VisualMatch`             | Correspondência visual       | "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a N registro(s). Pode ser uma cópia recomprimida." |
-| `Tampered`                | Registro adulterado          | "A assinatura do aparelho não confere com os dados registrados."                                                        |
-| `NotRegistered`           | Não registrada               | "Nenhum registro encontrado. Isso não significa que a imagem seja falsa."                                               |
-| `Error(NETWORK)`          | Não foi possível verificar   | "Sem conexão com a rede. Tente novamente."                                                                              |
-| `Error(UNSUPPORTED_FILE)` | Formato não suportado        | "Não foi possível ler este arquivo. Use uma imagem JPEG, PNG ou WebP; fotos em HEIC não são aceitas."                   |
+| Resultado                 | Título                       | Mensagem obrigatória                                                                                                                                                    |
+| ------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RegisteredOriginal`      | Registrada – original        | "Este arquivo é idêntico a uma captura registrada."                                                                                                                     |
+| `RegisteredEdited`        | Registrada – versão alterada | "Versão editada registrada. ≈ X% de alteração visual em relação à original."                                                                                            |
+| `VisualMatch`             | Correspondência visual       | "O arquivo não é idêntico a nenhum registro, mas é visualmente igual a N registro(s). Pode ser uma cópia enviada por um app de mensagens ou salva com outra qualidade." |
+| `Tampered`                | Registro adulterado          | "Os dados deste registro não conferem com a assinatura do aparelho que o fez. Não confie nas informações dele."                                                         |
+| `NotRegistered`           | Não registrada               | "Nenhum registro encontrado. Isso não significa que a imagem seja falsa."                                                                                               |
+| `Error(NETWORK)`          | Não foi possível verificar   | "Sem conexão com a rede. Tente novamente."                                                                                                                              |
+| `Error(UNSUPPORTED_FILE)` | Formato não suportado        | "Não foi possível ler este arquivo. Use uma imagem JPEG, PNG ou WebP; fotos em HEIC não são aceitas."                                                                   |
+
+Textos de `VisualMatch` e `Tampered` revistos na avaliação heurística (T098, P1 e P2, 13/10/2026):
+linguagem leiga e, no adulterado, o que fazer com o resultado. Ver `docs/design/avaliacao-heuristica.md`.
 
 Rodapé fixo em todos os resultados positivos: "O registro comprova quando e por quem o arquivo
 foi registrado, não que a cena retratada seja real."

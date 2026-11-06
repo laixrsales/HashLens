@@ -57,6 +57,7 @@ data class TechnicalItem(@StringRes val label: Int, val value: String, val url: 
  * principal. Recolhido por padrão; o estado fica com quem chama.
  *
  * @param onOpenUrl abre o link de um item (explorador da rede).
+ * @param note frase que explica os dados, antes deles (ex.: o que mede a alteração visual).
  */
 @Composable
 fun TechnicalDetails(
@@ -64,7 +65,8 @@ fun TechnicalDetails(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     onOpenUrl: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    note: String? = null
 ) {
     val spacing = HashLensTheme.spacing
     val duration = motionDuration(Motion.EXPAND_MS)
@@ -105,6 +107,13 @@ fun TechnicalDetails(
                 modifier = Modifier.padding(bottom = spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(spacing.md)
             ) {
+                note?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 items.forEach { TechnicalRow(it, onOpenUrl) }
             }
         }

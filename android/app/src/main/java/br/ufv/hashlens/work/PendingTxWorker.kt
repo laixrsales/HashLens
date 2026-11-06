@@ -12,6 +12,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.core.metrics.MetricsLogger
 import br.ufv.hashlens.data.chain.ReceiptTracker
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
@@ -38,9 +39,10 @@ class PendingTxWorker @AssistedInject constructor(
     private val receipts: ReceiptTracker,
     private val reader: RegistryReader,
     private val config: ChainConfig,
-    private val clock: Clock
+    private val clock: Clock,
+    private val metrics: MetricsLogger
 ) : CoroutineWorker(appContext, params) {
-    private val reconciler = PendingTxReconciler(images, receipts, reader, config, clock)
+    private val reconciler = PendingTxReconciler(images, receipts, reader, config, clock, metrics)
 
     override suspend fun doWork(): Result {
         images.getByStatus(listOf(RegistrationStatus.PENDING, RegistrationStatus.FAILED))

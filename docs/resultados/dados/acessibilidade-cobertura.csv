@@ -1,0 +1,429 @@
+tela,estado,variante,pagina,elementos,com_rotulo,titulos
+Editor,carregando,claro,0,15,2,0
+Editor,carregando,escuro,0,15,2,0
+Editor,carregando,fonte200,0,15,2,0
+Editor,editando,claro,0,39,11,0
+Editor,editando,escuro,0,39,11,0
+Editor,editando,fonte200,0,33,9,0
+Editor,sem_alteracoes,claro,0,38,10,0
+Editor,sem_alteracoes,escuro,0,38,10,0
+Editor,sem_alteracoes,fonte200,0,32,8,0
+Editor,ajuste_brilho,claro,0,47,13,0
+Editor,ajuste_brilho,escuro,0,47,13,0
+Editor,ajuste_brilho,fonte200,0,41,11,0
+Editor,recorte,claro,0,46,14,0
+Editor,recorte,escuro,0,46,14,0
+Editor,recorte,fonte200,0,40,12,0
+Editor,antes_depois,claro,0,39,11,0
+Editor,antes_depois,escuro,0,39,11,0
+Editor,antes_depois,fonte200,0,33,9,0
+Editor,imagem_de_terceiro,claro,0,41,12,0
+Editor,imagem_de_terceiro,escuro,0,41,12,0
+Editor,imagem_de_terceiro,fonte200,0,35,10,0
+Editor,aviso_permanencia,claro,0,31,10,1
+Editor,aviso_permanencia,escuro,0,31,10,1
+Editor,aviso_permanencia,fonte200,0,30,9,1
+Editor,processando,claro,0,41,11,0
+Editor,processando,escuro,0,41,11,0
+Editor,processando,fonte200,0,35,9,0
+Editor,nao_elegivel_pendente,claro,0,17,4,1
+Editor,nao_elegivel_pendente,escuro,0,17,4,1
+Editor,nao_elegivel_pendente,fonte200,0,17,4,1
+Editor,nao_elegivel_registro_falhou,claro,0,17,4,1
+Editor,nao_elegivel_registro_falhou,escuro,0,17,4,1
+Editor,nao_elegivel_registro_falhou,fonte200,0,17,4,1
+Editor,nao_elegivel_sem_registro,claro,0,17,4,1
+Editor,nao_elegivel_sem_registro,escuro,0,17,4,1
+Editor,nao_elegivel_sem_registro,fonte200,0,17,4,1
+Editor,nao_elegivel_adulterado,claro,0,17,4,1
+Editor,nao_elegivel_adulterado,escuro,0,17,4,1
+Editor,nao_elegivel_adulterado,fonte200,0,17,4,1
+Editor,importacao_sem_conexao,claro,0,17,4,1
+Editor,importacao_sem_conexao,escuro,0,17,4,1
+Editor,importacao_sem_conexao,fonte200,0,17,4,1
+Editor,nao_elegivel_arquivo,claro,0,17,4,1
+Editor,nao_elegivel_arquivo,escuro,0,17,4,1
+Editor,nao_elegivel_arquivo,fonte200,0,17,4,1
+Resultado da verificacao,original,claro,0,34,15,3
+Resultado da verificacao,original,escuro,0,34,15,3
+Resultado da verificacao,original,fonte200,0,33,14,3
+Resultado da verificacao,original,fonte200,1,29,12,3
+Resultado da verificacao,versao_alterada,claro,0,37,18,3
+Resultado da verificacao,versao_alterada,claro,1,34,17,3
+Resultado da verificacao,versao_alterada,escuro,0,37,18,3
+Resultado da verificacao,versao_alterada,escuro,1,34,17,3
+Resultado da verificacao,versao_alterada,fonte200,0,25,12,3
+Resultado da verificacao,versao_alterada,fonte200,1,31,15,3
+Resultado da verificacao,versao_alterada_zero,claro,0,34,17,3
+Resultado da verificacao,versao_alterada_zero,claro,1,34,17,3
+Resultado da verificacao,versao_alterada_zero,escuro,0,34,17,3
+Resultado da verificacao,versao_alterada_zero,escuro,1,34,17,3
+Resultado da verificacao,versao_alterada_zero,fonte200,0,23,10,3
+Resultado da verificacao,versao_alterada_zero,fonte200,1,31,15,3
+Resultado da verificacao,correspondencia_visual,claro,0,36,15,3
+Resultado da verificacao,correspondencia_visual,escuro,0,36,15,3
+Resultado da verificacao,correspondencia_visual,fonte200,0,29,10,3
+Resultado da verificacao,correspondencia_visual,fonte200,1,29,11,3
+Resultado da verificacao,adulterado,claro,0,24,7,3
+Resultado da verificacao,adulterado,escuro,0,24,7,3
+Resultado da verificacao,adulterado,fonte200,0,24,7,3
+Resultado da verificacao,nao_registrada,claro,0,21,6,2
+Resultado da verificacao,nao_registrada,escuro,0,21,6,2
+Resultado da verificacao,nao_registrada,fonte200,0,21,6,2
+Resultado da verificacao,sem_conexao,claro,0,22,6,2
+Resultado da verificacao,sem_conexao,escuro,0,22,6,2
+Resultado da verificacao,sem_conexao,fonte200,0,22,6,2
+Verificar imagem,inicial,claro,0,19,5,1
+Verificar imagem,inicial,escuro,0,19,5,1
+Verificar imagem,inicial,fonte200,0,19,5,1
+Verificar imagem,lendo,claro,0,17,5,1
+Verificar imagem,lendo,escuro,0,17,5,1
+Verificar imagem,lendo,fonte200,0,17,5,1
+Verificar imagem,consultando,claro,0,17,5,1
+Verificar imagem,consultando,escuro,0,17,5,1
+Verificar imagem,consultando,fonte200,0,17,5,1
+Verificar imagem,nao_suportado,claro,0,19,5,2
+Verificar imagem,nao_suportado,escuro,0,19,5,2
+Verificar imagem,nao_suportado,fonte200,0,19,5,2
+Conectar carteira,inicial,claro,0,18,5,1
+Conectar carteira,inicial,escuro,0,18,5,1
+Conectar carteira,inicial,fonte200,0,18,5,1
+Conectar carteira,aguardando,claro,0,18,4,1
+Conectar carteira,aguardando,escuro,0,18,4,1
+Conectar carteira,aguardando,fonte200,0,18,4,1
+Conectar carteira,conectada,claro,0,18,5,1
+Conectar carteira,conectada,escuro,0,18,5,1
+Conectar carteira,conectada,fonte200,0,18,5,1
+Conectar carteira,rede_errada,claro,0,18,5,1
+Conectar carteira,rede_errada,escuro,0,18,5,1
+Conectar carteira,rede_errada,fonte200,0,18,5,1
+Conectar carteira,saldo_insuficiente,claro,0,21,6,1
+Conectar carteira,saldo_insuficiente,escuro,0,21,6,1
+Conectar carteira,saldo_insuficiente,fonte200,0,21,6,1
+Conectar carteira,sem_carteira,claro,0,17,4,1
+Conectar carteira,sem_carteira,escuro,0,17,4,1
+Conectar carteira,sem_carteira,fonte200,0,17,4,1
+Conectar carteira,recusada,claro,0,17,4,1
+Conectar carteira,recusada,escuro,0,17,4,1
+Conectar carteira,recusada,fonte200,0,17,4,1
+Inicio,sem_carteira,claro,0,34,14,2
+Inicio,sem_carteira,escuro,0,34,14,2
+Inicio,sem_carteira,fonte200,0,27,11,2
+Inicio,sem_carteira,fonte200,1,32,12,2
+Inicio,conectada,claro,0,34,14,2
+Inicio,conectada,escuro,0,34,14,2
+Inicio,conectada,fonte200,0,30,12,2
+Inicio,conectada,fonte200,1,32,12,2
+Inicio,rede_errada,claro,0,34,14,2
+Inicio,rede_errada,escuro,0,34,14,2
+Inicio,rede_errada,fonte200,0,30,12,2
+Inicio,rede_errada,fonte200,1,32,12,2
+Inicio,pendentes,claro,0,36,15,2
+Inicio,pendentes,escuro,0,36,15,2
+Inicio,pendentes,fonte200,0,29,12,2
+Inicio,pendentes,fonte200,1,34,13,2
+Como funciona,unico,claro,0,27,13,4
+Como funciona,unico,claro,1,27,13,4
+Como funciona,unico,escuro,0,27,13,4
+Como funciona,unico,escuro,1,27,13,4
+Como funciona,unico,fonte200,0,22,8,4
+Como funciona,unico,fonte200,1,20,6,4
+Como funciona,unico,fonte200,2,20,6,4
+Meu acervo,carregando,claro,0,15,3,1
+Meu acervo,carregando,escuro,0,15,3,1
+Meu acervo,carregando,fonte200,0,15,3,1
+Meu acervo,vazio,claro,0,18,5,2
+Meu acervo,vazio,escuro,0,18,5,2
+Meu acervo,vazio,fonte200,0,18,5,2
+Meu acervo,com_itens,claro,0,53,18,3
+Meu acervo,com_itens,claro,1,52,17,4
+Meu acervo,com_itens,claro,2,52,17,3
+Meu acervo,com_itens,claro,3,52,17,3
+Meu acervo,com_itens,claro,4,53,17,3
+Meu acervo,com_itens,claro,5,54,18,3
+Meu acervo,com_itens,claro,6,55,19,3
+Meu acervo,com_itens,claro,7,52,18,3
+Meu acervo,com_itens,claro,8,46,15,3
+Meu acervo,com_itens,claro,9,46,15,3
+Meu acervo,com_itens,claro,10,46,15,3
+Meu acervo,com_itens,claro,11,46,15,3
+Meu acervo,com_itens,claro,12,46,15,3
+Meu acervo,com_itens,claro,13,48,16,3
+Meu acervo,com_itens,claro,14,47,16,3
+Meu acervo,com_itens,claro,15,48,16,3
+Meu acervo,com_itens,claro,16,45,15,3
+Meu acervo,com_itens,claro,17,45,15,3
+Meu acervo,com_itens,escuro,0,53,18,3
+Meu acervo,com_itens,escuro,1,52,17,4
+Meu acervo,com_itens,escuro,2,52,17,3
+Meu acervo,com_itens,escuro,3,52,17,3
+Meu acervo,com_itens,escuro,4,53,17,3
+Meu acervo,com_itens,escuro,5,54,18,3
+Meu acervo,com_itens,escuro,6,55,19,3
+Meu acervo,com_itens,escuro,7,52,18,3
+Meu acervo,com_itens,escuro,8,46,15,3
+Meu acervo,com_itens,escuro,9,46,15,3
+Meu acervo,com_itens,escuro,10,46,15,3
+Meu acervo,com_itens,escuro,11,46,15,3
+Meu acervo,com_itens,escuro,12,46,15,3
+Meu acervo,com_itens,escuro,13,48,16,3
+Meu acervo,com_itens,escuro,14,47,16,3
+Meu acervo,com_itens,escuro,15,48,16,3
+Meu acervo,com_itens,escuro,16,45,15,3
+Meu acervo,com_itens,escuro,17,45,15,3
+Meu acervo,com_itens,fonte200,0,44,14,2
+Meu acervo,com_itens,fonte200,1,44,14,3
+Meu acervo,com_itens,fonte200,2,43,13,2
+Meu acervo,com_itens,fonte200,3,44,14,2
+Meu acervo,com_itens,fonte200,4,44,14,2
+Meu acervo,com_itens,fonte200,5,47,15,2
+Meu acervo,com_itens,fonte200,6,47,15,2
+Meu acervo,com_itens,fonte200,7,43,13,2
+Meu acervo,com_itens,fonte200,8,44,14,2
+Meu acervo,com_itens,fonte200,9,42,13,2
+Meu acervo,com_itens,fonte200,10,44,13,3
+Meu acervo,com_itens,fonte200,11,41,12,3
+Meu acervo,com_itens,fonte200,12,38,11,3
+Meu acervo,com_itens,fonte200,13,38,11,3
+Meu acervo,com_itens,fonte200,14,38,11,3
+Meu acervo,com_itens,fonte200,15,40,12,3
+Meu acervo,com_itens,fonte200,16,40,12,3
+Meu acervo,com_itens,fonte200,17,41,13,3
+Meu acervo,com_itens,fonte200,18,39,12,3
+Meu acervo,com_itens,fonte200,19,39,12,3
+Meu acervo,com_itens,fonte200,20,40,13,3
+Meu acervo,com_itens,fonte200,21,38,12,3
+Meu acervo,com_itens,fonte200,22,42,13,3
+Meu acervo,com_itens,fonte200,23,39,12,3
+Meu acervo,com_itens,fonte200,24,39,12,3
+Meu acervo,com_itens,fonte200,25,36,11,3
+Meu acervo,com_itens,fonte200,26,36,11,3
+Meu acervo,com_itens,fonte200,27,38,12,3
+Meu acervo,com_itens,fonte200,28,37,11,3
+Meu acervo,com_itens,fonte200,29,37,11,2
+Meu acervo,com_itens,fonte200,30,37,11,2
+Meu acervo,com_itens,fonte200,31,38,12,2
+Meu acervo,com_itens,fonte200,32,41,13,2
+Meu acervo,com_itens,fonte200,33,41,13,2
+Meu acervo,com_itens,fonte200,34,39,12,2
+Meu acervo,com_itens,fonte200,35,39,12,2
+Meu acervo,pendentes,claro,0,31,9,2
+Meu acervo,pendentes,escuro,0,31,9,2
+Meu acervo,pendentes,fonte200,0,31,9,2
+Meu acervo,falhas,claro,0,43,15,3
+Meu acervo,falhas,claro,1,42,14,3
+Meu acervo,falhas,escuro,0,43,15,3
+Meu acervo,falhas,escuro,1,42,14,3
+Meu acervo,falhas,fonte200,0,37,12,3
+Meu acervo,falhas,fonte200,1,37,12,3
+Meu acervo,falhas,fonte200,2,36,11,2
+Meu acervo,falhas,fonte200,3,36,11,2
+Meu acervo,falhas,fonte200,4,36,11,2
+Meu acervo,falhas,fonte200,5,38,12,2
+Meu acervo,falhas,fonte200,6,38,12,2
+Meu acervo,falhas,fonte200,7,36,11,2
+Meu acervo,falhas,fonte200,8,37,12,2
+Meu acervo,falhas,fonte200,9,37,12,2
+Meu acervo,falhas,fonte200,10,40,13,2
+Meu acervo,falhas,fonte200,11,38,12,2
+Meu acervo,falhas,fonte200,12,38,12,2
+Meu acervo,falhas,fonte200,13,35,11,2
+Meu acervo,falhas_vazio,claro,0,24,7,2
+Meu acervo,falhas_vazio,escuro,0,24,7,2
+Meu acervo,falhas_vazio,fonte200,0,24,7,2
+Meu acervo,arquivo_removido,claro,0,53,18,3
+Meu acervo,arquivo_removido,claro,1,52,17,4
+Meu acervo,arquivo_removido,claro,2,52,17,3
+Meu acervo,arquivo_removido,claro,3,52,17,3
+Meu acervo,arquivo_removido,claro,4,53,17,3
+Meu acervo,arquivo_removido,claro,5,53,17,3
+Meu acervo,arquivo_removido,claro,6,54,18,3
+Meu acervo,arquivo_removido,claro,7,52,18,3
+Meu acervo,arquivo_removido,claro,8,46,15,3
+Meu acervo,arquivo_removido,claro,9,46,15,3
+Meu acervo,arquivo_removido,claro,10,46,15,3
+Meu acervo,arquivo_removido,claro,11,46,15,3
+Meu acervo,arquivo_removido,claro,12,46,15,3
+Meu acervo,arquivo_removido,claro,13,48,16,3
+Meu acervo,arquivo_removido,claro,14,47,16,3
+Meu acervo,arquivo_removido,claro,15,48,16,3
+Meu acervo,arquivo_removido,claro,16,45,15,3
+Meu acervo,arquivo_removido,claro,17,45,15,3
+Meu acervo,arquivo_removido,escuro,0,53,18,3
+Meu acervo,arquivo_removido,escuro,1,52,17,4
+Meu acervo,arquivo_removido,escuro,2,52,17,3
+Meu acervo,arquivo_removido,escuro,3,52,17,3
+Meu acervo,arquivo_removido,escuro,4,53,17,3
+Meu acervo,arquivo_removido,escuro,5,53,17,3
+Meu acervo,arquivo_removido,escuro,6,54,18,3
+Meu acervo,arquivo_removido,escuro,7,52,18,3
+Meu acervo,arquivo_removido,escuro,8,46,15,3
+Meu acervo,arquivo_removido,escuro,9,46,15,3
+Meu acervo,arquivo_removido,escuro,10,46,15,3
+Meu acervo,arquivo_removido,escuro,11,46,15,3
+Meu acervo,arquivo_removido,escuro,12,46,15,3
+Meu acervo,arquivo_removido,escuro,13,48,16,3
+Meu acervo,arquivo_removido,escuro,14,47,16,3
+Meu acervo,arquivo_removido,escuro,15,48,16,3
+Meu acervo,arquivo_removido,escuro,16,45,15,3
+Meu acervo,arquivo_removido,escuro,17,45,15,3
+Meu acervo,arquivo_removido,fonte200,0,44,14,2
+Meu acervo,arquivo_removido,fonte200,1,44,14,3
+Meu acervo,arquivo_removido,fonte200,2,43,13,2
+Meu acervo,arquivo_removido,fonte200,3,44,14,2
+Meu acervo,arquivo_removido,fonte200,4,44,14,2
+Meu acervo,arquivo_removido,fonte200,5,47,15,2
+Meu acervo,arquivo_removido,fonte200,6,46,14,2
+Meu acervo,arquivo_removido,fonte200,7,43,13,2
+Meu acervo,arquivo_removido,fonte200,8,44,14,2
+Meu acervo,arquivo_removido,fonte200,9,42,13,2
+Meu acervo,arquivo_removido,fonte200,10,44,13,3
+Meu acervo,arquivo_removido,fonte200,11,41,12,3
+Meu acervo,arquivo_removido,fonte200,12,38,11,3
+Meu acervo,arquivo_removido,fonte200,13,38,11,3
+Meu acervo,arquivo_removido,fonte200,14,38,11,3
+Meu acervo,arquivo_removido,fonte200,15,40,12,3
+Meu acervo,arquivo_removido,fonte200,16,40,12,3
+Meu acervo,arquivo_removido,fonte200,17,41,13,3
+Meu acervo,arquivo_removido,fonte200,18,39,12,3
+Meu acervo,arquivo_removido,fonte200,19,39,12,3
+Meu acervo,arquivo_removido,fonte200,20,40,13,3
+Meu acervo,arquivo_removido,fonte200,21,38,12,3
+Meu acervo,arquivo_removido,fonte200,22,42,13,3
+Meu acervo,arquivo_removido,fonte200,23,39,12,3
+Meu acervo,arquivo_removido,fonte200,24,39,12,3
+Meu acervo,arquivo_removido,fonte200,25,36,11,3
+Meu acervo,arquivo_removido,fonte200,26,36,11,3
+Meu acervo,arquivo_removido,fonte200,27,38,12,3
+Meu acervo,arquivo_removido,fonte200,28,37,11,3
+Meu acervo,arquivo_removido,fonte200,29,37,11,2
+Meu acervo,arquivo_removido,fonte200,30,37,11,2
+Meu acervo,arquivo_removido,fonte200,31,38,12,2
+Meu acervo,arquivo_removido,fonte200,32,41,13,2
+Meu acervo,arquivo_removido,fonte200,33,41,13,2
+Meu acervo,arquivo_removido,fonte200,34,39,12,2
+Meu acervo,arquivo_removido,fonte200,35,39,12,2
+Meu acervo,opcoes_registrada,claro,0,22,6,0
+Meu acervo,opcoes_registrada,escuro,0,22,6,0
+Meu acervo,opcoes_registrada,fonte200,0,22,6,0
+Meu acervo,opcoes_registrando,claro,0,17,5,0
+Meu acervo,opcoes_registrando,escuro,0,17,5,0
+Meu acervo,opcoes_registrando,fonte200,0,17,5,0
+Meu acervo,opcoes_falhou,claro,0,19,5,0
+Meu acervo,opcoes_falhou,escuro,0,19,5,0
+Meu acervo,opcoes_falhou,fonte200,0,19,5,0
+Meu acervo,opcoes_arquivo_removido,claro,0,19,5,0
+Meu acervo,opcoes_arquivo_removido,escuro,0,19,5,0
+Meu acervo,opcoes_arquivo_removido,fonte200,0,19,5,0
+Historico da imagem,carregando,claro,0,16,3,1
+Historico da imagem,carregando,escuro,0,16,3,1
+Historico da imagem,carregando,fonte200,0,16,3,1
+Historico da imagem,cadeia_simples,claro,0,33,16,1
+Historico da imagem,cadeia_simples,escuro,0,33,16,1
+Historico da imagem,cadeia_simples,fonte200,0,29,14,1
+Historico da imagem,cadeia_simples,fonte200,1,27,13,1
+Historico da imagem,com_ramificacoes,claro,0,49,25,1
+Historico da imagem,com_ramificacoes,escuro,0,49,25,1
+Historico da imagem,com_ramificacoes,fonte200,0,36,16,1
+Historico da imagem,com_ramificacoes,fonte200,1,30,14,1
+Historico da imagem,ramificacoes_abertas,claro,0,58,29,1
+Historico da imagem,ramificacoes_abertas,claro,1,55,27,1
+Historico da imagem,ramificacoes_abertas,escuro,0,58,29,1
+Historico da imagem,ramificacoes_abertas,escuro,1,55,27,1
+Historico da imagem,ramificacoes_abertas,fonte200,0,40,16,1
+Historico da imagem,ramificacoes_abertas,fonte200,1,33,15,1
+Historico da imagem,ramificacoes_abertas,fonte200,2,30,14,1
+Historico da imagem,limite_excedido,claro,0,51,26,1
+Historico da imagem,limite_excedido,claro,1,50,25,1
+Historico da imagem,limite_excedido,escuro,0,51,26,1
+Historico da imagem,limite_excedido,escuro,1,50,25,1
+Historico da imagem,limite_excedido,fonte200,0,33,14,1
+Historico da imagem,limite_excedido,fonte200,1,31,16,1
+Historico da imagem,limite_excedido,fonte200,2,30,14,1
+Historico da imagem,assinatura_invalida,claro,0,50,26,1
+Historico da imagem,assinatura_invalida,escuro,0,50,26,1
+Historico da imagem,assinatura_invalida,fonte200,0,34,16,1
+Historico da imagem,assinatura_invalida,fonte200,1,29,13,1
+Historico da imagem,sem_conexao,claro,0,19,5,2
+Historico da imagem,sem_conexao,escuro,0,19,5,2
+Historico da imagem,sem_conexao,fonte200,0,19,5,2
+Camera,pronta,claro,0,25,6,0
+Camera,pronta,escuro,0,25,6,0
+Camera,pronta,fonte200,0,25,6,0
+Camera,processando,claro,0,29,7,0
+Camera,processando,escuro,0,29,7,0
+Camera,processando,fonte200,0,29,7,0
+Camera,sem_permissao,claro,0,17,4,1
+Camera,sem_permissao,escuro,0,17,4,1
+Camera,sem_permissao,fonte200,0,17,4,1
+Camera,sem_permissao_configuracoes,claro,0,17,4,1
+Camera,sem_permissao_configuracoes,escuro,0,17,4,1
+Camera,sem_permissao_configuracoes,fonte200,0,17,4,1
+Camera,erro,claro,0,17,4,1
+Camera,erro,escuro,0,17,4,1
+Camera,erro,fonte200,0,17,4,1
+Carteira,conectada,claro,0,30,12,1
+Carteira,conectada,escuro,0,30,12,1
+Carteira,conectada,fonte200,0,30,12,1
+Carteira,consultando_saldo,claro,0,30,12,1
+Carteira,consultando_saldo,escuro,0,30,12,1
+Carteira,consultando_saldo,fonte200,0,30,12,1
+Carteira,saldo_indisponivel,claro,0,30,12,1
+Carteira,saldo_indisponivel,escuro,0,30,12,1
+Carteira,saldo_indisponivel,fonte200,0,30,12,1
+Carteira,rede_errada,claro,0,31,13,1
+Carteira,rede_errada,escuro,0,31,13,1
+Carteira,rede_errada,fonte200,0,31,13,1
+Carteira,saldo_baixo,claro,0,31,13,1
+Carteira,saldo_baixo,escuro,0,31,13,1
+Carteira,saldo_baixo,fonte200,0,31,13,1
+Acompanhamento do registro,vinculando_aparelho,claro,0,26,11,2
+Acompanhamento do registro,vinculando_aparelho,escuro,0,26,11,2
+Acompanhamento do registro,vinculando_aparelho,fonte200,0,21,8,2
+Acompanhamento do registro,vinculando_aparelho,fonte200,1,21,8,2
+Acompanhamento do registro,novo_vinculo,claro,0,26,11,2
+Acompanhamento do registro,novo_vinculo,escuro,0,26,11,2
+Acompanhamento do registro,novo_vinculo,fonte200,0,20,7,2
+Acompanhamento do registro,novo_vinculo,fonte200,1,21,8,2
+Acompanhamento do registro,aguardando_aprovacao,claro,0,25,10,2
+Acompanhamento do registro,aguardando_aprovacao,escuro,0,25,10,2
+Acompanhamento do registro,aguardando_aprovacao,fonte200,0,22,9,2
+Acompanhamento do registro,aguardando_aprovacao,fonte200,1,20,7,2
+Acompanhamento do registro,pendente,claro,0,25,10,2
+Acompanhamento do registro,pendente,escuro,0,25,10,2
+Acompanhamento do registro,pendente,fonte200,0,25,10,2
+Acompanhamento do registro,pendente,fonte200,1,25,10,2
+Acompanhamento do registro,confirmado,claro,0,28,11,3
+Acompanhamento do registro,confirmado,escuro,0,28,11,3
+Acompanhamento do registro,confirmado,fonte200,0,28,11,3
+Acompanhamento do registro,rejeitado,claro,0,28,11,2
+Acompanhamento do registro,rejeitado,escuro,0,28,11,2
+Acompanhamento do registro,rejeitado,fonte200,0,25,10,2
+Acompanhamento do registro,rejeitado,fonte200,1,24,9,2
+Acompanhamento do registro,falha_rede,claro,0,28,11,2
+Acompanhamento do registro,falha_rede,escuro,0,28,11,2
+Acompanhamento do registro,falha_rede,fonte200,0,25,10,2
+Acompanhamento do registro,falha_rede,fonte200,1,24,9,2
+Acompanhamento do registro,falha_prazo,claro,0,28,11,2
+Acompanhamento do registro,falha_prazo,escuro,0,28,11,2
+Acompanhamento do registro,falha_prazo,fonte200,0,22,9,2
+Acompanhamento do registro,falha_prazo,fonte200,1,23,8,2
+Acompanhamento do registro,falha_releitura,claro,0,28,11,2
+Acompanhamento do registro,falha_releitura,escuro,0,28,11,2
+Acompanhamento do registro,falha_releitura,fonte200,0,22,9,2
+Acompanhamento do registro,falha_releitura,fonte200,1,23,8,2
+Acompanhamento do registro,falha_revertida,claro,0,28,11,2
+Acompanhamento do registro,falha_revertida,escuro,0,28,11,2
+Acompanhamento do registro,falha_revertida,fonte200,0,25,10,2
+Acompanhamento do registro,falha_revertida,fonte200,1,24,9,2
+Acompanhamento do registro,falha_galeria,claro,0,28,11,2
+Acompanhamento do registro,falha_galeria,escuro,0,28,11,2
+Acompanhamento do registro,falha_galeria,fonte200,0,22,9,2
+Acompanhamento do registro,falha_galeria,fonte200,1,23,8,2
+Acompanhamento do registro,saldo_insuficiente,claro,0,28,11,2
+Acompanhamento do registro,saldo_insuficiente,escuro,0,28,11,2
+Acompanhamento do registro,saldo_insuficiente,fonte200,0,20,7,2
+Acompanhamento do registro,saldo_insuficiente,fonte200,1,23,8,2
+Acompanhamento do registro,ja_registrada,claro,0,24,7,2
+Acompanhamento do registro,ja_registrada,escuro,0,24,7,2
+Acompanhamento do registro,ja_registrada,fonte200,0,24,7,2

@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.ufv.hashlens.R
 import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.core.metrics.Metric
+import br.ufv.hashlens.core.metrics.MetricsLogger
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.LocalImageEntity
@@ -23,6 +25,7 @@ import br.ufv.hashlens.work.PendingTxScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
 import java.time.Clock
+import java.time.Duration
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -81,6 +84,7 @@ class CaptureViewModel @Inject constructor(
     private val scheduler: PendingTxScheduler,
     private val config: ChainConfig,
     private val clock: Clock,
+    private val metrics: MetricsLogger,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : ViewModel() {
     private val _ui = MutableStateFlow(CaptureFlowUiState())
@@ -133,7 +137,7 @@ class CaptureViewModel @Inject constructor(
         updateCamera { it.copy(camera = CameraState.Processing) }
         _ui.update { it.copy(progress = null) }
         thumbnailOfRun = thumbnail
-        run { captureAndRegister(photo, rotationDegrees, wallet, ::onProgress) }
+        run(retry = false) { captureAndRegister(photo, rotationDegrees, wallet, ::onProgress) }
     }
 
     fun onProgressAction(action: RegistrationProgressAction) {
@@ -159,11 +163,15 @@ class CaptureViewModel @Inject constructor(
             return
         }
         operationWallet = wallet
-        run { retryRegistration(id, wallet, ::onProgress) }
+        run(retry = true) { retryRegistration(id, wallet, ::onProgress) }
     }
 
-    /** Roda o registro fora da tela e mostra o resultado; falha na galeria pede outra foto. */
-    private fun run(block: suspend () -> CaptureResult) {
+    /**
+     * Roda o registro fora da tela e mostra o resultado; falha na galeria pede outra foto. Mede da foto
+     * tirada (ou do "Tentar de novo", [retry]) até o fim do envio (SC-008, T096).
+     */
+    private fun run(retry: Boolean, block: suspend () -> CaptureResult) {
+        val startedAt = clock.instant()
         applicationScope.launch {
             val result = try {
                 block()
@@ -175,6 +183,8 @@ class CaptureViewModel @Inject constructor(
             ) {
                 showStage(RegistrationStage.Failed(RegistrationFailure.SaveFailed))
             } else {
+                val outcome = result.metricOutcome() + if (retry) RETRY_SUFFIX else ""
+                metrics.record(Metric.CAPTURE_TO_SUBMITTED, Duration.between(startedAt, clock.instant()), outcome)
                 onResult(result)
             }
         }
