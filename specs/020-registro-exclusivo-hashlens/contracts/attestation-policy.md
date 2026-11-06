@@ -25,8 +25,17 @@ Concatenação binária, inteiros em big-endian, 95 bytes:
 | 4   | `wallet`   | 20 B    | carteira que vai vincular   |
 | 5   | `issuedAt` | 8 B     | `uint64`, segundos Unix     |
 
-Válido se os campos 1 a 4 forem iguais aos esperados e
-`referenceTime − 15 min ≤ issuedAt ≤ referenceTime + 2 min`.
+Válido se os campos 1 a 4 forem iguais aos esperados e `issuedAt` estiver na janela do contexto:
+
+| Contexto    | `referenceTime`       | Janela de `issuedAt`                                        |
+| ----------- | --------------------- | ----------------------------------------------------------- |
+| Atestador   | agora                 | `referenceTime − 15 min ≤ issuedAt ≤ referenceTime + 2 min` |
+| Verificação | `device.registeredAt` | `referenceTime − 30 min ≤ issuedAt ≤ referenceTime + 2 min` |
+
+Na verificação a janela é maior porque o vínculo legítimo soma dois prazos: até 15 min entre gerar
+o desafio e o atestador aceitar, e até 15 min entre a autorização (`deadline`) e o bloco do
+vínculo. Cada nova tentativa automática gera um desafio novo, então a soma nunca passa de 30 min.
+O limite de patch (regra 5) continua contado a partir de `issuedAt` nos dois contextos.
 
 ## 3. Regras (todas obrigatórias)
 

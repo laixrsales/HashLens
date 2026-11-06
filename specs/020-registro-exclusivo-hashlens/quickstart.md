@@ -101,8 +101,7 @@ attester.allowedCertDigests=<debug>,<release>
    sistema verificado, patch, data do vínculo).
 2. Sem internet só para `android.googleapis.com` (ou com o cache vazio e o domínio bloqueado):
    classificação mantida, nota de revogação não consultada.
-3. Auditoria independente: `./gradlew :attestation:run --args="audit <deviceId>"` (ou o script
-   equivalente da tarefa) lê o evento e repete a política fora do app; resultado igual ao do
+3. Auditoria independente: `./gradlew :attester:audit --args="<deviceId>"` lê o evento e repete a política fora do app; resultado igual ao do
    atestador (SC-006).
 
 ### Matriz de classificação (SC-007, SC-008)

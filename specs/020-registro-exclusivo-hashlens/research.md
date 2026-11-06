@@ -95,7 +95,8 @@ verifyingContract}`. O contrato confere a assinatura com `ecrecover` (com checag
   `"HASHLENS-ATT-v1" ‖ chainId (32 B) ‖ contrato (20 B) ‖ carteira (20 B) ‖ emitidoEm (8 B,
 segundos Unix)`, 95 bytes (o limite do Keystore é 128). O atestador aceita se rede, contrato e
   carteira forem os da requisição e se `emitidoEm` estiver entre 15 min no passado e 2 min no
-  futuro. O uso único vem do contrato (R5). Detalhes em
+  futuro. Na verificação, a janela vai até 30 min antes de `registeredAt` (15 min até o atestador
+  e mais 15 min de prazo da autorização). O uso único vem do contrato (R5). Detalhes em
   [contracts/attestation-policy.md](./contracts/attestation-policy.md) §2.
 - **Rationale**: o desafio fica público e verificável por qualquer pessoa (FR-006, princípio V),
   sem segredo e sem estado no atestador (princípio VII: "sem estado de negócio"). Ele amarra a
@@ -208,7 +209,8 @@ true`; `osPatchLevel` com no máximo 24 meses em relação a `emitidoEm`; pacote
   2. conferir `keccak256(abi.encode(chain)) == attestationHash`;
   3. validar a cadeia com a mesma política do atestador (R7), com três diferenças: o instante de
      referência da validade é `registeredAt` (certificados RKP expiram depois do vínculo); a
-     carteira esperada no desafio é `device.owner`; a lista de revogação é tratada à parte (passo 4);
+     carteira esperada no desafio é `device.owner`; o desafio pode ter até 30 min antes de
+     `registeredAt` (attestation-policy.md §2); a lista de revogação é tratada à parte (passo 4);
   4. consultar a lista de revogação: se algum certificado da cadeia aparece nela, manter a
      classificação e marcar `revokedAfterBinding` (FR-017). Como o atestador já recusa cadeias
      revogadas no vínculo, qualquer revogação encontrada depois é posterior a ele;

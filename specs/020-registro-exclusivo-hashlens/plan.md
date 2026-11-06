@@ -82,7 +82,8 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 interpretados e ficam registrados: (1) princípio IX, "desafio emitido para aquela carteira e ainda
 não usado": o desafio é público e ligado à carteira pelo conteúdo, e o uso único vem da unicidade
 da chave no contrato (R6); (2) princípio III, "trocar a chave do atestador exige atualizar o
-endereço no contrato": o endereço é `immutable`, então a troca é feita por novo deploy (R5).
+endereço no contrato": o endereço é `immutable`, então a troca é feita por novo deploy (R5);
+leitura confirmada pela autora em 2026-11-06.
 
 ## Project Structure
 

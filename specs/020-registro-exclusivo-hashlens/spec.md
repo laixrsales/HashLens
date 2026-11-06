@@ -177,9 +177,10 @@ fora do aplicativo e chegar à mesma conclusão.
 **Atestação e vínculo**
 
 - **FR-001**: O aplicativo MUST gerar a chave do aparelho com atestação de hardware, usando como
-  desafio um valor ligado à carteira conectada e de uso único.
-- **FR-002**: O aplicativo MUST enviar ao atestador apenas a cadeia de atestação, a carteira e o
-  desafio; MUST NOT enviar imagens, hashes de imagem ou dados pessoais (princípios VI e VII).
+  desafio um valor ligado à carteira conectada e com prazo de validade; a autorização gerada a
+  partir dele só vale uma vez, porque a mesma chave não pode ser vinculada duas vezes.
+- **FR-002**: O aplicativo MUST enviar ao atestador apenas a cadeia de atestação (que contém o
+  desafio), a carteira e a chave pública do aparelho; MUST NOT enviar imagens, hashes de imagem ou dados pessoais (princípios VI e VII).
 - **FR-003**: O atestador MUST autorizar uma chave somente se todas as condições valerem: cadeia
   válida até uma raiz de atestação do Google; nenhum certificado da cadeia revogado; pacote
   `br.ufv.hashlens` com certificado de assinatura na lista do deploy (desenvolvimento: debug e
@@ -256,7 +257,8 @@ fora do aplicativo e chegar à mesma conclusão.
   uma carteira, num contrato e rede específicos, até um prazo.
 - **Atestador**: serviço mínimo que valida a atestação e emite autorizações; seu endereço fica
   fixo no contrato.
-- **Desafio**: valor de uso único ligado à carteira, embutido na atestação para impedir reuso.
+- **Desafio**: valor ligado à carteira e com prazo, embutido na atestação; o reuso é impedido
+  porque cada chave só pode ser vinculada uma vez.
 
 ## Success Criteria _(mandatory)_
 
@@ -294,7 +296,9 @@ fora do aplicativo e chegar à mesma conclusão.
 - A raiz de confiança é a atestação de chaves do Android e a lista pública de revogação do
   Google; vazamento de chaves de atestação de fabricante é limite residual declarado.
 - A atestação não pede identificadores do aparelho (IMEI, número de série); a cadeia publicada
-  não identifica a pessoa.
+  não identifica a pessoa. Limite declarado: duas carteiras vinculadas no mesmo aparelho, dentro do
+  período de rotação dos certificados de atestação, podem ser relacionadas por quem comparar as
+  cadeias públicas.
 - Apenas aparelhos com atestação em hardware são aceitos; emuladores não registram.
 - A verificação de integridade do Google Play (Play Integrity) não é usada: o aplicativo não é
   distribuído pela Play Store.
