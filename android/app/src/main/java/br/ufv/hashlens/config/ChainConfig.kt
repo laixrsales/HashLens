@@ -20,7 +20,14 @@ data class ChainConfig(
     /** Bloco do deploy do contrato: início da busca de eventos (`eth_getLogs`); 0 busca desde a origem. */
     val deployBlock: Long = 0,
     /** Prazo sem recibo até a transação pendente passar a `FAILED(TIMEOUT)` (research R23). */
-    val pendingTimeout: Duration = Duration.ofMinutes(DEFAULT_PENDING_TIMEOUT_MINUTES)
+    val pendingTimeout: Duration = Duration.ofMinutes(DEFAULT_PENDING_TIMEOUT_MINUTES),
+    /** Base do atestador do deploy (020 research R9); no debug, `http://localhost:8080` com `adb reverse`. */
+    val attesterUrl: String = "",
+    /**
+     * SHA-256 em hex minúsculo dos certificados do APK aceitos na verificação da origem, o mesmo
+     * conjunto do atestador do deploy (020 research R8).
+     */
+    val allowedCertDigests: Set<String> = emptySet()
 ) {
     fun transactionUrl(txHash: String): String = "$explorerUrl/tx/$txHash"
 
@@ -37,7 +44,10 @@ data class ChainConfig(
             registryAddress = BuildConfig.REGISTRY_ADDRESS,
             reownProjectId = BuildConfig.REOWN_PROJECT_ID,
             deployBlock = BuildConfig.REGISTRY_DEPLOY_BLOCK,
-            pendingTimeout = Duration.ofMinutes(BuildConfig.PENDING_TIMEOUT_MINUTES.toLong())
+            pendingTimeout = Duration.ofMinutes(BuildConfig.PENDING_TIMEOUT_MINUTES.toLong()),
+            attesterUrl = BuildConfig.ATTESTER_URL,
+            // O build já normaliza: hex minúsculo, sem "0x" nem ":", separado por vírgula
+            allowedCertDigests = BuildConfig.ATTESTER_ALLOWED_CERT_DIGESTS.split(",").filter { it.isNotEmpty() }.toSet()
         )
     }
 }

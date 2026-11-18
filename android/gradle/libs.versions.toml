@@ -38,8 +38,24 @@ espresso = "3.7.0"
 atf = "4.1.1"
 # Mesma versão que o ATF traz em runtime; a API dele expõe tipos do Guava
 guava = "31.0.1-android"
+# A API do ATF expõe tipos com anotações do checker-qual; o Guava 33.4+ (trazido pela keyattestation) não depende mais dele
+checkerQual = "3.55.1"
 # 1.23.x (estável) não roda no JDK 25 do Android Studio nem com Kotlin 2.4; 2.x é a linha compatível
 detekt = "2.0.0-alpha.6"
+# Feature 020 (atestação). Dependências da android/keyattestation nas versões do build dela (research R4)
+keyattestationAnnotation = "1.9.1"
+keyattestationCbor = "0.9"
+keyattestationGson = "2.11.0"
+keyattestationErrorProne = "2.41.0"
+keyattestationProtobuf = "4.28.3"
+keyattestationBouncyCastle = "1.78.1"
+keyattestationGuava = "33.5.0-jre"
+ktor = "3.6.1"
+# Testes originais da keyattestation, rodados no módulo :keyattestation
+truth = "1.4.4"
+testParameterInjector = "1.18"
+# Só o módulo crypto (EIP-712, secp256k1); 4.13+ é compilado para Java 21
+web3jJvm = "4.12.3"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -106,10 +122,32 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }
 accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "atf" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
+checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerQual" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
+
+# Feature 020: :keyattestation, :attestation e :attester
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "keyattestationAnnotation" }
+cbor = { module = "co.nstant.in:cbor", version.ref = "keyattestationCbor" }
+gson = { module = "com.google.code.gson:gson", version.ref = "keyattestationGson" }
+errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "keyattestationErrorProne" }
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "keyattestationProtobuf" }
+protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "keyattestationProtobuf" }
+bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "keyattestationBouncyCastle" }
+guava-jre = { module = "com.google.guava:guava", version.ref = "keyattestationGuava" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "coroutines" }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-serialization-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+web3j-crypto-jvm = { module = "org.web3j:crypto", version.ref = "web3jJvm" }
+truth = { module = "com.google.truth:truth", version.ref = "truth" }
+test-parameter-injector = { module = "com.google.testparameterinjector:test-parameter-injector", version.ref = "testParameterInjector" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

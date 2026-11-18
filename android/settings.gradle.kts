@@ -24,3 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "HashLens"
 include(":app")
+
+// Feature 020: atestação do aparelho (research R4, R9)
+include(":keyattestation", ":attestation", ":attester")

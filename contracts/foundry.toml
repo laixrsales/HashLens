@@ -5,7 +5,8 @@ script = "script"
 out = "out"
 libs = ["lib"]
 solc_version = "0.8.24"
-evm_version = "cancun"
+# Osaka: pré-compilado P256VERIFY (EIP-7951, 0x100) nos testes; com "cancun" a chamada falha (020 research R2)
+evm_version = "osaka"
 optimizer = true
 optimizer_runs = 200
 remappings = ["forge-std/=lib/forge-std/src/"]

@@ -10,9 +10,13 @@ valendo.
   sistema original. Emulador só serve para validar a recusa (SC-003).
 - Duas chaves secp256k1 de atestador, de teste: uma de desenvolvimento e uma de avaliação
   (`cast wallet new`). Nunca no Git.
-- Keystore de release da autora (research R8), fora do Git, com o SHA-256 do certificado anotado:
-  `keytool -list -v -keystore <arquivo> | grep SHA256`. O do debug sai de
-  `./gradlew :app:signingReport`.
+- Keystore de release da autora (research R8), fora do Git (`*.jks` e `*.keystore` já estão no
+  `.gitignore`). Para criar, fora do repositório:
+  `keytool -genkeypair -v -keystore ~/hashlens-release.jks -alias hashlens -keyalg EC -groupname secp256r1 -validity 10000`.
+  O SHA-256 dos certificados de debug e de release sai de `./gradlew :app:signingReport` (linhas
+  `SHA-256`, `Variant: debug` e `Variant: release`). Em `attester.allowedCertDigests` e
+  `ATTESTER_ALLOWED_CERT_DIGESTS` vale o hex com ou sem `:`; o build normaliza para minúsculas
+  sem separador.
 - Para a avaliação: túnel HTTPS (Cloudflare Tunnel ou ngrok, research R9).
 
 ## 2. Contrato
@@ -63,6 +67,11 @@ registry.address=0x...            # do deploy em uso
 registry.deployBlock=...
 attester.url=http://localhost:8080
 attester.allowedCertDigests=<debug>,<release>
+# Assinatura de release; sem release.storeFile, o APK de release sai sem assinatura
+release.storeFile=/home/<você>/hashlens-release.jks
+release.storePassword=...
+release.keyAlias=hashlens
+release.keyPassword=...
 ```
 
 ```bash
