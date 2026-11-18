@@ -1,5 +1,6 @@
 package br.ufv.hashlens.domain.usecase
 
+import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.data.chain.RegistrationTxFinder
@@ -75,8 +76,8 @@ class TraceGenealogyUseCaseTest {
         // Só os aparelhos da autora e do editor existem
         coEvery { reader.getDevice(any()) } answers {
             when (val id = firstArg<Int>()) {
-                AUTHOR_DEVICE -> Device(id = id, owner = AUTHOR, publicKey = ByteArray(65))
-                EDITOR_DEVICE -> Device(id = id, owner = EDITOR, publicKey = ByteArray(65))
+                AUTHOR_DEVICE -> TestDevices.device(id = id, owner = AUTHOR, publicKey = ByteArray(65))
+                EDITOR_DEVICE -> TestDevices.device(id = id, owner = EDITOR, publicKey = ByteArray(65))
                 else -> null
             }
         }

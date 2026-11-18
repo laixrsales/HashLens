@@ -38,10 +38,10 @@ interface ChainRpc {
     fun getTransactionReceipt(txHash: String): RawReceipt?
 
     /**
-     * `eth_getLogs` de [address] de [fromBlock] até o bloco mais recente. [topics] segue a posição
-     * dos tópicos; `null` aceita qualquer valor naquela posição.
+     * `eth_getLogs` de [address] de [fromBlock] até [toBlock] (`null` = bloco mais recente).
+     * [topics] segue a posição dos tópicos; `null` aceita qualquer valor naquela posição.
      */
-    fun getLogs(address: String, topics: List<String?>, fromBlock: Long): List<RawLog>
+    fun getLogs(address: String, topics: List<String?>, fromBlock: Long, toBlock: Long? = null): List<RawLog>
 }
 
 /** [ChainRpc] via JSON-RPC HTTP com web3j (research R2). */
@@ -63,10 +63,10 @@ class Web3jChainRpc(private val web3j: Web3j) : ChainRpc {
         )
     }
 
-    override fun getLogs(address: String, topics: List<String?>, fromBlock: Long): List<RawLog> {
+    override fun getLogs(address: String, topics: List<String?>, fromBlock: Long, toBlock: Long?): List<RawLog> {
         val filter = EthFilter(
             DefaultBlockParameter.valueOf(BigInteger.valueOf(fromBlock)),
-            DefaultBlockParameterName.LATEST,
+            toBlock?.let { DefaultBlockParameter.valueOf(BigInteger.valueOf(it)) } ?: DefaultBlockParameterName.LATEST,
             address
         )
         topics.forEach { if (it == null) filter.addNullTopic() else filter.addSingleTopic(it) }

@@ -7,17 +7,23 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
- * T043: calldata das funções de escrita igual ao de `cast calldata` para os mesmos argumentos
- * (`tools/chain/gerar_calldata.sh`). Assinatura do aparelho entra como `r ‖ s` (64 bytes).
+ * 002/T043 e 020/T025: calldata das funções de escrita igual ao de `cast calldata` para os mesmos
+ * argumentos (`tools/chain/gerar_calldata.sh`). Assinatura do aparelho entra como `r ‖ s` (64 bytes).
  */
 class RegistryTxBuilderTest {
     private val original = SignatureVectors.case("original")
     private val edit = SignatureVectors.case("edicao")
 
     @Test
-    fun `registerDevice com a chave pública de 65 bytes`() {
-        RegistryTxBuilder.registerDevice(SignatureVectors.publicKeyBytes) shouldBe
-            CalldataVectors.calldata("registerDevice")
+    fun `registerDevice v2 com chave, cadeia, prazo e autorizacao do atestador`() {
+        val args = CalldataVectors.arguments("registerDevice")
+
+        RegistryTxBuilder.registerDevice(
+            publicKey = SignatureVectors.publicKeyBytes,
+            attestationChain = args["attestationChain"].map { it.asText().removePrefix("0x").hexToByteArray() },
+            deadline = args["deadline"].asLong(),
+            authorization = args["authorization"].asText().removePrefix("0x").hexToByteArray()
+        ) shouldBe CalldataVectors.calldata("registerDevice")
     }
 
     @Test
@@ -66,7 +72,9 @@ class RegistryTxBuilderTest {
 
     @Test
     fun `recusa chave pública fora do formato não comprimido`() {
-        shouldThrow<IllegalArgumentException> { RegistryTxBuilder.registerDevice(ByteArray(64)) }
+        shouldThrow<IllegalArgumentException> {
+            RegistryTxBuilder.registerDevice(ByteArray(64), listOf(ByteArray(1)), 0, ByteArray(65))
+        }
     }
 
     private companion object {

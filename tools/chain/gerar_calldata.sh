@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Gera o calldata de referência das funções de escrita do ImageRegistry (T043).
+# Gera o calldata de referência das funções de escrita do ImageRegistry (002/T043; v2 em 020/T025).
 #
 # Usa `cast calldata` (Foundry) com os argumentos dos casos de
-# android/app/src/test/resources/signature/vectors.json e grava
+# android/app/src/test/resources/signature/vectors.json e, para o registerDevice v2, do vetor
+# EIP-712 de contracts/test/vectors/device-authorization.json, e grava
 # android/app/src/test/resources/chain/calldata.json. O RegistryTxBuilder do app deve produzir
 # exatamente esses bytes para os mesmos argumentos.
 #
@@ -16,6 +17,7 @@ set -euo pipefail
 
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
 VETORES="$RAIZ/android/app/src/test/resources/signature/vectors.json"
+VETOR_AUTORIZACAO="$RAIZ/contracts/test/vectors/device-authorization.json"
 SAIDA="$RAIZ/android/app/src/test/resources/chain/calldata.json"
 export PATH="$HOME/.foundry/bin:$PATH"
 
@@ -38,13 +40,20 @@ entrada() { # entrada <nome> <função> <calldata> <args JSON>
         '{nome: $nome, funcao: $funcao, argumentos: $argumentos, calldata: $calldata}'
 }
 
-F_DEVICE="registerDevice(bytes)"
+F_DEVICE="registerDevice(bytes,bytes[],uint64,bytes)"
 F_CAPTURE="registerCapture(bytes32,uint64,uint32,bytes32,bytes32)"
 F_EDIT="registerEdit(uint256,bytes32,uint64,uint32,bytes32,bytes32,string)"
 
 ENTRADAS=()
-ENTRADAS+=("$(entrada "registerDevice" "$F_DEVICE" "$(cast calldata "$F_DEVICE" "$CHAVE_PUBLICA")" \
-    "$(jq -n --arg k "$CHAVE_PUBLICA" '{publicKey: $k}')")")
+autorizacao() { jq -r "$1" "$VETOR_AUTORIZACAO"; }
+CADEIA="[$(autorizacao '.input.attestationChain | join(",")')]"
+PRAZO=$(autorizacao '.message.deadline')
+ASSINATURA_ATESTADOR=$(autorizacao '.signature')
+[[ "$(autorizacao '.input.publicKey')" == "$CHAVE_PUBLICA" ]]
+ENTRADAS+=("$(entrada "registerDevice" "$F_DEVICE" \
+    "$(cast calldata "$F_DEVICE" "$CHAVE_PUBLICA" "$CADEIA" "$PRAZO" "$ASSINATURA_ATESTADOR")" \
+    "$(jq -n --arg k "$CHAVE_PUBLICA" --argjson c "$(autorizacao '.input.attestationChain')" --argjson d "$PRAZO" \
+        --arg a "$ASSINATURA_ATESTADOR" '{publicKey: $k, attestationChain: $c, deadline: $d, authorization: $a}')")")
 
 caso 0
 ENTRADAS+=("$(entrada "registerCapture original" "$F_CAPTURE" \
@@ -59,6 +68,6 @@ ENTRADAS+=("$(entrada "registerEdit edicao" "$F_EDIT" \
         --arg o "$OPERACOES" '{parentId: $pa, sha256: $s, pHash: $p, deviceId: $d, signature: $r, operations: $o}')")")
 
 printf '%s\n' "${ENTRADAS[@]}" | jq -s \
-    '{geradoPor: "tools/chain/gerar_calldata.sh", observacao: "cast calldata com os argumentos de signature/vectors.json.", calldata: .}' \
+    '{geradoPor: "tools/chain/gerar_calldata.sh", observacao: "cast calldata com os argumentos de signature/vectors.json e, no registerDevice, do vetor contracts/test/vectors/device-authorization.json.", calldata: .}' \
     >"$SAIDA"
 echo "gravado: $SAIDA"

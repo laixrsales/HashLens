@@ -23,6 +23,11 @@ import javax.inject.Singleton
  * [getOrCreatePublicKey] gera outra chave; não há recuperação, e o vínculo novo é feito pelo
  * `EnsureDeviceBoundUseCase` (research R25).
  *
+ * Para o vínculo com o atestador (020 research R11), [regenerateWithChallenge] gera a chave de novo
+ * com o desafio da atestação, que só pode ser definido na geração, e [getAttestationChain] devolve a
+ * cadeia que o Keystore emitiu para ela. Não pede atestação de identificadores do aparelho (IMEI,
+ * serial), só a da chave (research R13).
+ *
  * As operações do Keystore bloqueiam: chame fora da thread principal.
  */
 @Singleton
@@ -36,6 +41,31 @@ class DeviceKeyManager @Inject constructor(private val keyStore: KeyStore) {
         if (!keyStore.containsAlias(alias)) generate(alias)
         val publicKey = keyStore.getCertificate(alias).publicKey as ECPublicKey
         return encodeUncompressed(publicKey)
+    }
+
+    /**
+     * Apaga a chave da carteira e gera outra com [challenge] na atestação (020 attestation-policy
+     * §2), em StrongBox quando houver e no TEE caso contrário. Só deve ser chamado quando a chave
+     * atual não está vinculada no contrato, porque a anterior se perde.
+     *
+     * @return chave pública nova, `0x04 ‖ X ‖ Y` (65 bytes).
+     */
+    @Synchronized
+    fun regenerateWithChallenge(wallet: String, challenge: ByteArray): ByteArray {
+        val alias = alias(wallet)
+        if (keyStore.containsAlias(alias)) keyStore.deleteEntry(alias)
+        generate(alias, challenge)
+        return encodeUncompressed(keyStore.getCertificate(alias).publicKey as ECPublicKey)
+    }
+
+    /**
+     * Cadeia de atestação da chave da carteira, DER da folha para a raiz, como o Keystore entrega.
+     *
+     * @throws IllegalStateException se a carteira ainda não tiver chave neste aparelho.
+     */
+    fun getAttestationChain(wallet: String): List<ByteArray> {
+        val chain = keyStore.getCertificateChain(alias(wallet)) ?: error("sem chave do aparelho para a carteira")
+        return chain.map { it.encoded }
     }
 
     /**
@@ -61,23 +91,24 @@ class DeviceKeyManager @Inject constructor(private val keyStore: KeyStore) {
         if (keyStore.containsAlias(alias)) keyStore.deleteEntry(alias)
     }
 
-    private fun generate(alias: String) {
+    private fun generate(alias: String, challenge: ByteArray? = null) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
-                generate(alias, strongBox = true)
+                generate(alias, strongBox = true, challenge)
                 return
             } catch (_: StrongBoxUnavailableException) {
                 // Sem StrongBox: a chave fica no TEE
             }
         }
-        generate(alias, strongBox = false)
+        generate(alias, strongBox = false, challenge)
     }
 
-    private fun generate(alias: String, strongBox: Boolean) {
+    private fun generate(alias: String, strongBox: Boolean, challenge: ByteArray?) {
         val spec = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN)
             .setAlgorithmParameterSpec(ECGenParameterSpec(CURVE))
             .setDigests(KeyProperties.DIGEST_SHA256)
             .apply { if (strongBox) setIsStrongBoxBacked(true) }
+            .apply { if (challenge != null) setAttestationChallenge(challenge) }
             .build()
         KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, ANDROID_KEYSTORE).run {
             initialize(spec)

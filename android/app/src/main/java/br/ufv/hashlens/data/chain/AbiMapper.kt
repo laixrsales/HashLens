@@ -6,6 +6,7 @@ import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
 import java.math.BigInteger
 import java.time.Instant
+import org.web3j.abi.EventEncoder
 import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.TypeReference
@@ -13,6 +14,7 @@ import org.web3j.abi.datatypes.Address
 import org.web3j.abi.datatypes.DynamicArray
 import org.web3j.abi.datatypes.DynamicBytes
 import org.web3j.abi.datatypes.DynamicStruct
+import org.web3j.abi.datatypes.Event
 import org.web3j.abi.datatypes.Function
 import org.web3j.abi.datatypes.Type
 import org.web3j.abi.datatypes.Utf8String
@@ -21,10 +23,12 @@ import org.web3j.abi.datatypes.generated.Uint256
 import org.web3j.abi.datatypes.generated.Uint32
 import org.web3j.abi.datatypes.generated.Uint64
 import org.web3j.crypto.Keys
+import org.web3j.utils.Numeric
 
 /**
- * Codificação das chamadas `view` do ImageRegistry e decodificação das respostas ABI
- * (`contracts/IImageRegistry.sol`). Endereços saem no formato EIP-55; ids 0 ("inexistente") viram `null`.
+ * Codificação das chamadas `view` do ImageRegistry v2 e decodificação das respostas ABI e do evento
+ * `DeviceAttested` (`contracts/IImageRegistry.sol`). Endereços saem no formato EIP-55; ids 0
+ * ("inexistente") viram `null`.
  */
 // Uma função de chamada e uma de resposta por função `view` do contrato
 @Suppress("TooManyFunctions")
@@ -75,8 +79,37 @@ object AbiMapper {
         return Device(
             id = id,
             owner = Keys.toChecksumAddress(struct.owner.value),
-            publicKey = struct.publicKey.value
+            publicKey = struct.publicKey.value,
+            registeredAt = Instant.ofEpochSecond(struct.registeredAt.value.toLongExact()),
+            attestationHash = struct.attestationHash.value,
+            registeredBlock = struct.registeredBlock.value.toLongExact()
         )
+    }
+
+    // ─────────────── Evento DeviceAttested ───────────────
+
+    /** `topics[0]` de `DeviceAttested(uint32 indexed deviceId, bytes[] attestationChain)`. */
+    val DEVICE_ATTESTED_TOPIC: String = EventEncoder.encode(
+        Event(
+            "DeviceAttested",
+            listOf(object : TypeReference<Uint32>(true) {}, object : TypeReference<DynamicArray<DynamicBytes>>() {})
+        )
+    )
+
+    /** `topics[1]` de um evento com `uint32 indexed deviceId`: o id em 32 bytes. */
+    fun deviceIdTopic(deviceId: Int): String =
+        Numeric.toHexStringWithPrefixZeroPadded(BigInteger.valueOf(deviceId.toLong()), TOPIC_HEX_LENGTH)
+
+    /**
+     * Cadeia de atestação publicada no vínculo (DER, da folha para a raiz); `null` se [log] não for
+     * o `DeviceAttested` do aparelho [deviceId]. Dados que não decodificam viram
+     * [IllegalArgumentException].
+     */
+    fun decodeAttestationChain(log: RawLog, deviceId: Int): List<ByteArray>? {
+        val isEvent = log.topics.getOrNull(0).equals(DEVICE_ATTESTED_TOPIC, ignoreCase = true) &&
+            log.topics.getOrNull(1).equals(deviceIdTopic(deviceId), ignoreCase = true)
+        if (!isEvent) return null
+        return decodeSingle(log.data, object : TypeReference<DynamicArray<DynamicBytes>>() {}).value.map { it.value }
     }
 
     /** Resposta de `getDevicesOf` (`uint32[]`). */
@@ -92,6 +125,9 @@ object AbiMapper {
         decodeSingle(response, object : TypeReference<Uint256>() {}).value.toLongExact()
 
     // ─────────────── Apoio ───────────────
+
+    /** Um tópico é uma palavra de 32 bytes: 64 dígitos hex. */
+    private const val TOPIC_HEX_LENGTH = 64
 
     private val RESPONSE = Regex("0x([0-9a-fA-F]{64})+")
 
@@ -146,7 +182,13 @@ object AbiMapper {
         id, sha256Hash, pHash, parentId, originalId, registrant, deviceId, sigR, sigS, timestamp, operations
     )
 
-    /** `Device` do contrato, na ordem dos campos. */
-    class DeviceStruct(val id: Uint32, val owner: Address, val publicKey: DynamicBytes, val registeredAt: Uint64) :
-        DynamicStruct(id, owner, publicKey, registeredAt)
+    /** `Device` do contrato v2, na ordem dos campos. */
+    class DeviceStruct(
+        val id: Uint32,
+        val owner: Address,
+        val publicKey: DynamicBytes,
+        val registeredAt: Uint64,
+        val attestationHash: Bytes32,
+        val registeredBlock: Uint64
+    ) : DynamicStruct(id, owner, publicKey, registeredAt, attestationHash, registeredBlock)
 }

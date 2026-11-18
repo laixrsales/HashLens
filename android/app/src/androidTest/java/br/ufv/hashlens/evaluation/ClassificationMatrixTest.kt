@@ -8,6 +8,7 @@ import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.hashing.PerceptualHasher
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.data.chain.RegistryReader
+import br.ufv.hashlens.data.chain.Web3jChainRpc
 import br.ufv.hashlens.data.chain.Web3jEthCall
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.usecase.VerifyImageUseCase
@@ -80,7 +81,9 @@ class ClassificationMatrixTest {
         val verify = VerifyImageUseCase(
             Sha256Hasher(),
             PerceptualHasher(),
-            RegistryReader(config, Web3jEthCall(Web3j.build(HttpService(config.rpcUrl))), Dispatchers.IO),
+            Web3j.build(HttpService(config.rpcUrl)).let { web3j ->
+                RegistryReader(config, Web3jEthCall(web3j), Web3jChainRpc(web3j), Dispatchers.IO)
+            },
             DeviceSignatureVerifier(config),
             Dispatchers.Default
         )

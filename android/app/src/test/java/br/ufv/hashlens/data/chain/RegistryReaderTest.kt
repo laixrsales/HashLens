@@ -7,13 +7,19 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-/** T028: [RegistryReader] sobre as respostas capturadas e mapeamento de falhas para [RegistryException]. */
+/**
+ * 002/T028 e 020/T024: [RegistryReader] sobre as respostas capturadas e mapeamento de falhas para
+ * [RegistryException].
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RegistryReaderTest {
     private val config = ChainConfig(rpcUrl = "", registryAddress = ChainResponses.contract, reownProjectId = "")
@@ -25,7 +31,54 @@ class RegistryReaderTest {
         ChainResponses.calls.first { it.calldata == data }.response
     }
 
-    private fun reader(ethCall: EthCall = captured) = RegistryReader(config, ethCall, UnconfinedTestDispatcher())
+    private val rpc = mockk<ChainRpc>()
+
+    private fun reader(ethCall: EthCall = captured) = RegistryReader(config, ethCall, rpc, UnconfinedTestDispatcher())
+
+    @Test
+    fun `getAttestationChain busca so o bloco do vinculo, pelo evento e pelo deviceId`() = runTest {
+        val block = ChainResponses.deviceBlock
+        every { rpc.getLogs(any(), any(), any(), any()) } returns ChainResponses.logs("DeviceAttested aparelho 1")
+
+        val chain = reader().getAttestationChain(deviceId = 1, block = block)
+
+        chain!!.map { it.toList() } shouldBe ChainResponses.deviceChain.map { it.toList() }
+        verify {
+            rpc.getLogs(
+                ChainResponses.contract,
+                listOf(AbiMapper.DEVICE_ATTESTED_TOPIC, "0x" + "0".repeat(63) + "1"),
+                block,
+                block
+            )
+        }
+    }
+
+    @Test
+    fun `getAttestationChain sem log no bloco devolve null`() = runTest {
+        every { rpc.getLogs(any(), any(), any(), any()) } returns emptyList()
+
+        reader().getAttestationChain(deviceId = 1, block = 5).shouldBeNull()
+    }
+
+    @Test
+    fun `getAttestationChain ignora logs de outro aparelho que o no devolva`() = runTest {
+        val other = ChainResponses.logs("DeviceAttested aparelho 1").single().let {
+            it.copy(topics = listOf(it.topics[0], "0x" + "0".repeat(63) + "2"))
+        }
+        every { rpc.getLogs(any(), any(), any(), any()) } returns listOf(other)
+
+        reader().getAttestationChain(deviceId = 1, block = 5).shouldBeNull()
+    }
+
+    @Test
+    fun `getAttestationChain com falha de rede ou log ilegivel sai como RegistryException`() = runTest {
+        every { rpc.getLogs(any(), any(), any(), any()) } throws RegistryException.Network(IOException("offline"))
+        shouldThrow<RegistryException.Network> { reader().getAttestationChain(1, 5) }
+
+        val log = ChainResponses.logs("DeviceAttested aparelho 1").single()
+        every { rpc.getLogs(any(), any(), any(), any()) } returns listOf(log.copy(data = "0x00"))
+        shouldThrow<RegistryException.InvalidResponse> { reader().getAttestationChain(1, 5) }
+    }
 
     @Test
     fun `lê registros, aparelhos e índices`() = runTest {
@@ -37,6 +90,7 @@ class RegistryReaderTest {
         reader.getIdsByPHash(original.payload.pHash) shouldBe listOf(1L, 2L)
         reader.getChildren(1L) shouldBe listOf(2L)
         reader.getDevice(1)?.owner shouldBe ChainResponses.wallet
+        reader.getDevice(1)?.registeredBlock shouldBe ChainResponses.deviceBlock
         reader.getDevice(99).shouldBeNull()
         reader.getDevicesOf(ChainResponses.wallet) shouldBe listOf(1)
         reader.totalRecords() shouldBe 2L

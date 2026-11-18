@@ -40,6 +40,7 @@ object ChainModule {
     fun registryReader(
         config: ChainConfig,
         ethCall: EthCall,
+        rpc: ChainRpc,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
-    ): RegistryReader = RegistryReader(config, ethCall, ioDispatcher)
+    ): RegistryReader = RegistryReader(config, ethCall, rpc, ioDispatcher)
 }

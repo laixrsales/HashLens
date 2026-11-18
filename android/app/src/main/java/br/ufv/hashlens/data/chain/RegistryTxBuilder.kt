@@ -11,6 +11,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.web3j.abi.FunctionEncoder
+import org.web3j.abi.datatypes.DynamicArray
 import org.web3j.abi.datatypes.DynamicBytes
 import org.web3j.abi.datatypes.Function
 import org.web3j.abi.datatypes.Type
@@ -73,12 +74,29 @@ class RegistryTxBuilder @Inject constructor(
         private const val MAX_OPERATIONS_BYTES = 256
         private const val COMPONENT_SIZE = SignatureCodec.RAW_SIZE / 2
 
-        /** `registerDevice(bytes publicKey)` com a chave P-256 não comprimida (65 bytes, `0x04 ‖ X ‖ Y`). */
-        fun registerDevice(publicKey: ByteArray): String {
+        /**
+         * `registerDevice(bytes publicKey, bytes[] attestationChain, uint64 deadline, bytes authorization)`
+         * do contrato v2 (020 device-authorization.md): chave P-256 não comprimida (65 bytes,
+         * `0x04 ‖ X ‖ Y`), cadeia DER da folha para a raiz, prazo e assinatura `r ‖ s ‖ v` do
+         * atestador. A cadeia e a autorização vão como recebidas; quem as confere é o contrato.
+         */
+        fun registerDevice(
+            publicKey: ByteArray,
+            attestationChain: List<ByteArray>,
+            deadline: Long,
+            authorization: ByteArray
+        ): String {
             require(publicKey.size == P256.UNCOMPRESSED_KEY_SIZE && publicKey[0] == UNCOMPRESSED_PREFIX) {
                 "chave pública deve ter ${P256.UNCOMPRESSED_KEY_SIZE} bytes e prefixo 0x04"
             }
-            return encode("registerDevice", DynamicBytes(publicKey))
+            require(deadline >= 0) { "prazo negativo" }
+            return encode(
+                "registerDevice",
+                DynamicBytes(publicKey),
+                DynamicArray(DynamicBytes::class.java, attestationChain.map(::DynamicBytes)),
+                Uint64(deadline),
+                DynamicBytes(authorization)
+            )
         }
 
         /** `registerCapture(sha256Hash, pHash, deviceId, sigR, sigS)`; [signature] em `r ‖ s` (64 bytes). */

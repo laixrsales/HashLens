@@ -1,5 +1,6 @@
 package br.ufv.hashlens.core.crypto
 
+import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.domain.model.ImageRecord
@@ -21,7 +22,7 @@ class DeviceSignatureVerifierTest {
         reownProjectId = ""
     )
     private val verifier = DeviceSignatureVerifier(config)
-    private val device = Device(
+    private val device = TestDevices.device(
         id = original.payload.deviceId,
         owner = original.payload.registrant,
         publicKey = SignatureVectors.publicKeyBytes
