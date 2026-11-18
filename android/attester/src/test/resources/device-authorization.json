@@ -1,0 +1,30 @@
+{
+  "deviceAuthorization": "v1",
+  "geradoPor": "cast 1.8.4 (cast wallet sign --data --from-file), 020/T009",
+  "observacao": "Chave do atestador só de teste: keccak256(\"hashlens-attester-test-key\"). A chave pública, a carteira e o contrato são os mesmos dos vetores de assinatura da 002 (android/app/src/test/resources/signature/vectors.json). A cadeia é fictícia: só os bytes importam para o attestationHash.",
+  "attester": {
+    "privateKey": "0x5ced8e422ac212abb5fb6540ee60873cd437259e2c5fecfdfe4c140710f5299d",
+    "address": "0x646BBcC419D6176Ec8371ac6D463f412AdbFf6fc"
+  },
+  "domain": {
+    "name": "HashLens ImageRegistry",
+    "version": "2",
+    "chainId": 11155111,
+    "verifyingContract": "0xF2f42B34414936e456c6AC10c4844f456CAD65Ba"
+  },
+  "input": {
+    "publicKey": "0x04f19439cc5644128a8b42082317b7a378e4acbf2b8ae078f8c20fe7b0733c25a882b4897b6fcdb2c8a562e629ccbbf862ae6025528e5e07f552d3c690ca92a85a",
+    "attestationChain": ["0x3082010a0201", "0x30820204a003020102", "0x308201e2"]
+  },
+  "message": {
+    "wallet": "0x1234567890AbcdEF1234567890aBcdef12345678",
+    "publicKeyHash": "0xa33b1877acdfa2578b0c092440687c7110b2930366d0d3c706f399146f8d0c08",
+    "attestationHash": "0x59b252464a076c3e44a538e290b635269af7132d0f0401113a2c5000646352fd",
+    "deadline": 1767225600
+  },
+  "typeHash": "0xfe33b668f6cfba7d0065766d363e740d96fb27b601cfe5d217de09bec0d3f4eb",
+  "domainSeparator": "0xef40b9c17df3e4cdf0f9962eb7ba3e60da716e5246c5ffc99c046393b6796fc1",
+  "structHash": "0x1c83cf07c0dce63162437d046be8efa24a76ff79d6dac758a80036f4f1dc15a8",
+  "digest": "0xf215fa013ee364431a48d62e7ce49900fb0505269d98f56c6219475a7458f0af",
+  "signature": "0xe373075493b0ea8fe31ec6ec1dd2c1ca1250f7e832031b0402fabe937eeea36359f59ec88fbf9e12017aff2c8bfb026a55cde4f1930cb4f2ce707c15b7185c621b"
+}

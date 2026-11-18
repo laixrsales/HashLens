@@ -189,6 +189,13 @@ true`; `osPatchLevel` com no máximo 24 meses em relação a `emitidoEm`; pacote
   permite conferir que o evento lido é o original, e o bloco gravado permite buscar o evento com
   `eth_getLogs` num único bloco, dentro do limite de intervalo dos nós públicos. ⚠️ Medir o gás
   real de `registerDevice` nos testes (estimativa: 200 a 400 mil).
+- **Gás medido** (T014, 2026-11-18, `forge test --gas-report`, `evm_version = "osaka"`, medianas
+  da suíte; cadeia fictícia de 3 certificados curtos): `registerDevice` ≈ 310.000,
+  `registerCapture` ≈ 302.000, `registerEdit` ≈ 373.000. No teste de escala, cada registro ficou
+  ≈ 24.500 mais caro que na v1 (`registerCapture` 283.074 → 307.516; `registerEdit` 353.554 →
+  378.063): o P256VERIFY (6.900) mais a leitura fria dos 3 slots da chave pública do aparelho e o
+  SHA-256 do payload. O custo continua constante até 10.000 registros. O `registerDevice` com uma
+  cadeia real (2 a 4 KB de calldata e de log) e os valores na Sepolia ficam para T040 e T062.
 - **Alternatives considered**: IPFS com hash on-chain (outro serviço para manter; dado pode
   sumir); cadeia em storage (custo).
 

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {IImageRegistry} from "../src/IImageRegistry.sol";
-import {ImageRegistry} from "../src/ImageRegistry.sol";
-import {Test, console2} from "forge-std/Test.sol";
+import {RegistryTestBase} from "./helpers/RegistryTestBase.sol";
+import {console2} from "forge-std/Test.sol";
 
 /// T093: escalabilidade do ImageRegistry até 10.000 registros (plan "Scale/Scope", seção 4.4.3 do TCC).
 ///
@@ -15,14 +15,15 @@ import {Test, console2} from "forge-std/Test.sol";
 /// Medidas com o armazenamento frio (`vm.cool`), como no início de uma transação real. São gás de
 /// execução da chamada: sem os 21.000 de toda transação e sem o custo do calldata. Os valores vão para
 /// `snapshots/ImageRegistryScale.json` (TCC) e aparecem com `forge test --match-contract Scale -vv`.
-contract ImageRegistryScaleTest is Test {
-    ImageRegistry internal registry;
+///
+/// v2 (020/T012): o aparelho é vinculado com autorização do atestador de teste e cada registro leva uma
+/// assinatura P-256 real (`vm.signP256`), verificada pelo contrato. A assinatura é gerada antes da medida,
+/// então o gás medido continua sendo só o da chamada ao contrato (agora com o P256VERIFY).
+contract ImageRegistryScaleTest is RegistryTestBase {
     uint32 internal deviceId;
 
     address internal alice = makeAddr("alice");
 
-    bytes32 internal constant SIG_R = bytes32(uint256(0x1111));
-    bytes32 internal constant SIG_S = bytes32(uint256(0x2222));
     uint64 internal constant SHARED_PHASH = 0x8f3ac1e07b52d496;
     string internal constant GROUP = "ImageRegistryScale";
 
@@ -33,9 +34,9 @@ contract ImageRegistryScaleTest is Test {
     uint256 internal constant SAME_COST = 0.01e18;
 
     function setUp() public {
-        registry = new ImageRegistry();
-        vm.prank(alice);
-        deviceId = registry.registerDevice(abi.encodePacked(bytes1(0x04), keccak256("x"), keccak256("y")));
+        _setUpAttester();
+        _deployRegistry();
+        deviceId = _device(alice, 1);
         vm.startPrank(alice);
     }
 
@@ -64,43 +65,56 @@ contract ImageRegistryScaleTest is Test {
         return uint64(uint256(hash));
     }
 
-    /// Registra a captura [i] e devolve a memória que a chamada reservou para o retorno (32 bytes que o
-    /// Solidity não libera): em 10.000 registros seriam 320 KB, e a expansão de memória entraria nas medidas.
+    /// Registra a captura [i] e devolve a memória que a chamada e a assinatura reservaram (o Solidity não
+    /// libera): em 10.000 registros seriam centenas de KB, e a expansão de memória entraria nas medidas.
     function _capture(uint256 i, uint64 pHash) internal returns (uint256 id) {
-        uint256 freePointer;
-        assembly ("memory-safe") {
-            freePointer := mload(0x40)
-        }
-        id = registry.registerCapture(_sha(i), pHash, deviceId, SIG_R, SIG_S);
-        assembly ("memory-safe") {
-            mstore(0x40, freePointer)
-        }
+        uint256 freePointer = _freePointer();
+        (bytes32 r, bytes32 s) = _sign(alice, deviceId, _sha(i), pHash, 0, "");
+        id = registry.registerCapture(_sha(i), pHash, deviceId, r, s);
+        _restoreFreePointer(freePointer);
     }
 
     function _edit(uint256 parentId, uint256 i) internal returns (uint256 id) {
-        uint256 freePointer;
+        uint256 freePointer = _freePointer();
+        (bytes32 r, bytes32 s) = _sign(alice, deviceId, _sha(i), _pHash(i), parentId, "grayscale");
+        id = registry.registerEdit(parentId, _sha(i), _pHash(i), deviceId, r, s, "grayscale");
+        _restoreFreePointer(freePointer);
+    }
+
+    function _freePointer() internal pure returns (uint256 freePointer) {
         assembly ("memory-safe") {
             freePointer := mload(0x40)
         }
-        id = registry.registerEdit(parentId, _sha(i), _pHash(i), deviceId, SIG_R, SIG_S, "grayscale");
+    }
+
+    function _restoreFreePointer(uint256 freePointer) internal pure {
         assembly ("memory-safe") {
             mstore(0x40, freePointer)
         }
     }
 
-    /// Gás de execução de registrar a captura [i], com o armazenamento frio.
+    /// Gás de execução de registrar a captura [i], com o armazenamento frio; assina antes de medir.
     function _measureCapture(uint256 i, uint64 pHash) internal returns (uint256 gasUsed) {
+        uint256 freePointer = _freePointer();
+        (bytes32 r, bytes32 s) = _sign(alice, deviceId, _sha(i), pHash, 0, "");
+        bytes32 sha = _sha(i);
         vm.cool(address(registry));
         uint256 before = gasleft();
-        _capture(i, pHash);
+        registry.registerCapture(sha, pHash, deviceId, r, s);
         gasUsed = before - gasleft();
+        _restoreFreePointer(freePointer);
     }
 
     function _measureEdit(uint256 parentId, uint256 i) internal returns (uint256 gasUsed) {
+        uint256 freePointer = _freePointer();
+        (bytes32 r, bytes32 s) = _sign(alice, deviceId, _sha(i), _pHash(i), parentId, "grayscale");
+        bytes32 sha = _sha(i);
+        uint64 pHash = _pHash(i);
         vm.cool(address(registry));
         uint256 before = gasleft();
-        _edit(parentId, i);
+        registry.registerEdit(parentId, sha, pHash, deviceId, r, s, "grayscale");
         gasUsed = before - gasleft();
+        _restoreFreePointer(freePointer);
     }
 
     function _record(string memory name, uint256 value) internal {

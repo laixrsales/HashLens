@@ -32,12 +32,22 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --gas-es
 
 Fazer dois deploys, cada um com o seu `ATTESTER_ADDRESS`, e registrar na tabela:
 
-| Data | Deploy          | Endereço `ImageRegistry` | Bloco | Atestador | Commit |
-| ---- | --------------- | ------------------------ | ----- | --------- | ------ |
-|      | desenvolvimento |                          |       |           |        |
-|      | avaliação       |                          |       |           |        |
+| Data       | Deploy          | Endereço `ImageRegistry`                     | Bloco    | Atestador                                    | Commit                                                       |
+| ---------- | --------------- | -------------------------------------------- | -------- | -------------------------------------------- | ------------------------------------------------------------ |
+| 2026-11-18 | desenvolvimento | `0xfBa7aeDa5e979F88336b35e81A1780b4655BAe6E` | 12163212 | `0x308F1744DFA756A4ADdfd852D2BeAAF13C1F586e` | branch `feature/022-contrato-v2-atestacao` (antes do commit) |
+|            | avaliação       |                                              |          |                                              |                                                              |
 
 O contrato da 002 (`0xF2f42B34…65Ba`) deixa de ser lido (clarificação Q3).
+
+- São três carteiras diferentes: a do **atestador** (`cast wallet new`; só o endereço entra no
+  deploy, em `ATTESTER_ADDRESS`, e ela não precisa de saldo), a de **deploy** (chave em
+  `DEPLOYER_PRIVATE_KEY`; é ela que paga o gás e precisa de SepoliaETH) e a da pessoa no app. Com a
+  chave do atestador em `DEPLOYER_PRIVATE_KEY`, o forge falha com `insufficient funds ... have 0`.
+- `DEPLOYER_PRIVATE_KEY` vale com ou sem `0x` (a MetaMask exporta sem). Para não deixar a chave no
+  histórico do terminal: `read -s DEPLOYER_PRIVATE_KEY && export DEPLOYER_PRIVATE_KEY`. O script
+  mostra a `carteira de deploy` antes de enviar.
+- Como na 002, a Sepolia cobra a criação bem acima da simulação local: o deploy de desenvolvimento
+  usou 10.916.050 de gás (tx `0x07c5a1ea…5a54`); por isso o `--gas-estimate-multiplier 800`.
 
 ## 3. Atestador
 
