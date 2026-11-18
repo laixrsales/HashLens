@@ -30,6 +30,8 @@ dependencies {
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.kotest.assertions.core)
+    // Leitura das cadeias de referência em JSON (src/test/resources/attestation/)
+    testImplementation(libs.gson)
 }
 
 tasks.test {

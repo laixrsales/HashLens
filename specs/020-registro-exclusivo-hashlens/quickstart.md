@@ -32,10 +32,10 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --gas-es
 
 Fazer dois deploys, cada um com o seu `ATTESTER_ADDRESS`, e registrar na tabela:
 
-| Data       | Deploy          | Endereço `ImageRegistry`                     | Bloco    | Atestador                                    | Commit                                                       |
-| ---------- | --------------- | -------------------------------------------- | -------- | -------------------------------------------- | ------------------------------------------------------------ |
-| 2026-11-18 | desenvolvimento | `0xfBa7aeDa5e979F88336b35e81A1780b4655BAe6E` | 12163212 | `0x308F1744DFA756A4ADdfd852D2BeAAF13C1F586e` | branch `feature/022-contrato-v2-atestacao` (antes do commit) |
-|            | avaliação       |                                              |          |                                              |                                                              |
+| Data       | Deploy          | Endereço `ImageRegistry`                     | Bloco    | Atestador                                    | Commit    |
+| ---------- | --------------- | -------------------------------------------- | -------- | -------------------------------------------- | --------- |
+| 2026-11-18 | desenvolvimento | `0xfBa7aeDa5e979F88336b35e81A1780b4655BAe6E` | 12163212 | `0x308F1744DFA756A4ADdfd852D2BeAAF13C1F586e` | `562550e` |
+|            | avaliação       |                                              |          |                                              |           |
 
 O contrato da 002 (`0xF2f42B34…65Ba`) deixa de ser lido (clarificação Q3).
 
