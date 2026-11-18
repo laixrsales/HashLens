@@ -30,6 +30,18 @@ val pendingTimeoutMinutes = localProperty("registry.pendingTimeoutMinutes")
 // Bloco do deploy do ImageRegistry: início da busca de eventos (transação de cada registro); 0 busca desde a origem
 val registryDeployBlock = localProperty("registry.deployBlock").toLongOrNull()?.takeIf { it >= 0 } ?: 0L
 
+// SHA-256 (hex) dos certificados de assinatura do APK aceitos na verificação, separados por vírgula;
+// mesmo valor de ATTESTER_ALLOWED_CERT_DIGESTS no atestador do deploy (020 research R8)
+val attesterAllowedCertDigests = localProperty("attester.allowedCertDigests")
+    .split(",")
+    .map { it.trim().lowercase().removePrefix("0x").replace(":", "") }
+    .filter { it.isNotEmpty() }
+    .joinToString(",")
+
+// Keystore de release da autora, fora do Git (020 research R8). Sem release.storeFile, o build de
+// release sai sem assinatura, como antes.
+val releaseStoreFile = localProperty("release.storeFile").takeIf { it.isNotEmpty() }?.let(rootProject::file)
+
 android {
     namespace = "br.ufv.hashlens"
     compileSdk = 37
@@ -48,11 +60,25 @@ android {
         buildConfigField("String", "REOWN_PROJECT_ID", "\"${localProperty("reown.projectId")}\"")
         buildConfigField("int", "PENDING_TIMEOUT_MINUTES", pendingTimeoutMinutes.toString())
         buildConfigField("long", "REGISTRY_DEPLOY_BLOCK", "${registryDeployBlock}L")
+        buildConfigField("String", "ATTESTER_URL", "\"${localProperty("attester.url")}\"")
+        buildConfigField("String", "ATTESTER_ALLOWED_CERT_DIGESTS", "\"$attesterAllowedCertDigests\"")
+    }
+
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = localProperty("release.storePassword")
+                keyAlias = localProperty("release.keyAlias")
+                keyPassword = localProperty("release.keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 
@@ -146,6 +172,9 @@ dependencies {
     implementation(libs.androidx.exifinterface)
     implementation(libs.opencv)
 
+    // Política de atestação compartilhada com o atestador (020 research R4)
+    implementation(project(":attestation"))
+
     // Blockchain e carteira
     implementation(libs.web3j.core)
     implementation(platform(libs.reown.bom))
@@ -182,6 +211,7 @@ dependencies {
     // Accessibility Test Framework, o motor do Accessibility Scanner (auditoria da T097)
     androidTestImplementation(libs.accessibility.test.framework)
     androidTestImplementation(libs.guava)
+    androidTestImplementation(libs.checker.qual)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.kotest.assertions.core)
     androidTestImplementation(libs.hilt.android.testing)

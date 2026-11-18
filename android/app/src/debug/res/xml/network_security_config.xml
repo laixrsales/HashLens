@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Só no build de debug: libera HTTP sem TLS para o atestador local, acessado pelo aparelho via
+  `adb reverse tcp:8080 tcp:8080` (020 research R9). Todo o resto continua só HTTPS, e o build de
+  release não tem esta exceção.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

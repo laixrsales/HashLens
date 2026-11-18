@@ -55,9 +55,20 @@ do escopo). Os demais itens da 002 continuam valendo.
   pelo aplicativo. Ela valida a cadeia até as raízes do Google, trata a validade dos certificados
   RKP e de fábrica, consulta a lista de revogação e devolve chave pública, nível de segurança,
   estado de boot e dados do aplicativo. A política do HashLens (R7) fica numa camada própria por
-  cima dela. ⚠️ A biblioteca não é publicada no Maven: entra como submódulo Git em
-  `android/third_party/keyattestation`, fixado num commit, e incluída no build. Confirmar no
-  setup que ela roda no Android (minSdk 26) além da JVM.
+  cima dela. ⚠️ Confirmar no setup que ela roda no Android (minSdk 26) além da JVM.
+- **Inclusão no build** (T001, 2026-11-06): a biblioteca não é publicada no Maven. Entra como
+  submódulo Git em `android/third_party/keyattestation`, fixado no commit `0e3ac2f`
+  (2026-10-30). O build próprio dela não roda dentro do nosso, porque o plugin foojay 0.8.0 que
+  ela usa é incompatível com o Gradle 9. Por isso o módulo `:keyattestation`
+  (`android/keyattestation/build.gradle.kts`) compila os fontes do submódulo com o Kotlin e o alvo
+  JVM 17 deste build, gera `GoogleTrustAnchors` a partir de `roots.json` como o build original e
+  roda os 186 testes originais da biblioteca, todos verdes. As dependências usam as versões do
+  build dela.
+- **No Android** (T004, 2026-11-18): confirmado. O app depende de `:attestation` e o teste
+  instrumentado `AttestationLibraryOnDeviceTest` gera uma chave P-256 com desafio no Keystore e
+  roda o `Verifier` da biblioteca no próprio aparelho, com as raízes do Google embutidas: resultado
+  `Success`, cadeia com 4 certificados, `TRUSTED_ENVIRONMENT`, boot `VERIFIED`, bootloader travado
+  (Samsung SM-M526B, Android 13, patch 2025-05-01). O plano B não é necessário.
 - **Rationale**: a documentação oficial diz que a biblioteca "é bem testada e cobre casos que
   verificadores próprios costumam esquecer" (só a primeira extensão da cadeia vale, expiração de
   chaves de fábrica × RKP, rotação de raízes). Um só código para o atestador e para o app garante
