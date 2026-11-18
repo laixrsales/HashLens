@@ -15,5 +15,10 @@ object CalldataVectors {
         stream.use { ObjectMapper().readTree(it) }
     }
 
-    fun calldata(name: String): String = root["calldata"].single { it["nome"].asText() == name }["calldata"].asText()
+    fun calldata(name: String): String = entry(name)["calldata"].asText()
+
+    /** Argumentos usados no `cast calldata` da entrada [name]. */
+    fun arguments(name: String): JsonNode = entry(name)["argumentos"]
+
+    private fun entry(name: String): JsonNode = root["calldata"].single { it["nome"].asText() == name }
 }

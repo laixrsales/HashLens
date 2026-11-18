@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Captura respostas ABI reais das funções `view` do ImageRegistry (T027) e os recibos das
-# transações de escrita (T050).
+# Captura respostas ABI reais das funções `view` do ImageRegistry (002/T027; v2 em 020/T023) e os
+# recibos das transações de escrita (002/T050).
 #
-# Sobe um anvil local, coloca o bytecode do ImageRegistry no endereço da Sepolia usado nos
-# vetores de assinatura, registra o aparelho e os dois casos de
+# Sobe um anvil local com o chainId da Sepolia, roda o construtor do ImageRegistry v2 no endereço
+# usado nos vetores de assinatura (o separador EIP-712 é `immutable` e depende do endereço e da
+# rede), com o atestador de teste de contracts/test/vectors/device-authorization.json. Vincula a
+# chave dos vetores com uma autorização assinada na hora por essa chave de teste e a cadeia real de
+# android/attestation/src/test/resources/attestation/real/ (o contrato não confere a cadeia, só o
+# hash), registra os dois casos de
 # android/app/src/test/resources/signature/vectors.json pela carteira dos vetores
 # (anvil_impersonateAccount) e grava as respostas brutas de `cast call` em
-# android/app/src/test/resources/chain/responses.json; os recibos (inclusive o de uma captura
+# android/app/src/test/resources/chain/responses.json, com o `eth_getLogs` do evento DeviceAttested;
+# os recibos (inclusive o de uma captura
 # repetida, que reverte com AlreadyRegistered) vão para chain/receipts.json. Como contrato, carteira, deviceId e
 # parentId batem com os vetores, as assinaturas dos registros capturados são válidas.
 #
@@ -14,12 +19,14 @@
 #
 #     tools/chain/capturar_respostas.sh
 #
-# Não usa chave real nem rede pública. Os horários dos blocos são fixos, então a saída é sempre igual.
+# Não usa chave real nem rede pública (a chave do atestador é a de teste, pública no vetor). Os horários dos blocos são fixos, então a saída é sempre igual.
 
 set -euo pipefail
 
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
 VETORES="$RAIZ/android/app/src/test/resources/signature/vectors.json"
+VETOR_AUTORIZACAO="$RAIZ/contracts/test/vectors/device-authorization.json"
+CADEIA_REAL="$RAIZ/android/attestation/src/test/resources/attestation/real/SM_M526B-tee.json"
 SAIDA="$RAIZ/android/app/src/test/resources/chain/responses.json"
 SAIDA_RECIBOS="$RAIZ/android/app/src/test/resources/chain/receipts.json"
 PORTA=8547
@@ -32,7 +39,7 @@ T_CAPTURA=1791320460
 T_EDICAO=1791320520
 T_REPETIDA=1791320580
 
-anvil --port "$PORTA" --silent --timestamp "$((T_APARELHO - 60))" &
+anvil --port "$PORTA" --silent --chain-id 11155111 --timestamp "$((T_APARELHO - 60))" &
 ANVIL_PID=$!
 trap 'kill "$ANVIL_PID" 2>/dev/null || true' EXIT
 until cast chain-id --rpc-url "$RPC" >/dev/null 2>&1; do sleep 0.2; done
@@ -42,13 +49,36 @@ CONTRATO=$(vetor '.casos[0].campos.contract')
 CARTEIRA=$(vetor '.casos[0].campos.registrant')
 CHAVE_PUBLICA=0x$(vetor '.publicKey')
 
-# Bytecode do ImageRegistry no mesmo endereço da Sepolia (o contrato não tem construtor com estado)
-# (deploy temporário pela primeira conta do anvil, já desbloqueada: nenhuma chave é usada)
-BYTECODE=$(cd "$RAIZ/contracts" && forge inspect ImageRegistry bytecode)
-CONTA_ANVIL=$(cast rpc eth_accounts --rpc-url "$RPC" | jq -r '.[0]')
-TEMPORARIO=$(cast send --json --from "$CONTA_ANVIL" --unlocked --rpc-url "$RPC" --create "$BYTECODE" |
-    jq -r .contractAddress)
-cast rpc anvil_setCode "$CONTRATO" "$(cast code "$TEMPORARIO" --rpc-url "$RPC")" --rpc-url "$RPC" >/dev/null
+ATESTADOR=$(jq -r '.attester.address' "$VETOR_AUTORIZACAO")
+CHAVE_ATESTADOR=$(jq -r '.attester.privateKey' "$VETOR_AUTORIZACAO")
+
+# Construtor do ImageRegistry v2 rodando no próprio endereço dos vetores, como o deployCodeTo do
+# forge: o código de criação vira o código da conta, um eth_call sem dados executa o construtor
+# (address(this) e chainid certos) e devolve o código de execução, que substitui o de criação. O
+# construtor só define `immutable`s, então não há estado a copiar.
+CRIACAO=$(cd "$RAIZ/contracts" && forge inspect ImageRegistry bytecode)$(cast abi-encode "f(address)" "$ATESTADOR" | cut -c3-)
+cast rpc anvil_setCode "$CONTRATO" "$CRIACAO" --rpc-url "$RPC" >/dev/null
+EXECUCAO=$(cast call "$CONTRATO" --rpc-url "$RPC")
+cast rpc anvil_setCode "$CONTRATO" "$EXECUCAO" --rpc-url "$RPC" >/dev/null
+[[ "$(cast call "$CONTRATO" "attester()(address)" --rpc-url "$RPC")" == "$ATESTADOR" ]]
+
+# Cadeia real em hex (DER, da folha para a raiz) e a autorização EIP-712 do atestador de teste
+CADEIA="[$(python3 -c 'import base64,json,sys; print(",".join("0x"+base64.b64decode(c).hex() for c in json.load(open(sys.argv[1]))["chain"]))' "$CADEIA_REAL")]"
+PRAZO=$((T_APARELHO + 900))
+HASH_CADEIA=$(cast keccak "$(cast abi-encode "f(bytes[])" "$CADEIA")")
+DADOS_TIPADOS=$(jq -n --arg c "$CONTRATO" --arg w "$CARTEIRA" --arg k "$(cast keccak "$CHAVE_PUBLICA")" \
+    --arg h "$HASH_CADEIA" --argjson d "$PRAZO" '{
+        types: {
+            EIP712Domain: [{name: "name", type: "string"}, {name: "version", type: "string"},
+                {name: "chainId", type: "uint256"}, {name: "verifyingContract", type: "address"}],
+            DeviceAuthorization: [{name: "wallet", type: "address"}, {name: "publicKeyHash", type: "bytes32"},
+                {name: "attestationHash", type: "bytes32"}, {name: "deadline", type: "uint64"}]
+        },
+        primaryType: "DeviceAuthorization",
+        domain: {name: "HashLens ImageRegistry", version: "2", chainId: 11155111, verifyingContract: $c},
+        message: {wallet: $w, publicKeyHash: $k, attestationHash: $h, deadline: $d}
+    }')
+AUTORIZACAO=$(cast wallet sign --data "$DADOS_TIPADOS" --private-key "$CHAVE_ATESTADOR")
 
 cast rpc anvil_impersonateAccount "$CARTEIRA" --rpc-url "$RPC" >/dev/null
 cast rpc anvil_setBalance "$CARTEIRA" 0x56BC75E2D63100000 --rpc-url "$RPC" >/dev/null
@@ -61,7 +91,7 @@ enviar() { # enviar <nome do recibo> <timestamp> <assinatura> <args...> (grava o
     cast rpc evm_setNextBlockTimestamp "$ts" --rpc-url "$RPC" >/dev/null
     # --gas-limit fixo: sem estimativa, uma chamada que reverte também é minerada (recibo com status 0)
     recibo=$(cast send "$CONTRATO" "$@" --from "$CARTEIRA" --unlocked --rpc-url "$RPC" \
-        --gas-limit 500000 --json 2>/dev/null || true)
+        --gas-limit 2000000 --json 2>/dev/null || true)
     recibos=$(jq --arg n "$nome" --argjson r "$recibo" \
         '. + [{nome: $n, status: $r.status, logs: [$r.logs[] | {address, topics, data}]}]' <<<"$recibos")
 }
@@ -83,7 +113,10 @@ registrar() { # registrar <nome do recibo> <timestamp> <índice do caso>
     fi
 }
 
-enviar "registerDevice" "$T_APARELHO" "registerDevice(bytes)" "$CHAVE_PUBLICA"
+enviar "registerDevice" "$T_APARELHO" "registerDevice(bytes,bytes[],uint64,bytes)" \
+    "$CHAVE_PUBLICA" "$CADEIA" "$PRAZO" "$AUTORIZACAO"
+[[ "$(jq -r '.[-1].status' <<<"$recibos")" == "0x1" ]] || { echo "registerDevice falhou" >&2; exit 1; }
+BLOCO_APARELHO=$(cast block-number --rpc-url "$RPC")
 registrar "registerCapture original" "$T_CAPTURA" 0
 registrar "registerEdit edicao" "$T_EDICAO" 1
 
@@ -116,19 +149,33 @@ for chamada in "${chamadas[@]}"; do
         '. + [{nome: $n, funcao: $f, argumento: $a, calldata: $c, resposta: $r}]' <<<"$respostas")
 done
 
+# eth_getLogs do DeviceAttested do aparelho 1, como o app busca: só o bloco do vínculo, tópico deviceId
+BLOCO_HEX=$(printf '0x%x' "$BLOCO_APARELHO")
+TOPICO_EVENTO=$(cast keccak "DeviceAttested(uint32,bytes[])")
+FILTRO=$(jq -cn --arg a "$CONTRATO" --arg b "$BLOCO_HEX" --arg t0 "$TOPICO_EVENTO" \
+    --arg t1 "$(cast to-uint256 1)" '{address: $a, fromBlock: $b, toBlock: $b, topics: [$t0, $t1]}')
+LOGS=$(cast rpc eth_getLogs "$FILTRO" --rpc-url "$RPC" | jq '[.[] | {address, topics, data, blockNumber}]')
+
 # Depois das leituras, para não mudar as respostas: a mesma captura de novo reverte (AlreadyRegistered)
 registrar "registerCapture repetida" "$T_REPETIDA" 0
 
 mkdir -p "$(dirname "$SAIDA")"
 jq -n --arg contrato "$CONTRATO" --arg carteira "$CARTEIRA" \
     --argjson tAparelho "$T_APARELHO" --argjson tCaptura "$T_CAPTURA" --argjson tEdicao "$T_EDICAO" \
-    --argjson respostas "$respostas" '{
+    --argjson blocoAparelho "$BLOCO_APARELHO" --argjson filtro "$FILTRO" --argjson logs "$LOGS" \
+    --argjson cadeia "$(jq '.chain' "$CADEIA_REAL")" --arg hashCadeia "$HASH_CADEIA" \
+    --arg atestador "$ATESTADOR" --argjson respostas "$respostas" '{
         geradoPor: "tools/chain/capturar_respostas.sh",
-        observacao: "Respostas brutas de eth_call (anvil). Registros 1 e 2 são os casos original e edicao de signature/vectors.json, com assinaturas válidas.",
+        observacao: "Respostas brutas de eth_call e eth_getLogs (anvil, ImageRegistry v2). Registros 1 e 2 são os casos original e edicao de signature/vectors.json, com assinaturas válidas. O aparelho 1 foi vinculado com a cadeia real do SM-M526B (attestation/real/) e autorização do atestador de teste.",
         contrato: $contrato,
         carteira: $carteira,
+        atestador: $atestador,
         timestamps: {aparelho: $tAparelho, captura: $tCaptura, edicao: $tEdicao},
-        respostas: $respostas
+        blocoAparelho: $blocoAparelho,
+        cadeiaAparelho: $cadeia,
+        attestationHash: $hashCadeia,
+        respostas: $respostas,
+        logs: [{nome: "DeviceAttested aparelho 1", filtro: $filtro, resposta: $logs}]
     }' >"$SAIDA"
 jq -n --arg contrato "$CONTRATO" --argjson recibos "$recibos" '{
         geradoPor: "tools/chain/capturar_respostas.sh",

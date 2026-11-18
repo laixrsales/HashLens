@@ -1,5 +1,6 @@
 package br.ufv.hashlens.domain.usecase
 
+import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.data.chain.RegistryException
@@ -48,7 +49,7 @@ class ImportForEditUseCaseTest {
         every { signatureVerifier.verify(any(), any()) } returns true
     }
 
-    private fun device(id: Int) = Device(
+    private fun device(id: Int) = TestDevices.device(
         id = id,
         owner = if (id ==
             AUTHOR_DEVICE

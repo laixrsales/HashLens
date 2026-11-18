@@ -19,5 +19,7 @@ data class DeviceBindingEntity(
     /** Nulo até a confirmação de `registerDevice`. */
     val deviceId: Int? = null,
     val txHash: String? = null,
-    val status: RegistrationStatus
+    val status: RegistrationStatus,
+    /** Motivo da última falha quando [status] é `FAILED` (020 data-model §2.1); nulo nos demais. */
+    val failureReason: BindingFailure? = null
 )

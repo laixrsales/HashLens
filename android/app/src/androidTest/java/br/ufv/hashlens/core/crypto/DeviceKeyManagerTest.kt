@@ -1,19 +1,34 @@
 package br.ufv.hashlens.core.crypto
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import br.ufv.hashlens.attestation.AttestationChallenge
+import br.ufv.hashlens.attestation.AttestationPolicy
+import br.ufv.hashlens.attestation.AttestationVerdict
+import br.ufv.hashlens.attestation.ChallengeWindow
+import br.ufv.hashlens.attestation.ExpectedAttestation
+import br.ufv.hashlens.config.ChainConfig
+import com.android.keyattestation.verifier.KeyDescription
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import java.io.ByteArrayInputStream
 import java.math.BigInteger
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.Signature
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.time.Instant
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * T039: chave do aparelho no Android Keystore (research R4 e R25).
+ * 002/T039 e 020/T027: chave do aparelho no Android Keystore (002 research R4 e R25) e a geração
+ * com o desafio da atestação (020 research R11).
  *
  * Instrumentado porque o Android Keystore só existe no aparelho. Usa carteiras fictícias e apaga
  * os aliases criados ao fim de cada teste.
@@ -118,6 +133,65 @@ class DeviceKeyManagerTest {
         val after = manager.getOrCreatePublicKey(WALLET_A)
 
         after.toHexString() shouldNotBe before.toHexString()
+    }
+
+    // ───────────────────────────── Atestação (020/T027) ─────────────
+
+    private val config = ChainConfig.fromBuildConfig()
+
+    private fun challengeFor(wallet: String, issuedAt: Instant = Instant.ofEpochSecond(Instant.now().epochSecond)) =
+        AttestationChallenge(config.chainId, config.registryAddress, wallet, issuedAt)
+
+    @Test
+    fun regenerarComDesafioTrocaAChaveDoAlias() {
+        val before = manager.getOrCreatePublicKey(WALLET_A)
+
+        val after = manager.regenerateWithChallenge(WALLET_A, challengeFor(WALLET_A).encode())
+
+        after.toHexString() shouldNotBe before.toHexString()
+        manager.getOrCreatePublicKey(WALLET_A).toHexString() shouldBe after.toHexString()
+    }
+
+    @Test
+    fun cadeiaTemAoMenosDoisCertificadosEODesafioNaExtensaoDaFolha() {
+        val challenge = challengeFor(WALLET_A)
+        val publicKey = manager.regenerateWithChallenge(WALLET_A, challenge.encode())
+
+        val chain = manager.getAttestationChain(WALLET_A)
+
+        chain shouldHaveAtLeastSize 2
+        val leaf = CertificateFactory.getInstance("X.509")
+            .generateCertificate(ByteArrayInputStream(chain.first())) as X509Certificate
+        val description = requireNotNull(KeyDescription.parseFrom(leaf))
+        AttestationChallenge.decode(description.attestationChallenge.toByteArray()) shouldBe challenge
+        // Chave pública da folha = chave do alias
+        P256.decodePublicKey(publicKey).encoded.toList() shouldBe leaf.publicKey.encoded.toList()
+    }
+
+    @Test
+    fun cadeiaDaChaveGeradaPeloAppPassaNaPoliticaDeAtestacao() {
+        val challenge = challengeFor(WALLET_A)
+        val publicKey = manager.regenerateWithChallenge(WALLET_A, challenge.encode())
+
+        val verdict = AttestationPolicy().evaluate(
+            manager.getAttestationChain(WALLET_A),
+            ExpectedAttestation(
+                chainId = config.chainId,
+                contract = config.registryAddress,
+                wallet = WALLET_A,
+                publicKey = publicKey,
+                allowedCertDigests = config.allowedCertDigests,
+                referenceTime = Instant.now(),
+                window = ChallengeWindow.ATTESTER
+            )
+        )
+
+        verdict.shouldBeInstanceOf<AttestationVerdict.Accepted>()
+    }
+
+    @Test
+    fun cadeiaSemChaveFalha() {
+        shouldThrow<IllegalStateException> { manager.getAttestationChain(WALLET_B) }
     }
 
     private companion object {

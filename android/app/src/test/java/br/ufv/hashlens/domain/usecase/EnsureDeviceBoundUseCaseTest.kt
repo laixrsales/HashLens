@@ -1,5 +1,6 @@
 package br.ufv.hashlens.domain.usecase
 
+import br.ufv.hashlens.testing.TestDevices
 import android.app.Application
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceKeyManager
@@ -55,14 +56,14 @@ class EnsureDeviceBoundUseCaseTest {
 
     /** A carteira envia a transação e o recibo traz o `deviceId` do evento `DeviceRegistered`. */
     private fun chainRegisters(publicKey: ByteArray, txHash: String, newDeviceId: Int) {
-        coEvery { txBuilder.estimate(any(), RegistryTxBuilder.registerDevice(publicKey)) } returns ENOUGH
-        coEvery { wallet.sendTransaction(CONTRACT, RegistryTxBuilder.registerDevice(publicKey)) } returns txHash
+        coEvery { txBuilder.estimate(any(), unattestedCalldata(publicKey)) } returns ENOUGH
+        coEvery { wallet.sendTransaction(CONTRACT, unattestedCalldata(publicKey)) } returns txHash
         coEvery { receipts.awaitDeviceRegistered(txHash) } returns newDeviceId
     }
 
     private fun onChain(owner: String, vararg devices: Pair<Int, ByteArray>) {
         coEvery { reader.getDevicesOf(owner) } returns devices.map { it.first }
-        devices.forEach { (id, key) -> coEvery { reader.getDevice(id) } returns Device(id, owner, key) }
+        devices.forEach { (id, key) -> coEvery { reader.getDevice(id) } returns TestDevices.device(id, owner, key) }
     }
 
     @Test
@@ -92,7 +93,7 @@ class EnsureDeviceBoundUseCaseTest {
 
         bound shouldBe BoundDevice(deviceId = 1, newlyBound = true)
         verify { keyManager.getOrCreatePublicKey(WALLET_A) }
-        coVerify(exactly = 1) { wallet.sendTransaction(CONTRACT, RegistryTxBuilder.registerDevice(KEY_A)) }
+        coVerify(exactly = 1) { wallet.sendTransaction(CONTRACT, unattestedCalldata(KEY_A)) }
         bindings.get(WALLET_A.lowercase()).shouldNotBeNull().run {
             deviceId shouldBe 1
             txHash shouldBe TX_1
@@ -112,7 +113,7 @@ class EnsureDeviceBoundUseCaseTest {
         bound shouldBe BoundDevice(deviceId = 2, newlyBound = true)
         // Uma única transação, e é o registro do aparelho novo: nada revoga o aparelho 1
         coVerify(exactly = 1) { wallet.sendTransaction(any(), any()) }
-        coVerify(exactly = 1) { wallet.sendTransaction(CONTRACT, RegistryTxBuilder.registerDevice(KEY_A)) }
+        coVerify(exactly = 1) { wallet.sendTransaction(CONTRACT, unattestedCalldata(KEY_A)) }
     }
 
     @Test
@@ -162,7 +163,7 @@ class EnsureDeviceBoundUseCaseTest {
     fun `saldo insuficiente para registerDevice não abre a carteira`() = runTest {
         every { keyManager.getOrCreatePublicKey(WALLET_A) } returns KEY_A
         onChain(WALLET_A)
-        coEvery { txBuilder.estimate(WALLET_A, RegistryTxBuilder.registerDevice(KEY_A)) } returns NOT_ENOUGH
+        coEvery { txBuilder.estimate(WALLET_A, unattestedCalldata(KEY_A)) } returns NOT_ENOUGH
 
         shouldThrow<InsufficientFundsException> { useCase(WALLET_A) }.cost shouldBe NOT_ENOUGH
 
@@ -201,6 +202,10 @@ class EnsureDeviceBoundUseCaseTest {
 
         progress shouldBe listOf(RegistrationProgress.BindingDevice(newKey = true, cost = ENOUGH))
     }
+
+    /** Calldata provisório do vínculo, até o fluxo com o atestador (020/T032, T037). */
+    private fun unattestedCalldata(key: ByteArray) =
+        RegistryTxBuilder.registerDevice(key, emptyList(), deadline = 0, authorization = ByteArray(0))
 
     private companion object {
         val CONTRACT = SignatureVectors.case("original").payload.contract

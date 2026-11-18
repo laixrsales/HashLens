@@ -9,7 +9,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
- * Leitura do ImageRegistry pelas funções `view` (sem carteira e sem gás).
+ * Leitura do ImageRegistry pelas funções `view` e pelo evento `DeviceAttested` (sem carteira e
+ * sem gás).
  *
  * Toda falha sai como [RegistryException]: rede ([RegistryException.Network]), erro do nó
  * ([RegistryException.Rpc]) ou retorno que não decodifica ([RegistryException.InvalidResponse]).
@@ -17,6 +18,7 @@ import kotlinx.coroutines.withContext
 class RegistryReader(
     private val config: ChainConfig,
     private val ethCall: EthCall,
+    private val rpc: ChainRpc,
     private val ioDispatcher: CoroutineDispatcher
 ) {
     /** Registro pelo id; `null` se não existir. */
@@ -39,6 +41,21 @@ class RegistryReader(
     suspend fun getDevicesOf(owner: String): List<Int> = call(AbiMapper.getDevicesOf(owner), AbiMapper::decodeDeviceIds)
 
     suspend fun totalRecords(): Long = call(AbiMapper.totalRecords(), AbiMapper::decodeId)
+
+    /**
+     * Cadeia de atestação publicada no vínculo do aparelho [deviceId], lida do evento
+     * `DeviceAttested` do bloco [block] (`Device.registeredBlock`). Buscar um único bloco cabe no
+     * limite de intervalo dos nós públicos (020 research R10). `null` se o evento não estiver lá.
+     */
+    suspend fun getAttestationChain(deviceId: Int, block: Long): List<ByteArray>? = withContext(ioDispatcher) {
+        val topics = listOf(AbiMapper.DEVICE_ATTESTED_TOPIC, AbiMapper.deviceIdTopic(deviceId))
+        val logs = rpc.getLogs(config.registryAddress, topics, fromBlock = block, toBlock = block)
+        try {
+            logs.firstNotNullOfOrNull { AbiMapper.decodeAttestationChain(it, deviceId) }
+        } catch (e: IllegalArgumentException) {
+            throw RegistryException.InvalidResponse(e)
+        }
+    }
 
     private suspend fun <T> call(data: String, decode: (String) -> T): T = withContext(ioDispatcher) {
         val response = ethCall.call(config.registryAddress, data)

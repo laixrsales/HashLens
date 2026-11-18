@@ -4,6 +4,8 @@ import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.domain.model.ImageRecord
+import br.ufv.hashlens.attestation.AttestationHash
+import br.ufv.hashlens.testing.ChainReceipts
 import br.ufv.hashlens.testing.ChainResponses
 import br.ufv.hashlens.testing.SignatureVectors
 import io.kotest.assertions.throwables.shouldThrow
@@ -14,7 +16,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-/** T027: decodificação das respostas `view` do ImageRegistry, capturadas com `cast`. */
+/**
+ * 002/T027 e 020/T023: decodificação das respostas `view` e do log `DeviceAttested` do
+ * ImageRegistry v2, capturados com `cast`.
+ */
 class AbiMapperTest {
     private val original = SignatureVectors.case("original")
     private val edition = SignatureVectors.case("edicao")
@@ -57,12 +62,47 @@ class AbiMapperTest {
     }
 
     @Test
-    fun `getDevice existente`() {
+    fun `getDevice existente, com os campos da v2`() {
         AbiMapper.decodeDevice(ChainResponses.response("getDevice 1")) shouldBe Device(
             id = 1,
             owner = ChainResponses.wallet,
-            publicKey = SignatureVectors.publicKeyBytes
+            publicKey = SignatureVectors.publicKeyBytes,
+            registeredAt = ChainResponses.deviceTime,
+            attestationHash = hexBytes(ChainResponses.attestationHash),
+            registeredBlock = ChainResponses.deviceBlock
         )
+    }
+
+    @Test
+    fun `log DeviceAttested devolve a cadeia publicada, com o hash gravado no aparelho`() {
+        val log = ChainResponses.logs("DeviceAttested aparelho 1").single()
+
+        val chain = requireNotNull(AbiMapper.decodeAttestationChain(log, deviceId = 1))
+
+        chain.map { it.toList() } shouldBe ChainResponses.deviceChain.map { it.toList() }
+        AttestationHash.of(chain).toList() shouldBe hexBytes(ChainResponses.attestationHash).toList()
+    }
+
+    @Test
+    fun `log DeviceAttested do recibo do vinculo e o mesmo do eth_getLogs`() {
+        val fromReceipt = ChainReceipts.receipt("registerDevice").logs
+            .single { it.topics.first() == AbiMapper.DEVICE_ATTESTED_TOPIC }
+
+        AbiMapper.decodeAttestationChain(fromReceipt, deviceId = 1)!!.map { it.toList() } shouldBe
+            ChainResponses.deviceChain.map { it.toList() }
+    }
+
+    @Test
+    fun `log de outro evento ou de outro aparelho nao vale como cadeia`() {
+        val log = ChainResponses.logs("DeviceAttested aparelho 1").single()
+        val registered = ChainReceipts.receipt("registerDevice").logs
+            .single { it.topics.first() != AbiMapper.DEVICE_ATTESTED_TOPIC }
+
+        AbiMapper.decodeAttestationChain(log, deviceId = 2).shouldBeNull()
+        AbiMapper.decodeAttestationChain(registered, deviceId = 1).shouldBeNull()
+        shouldThrow<IllegalArgumentException> {
+            AbiMapper.decodeAttestationChain(log.copy(data = "0x00"), deviceId = 1)
+        }
     }
 
     @Test
@@ -133,4 +173,7 @@ class AbiMapperTest {
 
         shouldThrow<IllegalArgumentException> { AbiMapper.decodeRecord(truncated) }
     }
+
+    private fun hexBytes(hex: String): ByteArray =
+        hex.removePrefix("0x").chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 }

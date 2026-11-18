@@ -44,6 +44,40 @@ enum class FailureReason {
     INSUFFICIENT_FUNDS
 }
 
+/**
+ * Motivo de [RegistrationStatus.FAILED] de um vínculo de aparelho (020 data-model §2.1), para a UI e
+ * para o reenvio (FR-010, FR-011). Os `NOT_ELIGIBLE_*` e [ATTESTER_UNAVAILABLE] acontecem antes de
+ * abrir a carteira.
+ */
+enum class BindingFailure {
+    /** Sistema modificado: boot não verificado ou bootloader destravado. */
+    NOT_ELIGIBLE_MODIFIED,
+
+    /** Patch de segurança com mais de 24 meses. */
+    NOT_ELIGIBLE_OUTDATED,
+
+    /** Sem TEE ou StrongBox, ou chave sem as propriedades exigidas. */
+    NOT_ELIGIBLE_NO_SECURE_HARDWARE,
+
+    /** O aplicativo não é o HashLens original (pacote ou certificado de assinatura). */
+    NOT_ELIGIBLE_APP,
+
+    /** Certificado da cadeia revogado ou suspenso pelo Google. */
+    NOT_ELIGIBLE_REVOKED,
+
+    /** Atestador fora do ar, sem rede ou recusa temporária (tentar de novo). */
+    ATTESTER_UNAVAILABLE,
+
+    /** O saldo da carteira não cobre o gás estimado. */
+    INSUFFICIENT_FUNDS,
+
+    /** Recibo com status 0. */
+    REVERTED,
+
+    /** Sem recibo dentro do prazo. */
+    TIMEOUT
+}
+
 /** Como a imagem local surgiu. */
 enum class ImageOrigin {
     CAPTURE,

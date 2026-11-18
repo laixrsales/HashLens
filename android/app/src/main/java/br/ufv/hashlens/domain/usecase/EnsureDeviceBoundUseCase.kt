@@ -69,7 +69,10 @@ class EnsureDeviceBoundUseCase @Inject constructor(
             return BoundDevice(deviceId, newlyBound = false)
         }
 
-        val calldata = RegistryTxBuilder.registerDevice(publicKey)
+        // PROVISÓRIO até 020/T037: o contrato v2 exige cadeia e autorização do atestador, e sem elas
+        // a estimativa reverte (EmptyAttestation). O fluxo com o atestador entra na US1.
+        val calldata =
+            RegistryTxBuilder.registerDevice(publicKey, emptyList(), deadline = 0, authorization = ByteArray(0))
         val cost = txBuilder.estimate(walletAddress, calldata)
         if (!cost.hasEnoughBalance) {
             bindings.upsert(binding.copy(status = RegistrationStatus.FAILED))

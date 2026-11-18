@@ -1,5 +1,6 @@
 package br.ufv.hashlens.domain.usecase
 
+import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.crypto.SignatureCodec
@@ -349,7 +350,7 @@ class VerifyImageUseCaseTest {
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }
             .generateKeyPair()
         keys[id] = pair
-        devices[id] = Device(id = id, owner = owner, publicKey = uncompressed(pair.public as ECPublicKey))
+        devices[id] = TestDevices.device(id = id, owner = owner, publicKey = uncompressed(pair.public as ECPublicKey))
     }
 
     /** Grava um registro no contrato falso, assinado pela chave do aparelho [deviceId]. */
