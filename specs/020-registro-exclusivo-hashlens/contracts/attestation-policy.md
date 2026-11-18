@@ -47,11 +47,15 @@ O limite de patch (regra 5) continua contado a partir de `issuedAt` nos dois con
 | 4   | `rootOfTrust.verifiedBootState = Verified` e `rootOfTrust.deviceLocked = true`                                                                                                  | `BOOT_NOT_VERIFIED` |
 | 5   | `osPatchLevel` (AAAAMM) com no máximo 24 meses antes de `issuedAt`                                                                                                              | `PATCH_TOO_OLD`     |
 | 6   | `attestationApplicationId` com pacote `br.ufv.hashlens` e algum `signatureDigest` em `allowedCertDigests`                                                                       | `APP_NOT_GENUINE`   |
-| 7   | `purpose = {SIGN}`, `algorithm = EC`, `ecCurve = P_256`, `digest ∋ SHA_256`                                                                                                     | `KEY_PROPERTIES`    |
+| 7   | `purpose = {SIGN}`, `algorithm = EC`, `ecCurve = P_256`, `digest ∋ SHA_256`, `origin = GENERATED`, todos na lista garantida pelo hardware                                       | `KEY_PROPERTIES`    |
 | 8   | Chave pública da folha igual a `publicKey`                                                                                                                                      | `KEY_MISMATCH`      |
 | 9   | Desafio válido (§2)                                                                                                                                                             | `CHALLENGE_INVALID` |
 
 Quando mais de uma regra falha, o motivo devolvido é o da primeira na ordem da tabela.
+
+`origin = GENERATED` na regra 7 (acrescentado na implementação, 020/T022): uma chave importada
+para o Keystore (`IMPORTED` ou `SECURELY_IMPORTED`) também recebe atestação de hardware, mas quem a
+importou tem uma cópia da chave privada e poderia assinar qualquer imagem fora do aparelho.
 
 ## 4. Resultado
 
