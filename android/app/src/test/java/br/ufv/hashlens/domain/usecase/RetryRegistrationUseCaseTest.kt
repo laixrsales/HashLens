@@ -13,6 +13,9 @@ import br.ufv.hashlens.data.local.ImageOrigin
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
+import br.ufv.hashlens.domain.model.AttesterUnavailableException
+import br.ufv.hashlens.domain.model.DeviceNotEligibleException
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.testing.SignatureVectors
@@ -90,7 +93,7 @@ class RetryRegistrationUseCaseTest {
         status: RegistrationStatus = RegistrationStatus.FAILED
     ): Long = images.insert(
         LocalImageEntity(
-            contentUri = "content://media/external/images/media/42",
+            contentUri = CONTENT_URI,
             sha256Hex = SHA.hex,
             pHashHex = PHASH.hex,
             origin = origin,
@@ -104,6 +107,19 @@ class RetryRegistrationUseCaseTest {
             txHash = if (reason == FailureReason.TIMEOUT) OLD_TX else null,
             submittedAt = if (reason == FailureReason.TIMEOUT) NOW.toEpochMilli() else null,
             failureReason = if (status == RegistrationStatus.FAILED) reason else null,
+            createdAt = NOW.toEpochMilli()
+        )
+    )
+
+    /** Foto na galeria cujo vínculo falhou antes de assinar (020 US2): `LOCAL_ONLY`, sem aparelho. */
+    private suspend fun notBound(): Long = images.insert(
+        LocalImageEntity(
+            contentUri = CONTENT_URI,
+            sha256Hex = SHA.hex,
+            pHashHex = PHASH.hex,
+            origin = ImageOrigin.CAPTURE,
+            walletAddress = WALLET.lowercase(),
+            status = RegistrationStatus.LOCAL_ONLY,
             createdAt = NOW.toEpochMilli()
         )
     )
@@ -217,6 +233,38 @@ class RetryRegistrationUseCaseTest {
     }
 
     @Test
+    fun `depois do atestador voltar, o reenvio vincula e registra sem nova captura`() = runTest {
+        // Como a captura deixa a foto quando o vínculo falha: na galeria, sem aparelho nem assinatura
+        val localId = notBound()
+        coEvery { ensureDeviceBound(WALLET, any()) } throws AttesterUnavailableException()
+
+        useCase(localId, WALLET) shouldBe CaptureResult.AttesterUnavailable(localId)
+        image(localId).status shouldBe RegistrationStatus.LOCAL_ONLY
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+
+        coEvery { ensureDeviceBound(WALLET, any()) } returns
+            BoundDevice(deviceId = DEVICE_ID, newlyBound = true, walletAddress = WALLET)
+
+        useCase(localId, WALLET) shouldBe CaptureResult.Submitted(localId, TX)
+        image(localId).run {
+            status shouldBe RegistrationStatus.PENDING
+            deviceId shouldBe DEVICE_ID
+            contentUri shouldBe CONTENT_URI
+        }
+    }
+
+    @Test
+    fun `recusa do atestador no reenvio mantém a foto não registrada, sem abrir a carteira`() = runTest {
+        val localId = notBound()
+        coEvery { ensureDeviceBound(WALLET, any()) } throws DeviceNotEligibleException(NotEligibleReason.REVOKED)
+
+        useCase(localId, WALLET) shouldBe CaptureResult.NotEligible(localId, NotEligibleReason.REVOKED)
+        image(localId).status shouldBe RegistrationStatus.LOCAL_ONLY
+        coVerify(exactly = 0) { keyManager.sign(any(), any()) }
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
     fun `só registros que não foram enviados são reenviados`() = runTest {
         val pending = failed(status = RegistrationStatus.PENDING)
 
@@ -228,6 +276,7 @@ class RetryRegistrationUseCaseTest {
         val NOW: Instant = Instant.parse("2026-10-12T18:00:00Z")
         val CONTRACT = SignatureVectors.case("original").payload.contract
         const val WALLET = "0x1234567890AbcdEF1234567890aBcdef12345678"
+        const val CONTENT_URI = "content://media/external/images/media/42"
         const val OTHER_WALLET = "0xAbCdEf0123456789aBcDeF0123456789AbCdEf01"
         const val DEVICE_ID = 3
         const val EXISTING_RECORD = 5L

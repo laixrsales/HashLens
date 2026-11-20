@@ -1,6 +1,7 @@
 package br.ufv.hashlens.ui.capture
 
 import androidx.compose.ui.graphics.ImageBitmap
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.ui.components.TechnicalItem
 import java.math.BigDecimal
 import java.time.Instant
@@ -47,6 +48,12 @@ sealed interface RegistrationStage {
 
     /** O arquivo já tem registro; nenhuma transação foi aberta. */
     data class AlreadyRegistered(val recordId: Long) : RegistrationStage
+
+    /**
+     * O atestador recusou este aparelho (020 FR-010): a foto fica na galeria como não registrada, a
+     * carteira não abriu e nenhuma taxa foi cobrada. Não há "Tentar de novo": o motivo é do aparelho.
+     */
+    data class DeviceNotEligible(val reason: NotEligibleReason) : RegistrationStage
 }
 
 enum class RegistrationFailure {
@@ -66,7 +73,13 @@ enum class RegistrationFailure {
     HashMismatch,
 
     /** A galeria recusou a gravação (ex.: sem espaço); nada foi registrado. */
-    SaveFailed
+    SaveFailed,
+
+    /**
+     * Não foi possível verificar a integridade do aparelho agora (atestador fora do ar, sem conexão
+     * ou relógio errado; 020 FR-011). A carteira não abriu; dá para tentar de novo.
+     */
+    AttesterUnavailable
 }
 
 sealed interface RegistrationProgressAction {

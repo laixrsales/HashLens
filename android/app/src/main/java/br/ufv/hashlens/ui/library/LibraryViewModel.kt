@@ -9,17 +9,21 @@ import androidx.lifecycle.viewModelScope
 import br.ufv.hashlens.R
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.core.imaging.ImageDecoder
+import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.data.local.FailureReason
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.LocalImageEntity
+import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.di.ApplicationScope
 import br.ufv.hashlens.di.DefaultDispatcher
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
+import br.ufv.hashlens.ui.capture.RegistrationWatcher
 import br.ufv.hashlens.ui.common.AddressFormat
+import br.ufv.hashlens.work.PendingTxReconciler
 import br.ufv.hashlens.work.PendingTxScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
@@ -27,11 +31,15 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -62,6 +70,10 @@ sealed interface LibraryEffect {
  * Ao aparecer no acervo, cada foto é relida da galeria uma vez (T090): apagada ou alterada (SHA-256
  * diferente do registrado) vira `fileAvailable = false`, de volta vira `true`. Da mesma leitura sai a
  * miniatura.
+ *
+ * Enquanto o acervo está aberto e há foto "Registrando…", consulta a rede pelo [PendingTxReconciler]
+ * a cada [RegistrationWatcher.POLL_INTERVAL_MS], como a tela de Acompanhamento: o reenvio daqui (e o
+ * registro que continuou depois de o sistema encerrar o app) não espera o ciclo de 15 min do worker.
  */
 @Suppress("LongParameterList")
 @HiltViewModel
@@ -70,6 +82,7 @@ class LibraryViewModel @Inject constructor(
     private val retryRegistration: RetryRegistrationUseCase,
     private val session: WalletSession,
     private val scheduler: PendingTxScheduler,
+    private val reconciler: PendingTxReconciler,
     private val gallery: GalleryRepository,
     private val decoder: ImageDecoder,
     private val sha256Hasher: Sha256Hasher,
@@ -101,6 +114,36 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             images.observeAll().collect { stored ->
                 stored.filter { inspected.add(it.localId) }.forEach { inspect(it) }
+            }
+        }
+        trackPendingWhileOpen()
+    }
+
+    /**
+     * Roda no escopo da aplicação (como o acompanhamento da captura) e é cancelado quando a tela fecha;
+     * dali em diante, quem acompanha é o worker.
+     */
+    private fun trackPendingWhileOpen() {
+        val job = applicationScope.launch {
+            images.observeAll()
+                .map { stored -> stored.any { it.status == RegistrationStatus.PENDING } }
+                .distinctUntilChanged()
+                .collectLatest { hasPending ->
+                    while (hasPending) {
+                        delay(RegistrationWatcher.POLL_INTERVAL_MS)
+                        checkPending()
+                    }
+                }
+        }
+        addCloseable { job.cancel() }
+    }
+
+    private suspend fun checkPending() {
+        images.getByStatus(listOf(RegistrationStatus.PENDING)).forEach { image ->
+            try {
+                reconciler.check(image)
+            } catch (_: RegistryException.Network) {
+                // Sem rede agora; a próxima consulta tenta de novo
             }
         }
     }
@@ -155,6 +198,11 @@ class LibraryViewModel @Inject constructor(
                 if (result.reason == FailureReason.NETWORK) {
                     send(LibraryEffect.Notice(R.string.notice_network_retry))
                 }
+            // 020 US2: a foto continua não registrada; a carteira não foi aberta
+            is CaptureResult.NotEligible -> send(LibraryEffect.Notice(R.string.notice_not_eligible_retry))
+            is CaptureResult.AttesterUnavailable -> send(
+                LibraryEffect.Notice(R.string.notice_attester_unavailable_retry)
+            )
             // O selo muda sozinho pelo acervo; a recusa na carteira é decisão da pessoa
             is CaptureResult.Confirmed, is CaptureResult.AlreadyRegistered -> Unit
         }

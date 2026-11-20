@@ -16,6 +16,7 @@ import br.ufv.hashlens.data.wallet.WalletEvent
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.domain.model.ImageRecord
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.usecase.CaptureAndRegisterUseCase
@@ -280,6 +281,33 @@ class CaptureViewModelTest {
             RecordingMetrics.Record(Metric.CAPTURE_TO_SUBMITTED, Duration.ZERO, "Failed:REJECTED"),
             RecordingMetrics.Record(Metric.CAPTURE_TO_SUBMITTED, Duration.ofSeconds(7), "Submitted:reenvio")
         )
+    }
+
+    @Test
+    fun `aparelho recusado pelo atestador mostra o motivo, sem Tentar de novo`() = runTest(dispatcher) {
+        capture(CaptureResult.NotEligible(LOCAL_ID, NotEligibleReason.MODIFIED), RegistrationProgress.Saved(LOCAL_ID))
+        val viewModel = viewModel()
+
+        viewModel.onPhotoTaken(photo, ROTATION, thumbnail)
+
+        viewModel.stage() shouldBe RegistrationStage.DeviceNotEligible(NotEligibleReason.MODIFIED)
+        viewModel.stage().canRetry shouldBe false
+    }
+
+    @Test
+    fun `atestador fora do ar e tentar de novo reenvia a mesma foto`() = runTest(dispatcher) {
+        capture(CaptureResult.AttesterUnavailable(LOCAL_ID), RegistrationProgress.Saved(LOCAL_ID))
+        coEvery { retryRegistration(LOCAL_ID, ADDRESS, any()) } returns CaptureResult.Submitted(LOCAL_ID, TX)
+        coEvery { images.getById(LOCAL_ID) } returns image(RegistrationStatus.PENDING)
+        val viewModel = viewModel()
+
+        viewModel.onPhotoTaken(photo, ROTATION, thumbnail)
+        viewModel.stage() shouldBe RegistrationStage.Failed(RegistrationFailure.AttesterUnavailable)
+        viewModel.onProgressAction(RegistrationProgressAction.Retry)
+
+        viewModel.stage() shouldBe RegistrationStage.Pending
+        coVerify(exactly = 1) { captureAndRegister(photo, ROTATION, ADDRESS, any()) }
+        coVerify { retryRegistration(LOCAL_ID, ADDRESS, any()) }
     }
 
     @Test

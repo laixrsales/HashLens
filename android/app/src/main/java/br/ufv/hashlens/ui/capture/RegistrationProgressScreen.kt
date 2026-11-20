@@ -48,6 +48,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import br.ufv.hashlens.R
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.ui.common.DateFormat
 import br.ufv.hashlens.ui.common.SepoliaEthFormat
 import br.ufv.hashlens.ui.common.motionDuration
@@ -111,6 +112,15 @@ fun RegistrationProgressScreen(
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
                     onOpenUrl = { onAction(RegistrationProgressAction.OpenUrl(it)) }
+                )
+            }
+            if (stage is RegistrationStage.DeviceNotEligible) {
+                // O que continua disponível (020 US2 cenário 4): neutro, não é parte do erro
+                Spacer(Modifier.height(spacing.lg))
+                Text(
+                    stringResource(R.string.registration_not_eligible_available),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Spacer(Modifier.height(spacing.xxl))
@@ -183,8 +193,23 @@ private fun Header(stage: RegistrationStage, zone: ZoneId) {
             stringResource(R.string.registration_already_message),
             title = stringResource(R.string.registration_already_title)
         )
+        is RegistrationStage.DeviceNotEligible -> StatusHeader(
+            ImageStatus.NotRegistered,
+            stringResource(stage.reason.message),
+            title = stringResource(R.string.registration_not_eligible_title)
+        )
     }
 }
+
+/** Por que o atestador recusou, em linguagem leiga (020 FR-010). */
+private val NotEligibleReason.message: Int
+    @StringRes get() = when (this) {
+        NotEligibleReason.MODIFIED -> R.string.registration_not_eligible_modified
+        NotEligibleReason.OUTDATED -> R.string.registration_not_eligible_outdated
+        NotEligibleReason.NO_SECURE_HARDWARE -> R.string.registration_not_eligible_no_secure_hardware
+        NotEligibleReason.APP_NOT_GENUINE -> R.string.registration_not_eligible_app
+        NotEligibleReason.REVOKED -> R.string.registration_not_eligible_revoked
+    }
 
 private val RegistrationFailure.message: Int
     @StringRes get() = when (this) {
@@ -193,6 +218,7 @@ private val RegistrationFailure.message: Int
         RegistrationFailure.Reverted -> R.string.registration_reverted_message
         RegistrationFailure.HashMismatch -> R.string.registration_hash_mismatch_message
         RegistrationFailure.SaveFailed -> R.string.registration_save_failed_message
+        RegistrationFailure.AttesterUnavailable -> R.string.registration_attester_unavailable_message
     }
 
 /**
@@ -254,22 +280,25 @@ private fun Actions(stage: RegistrationStage, onAction: (RegistrationProgressAct
                     onAction(RegistrationProgressAction.Done)
                 })
             is RegistrationStage.Failed -> {
-                // Sem arquivo confiável na galeria: refazer a foto, não reenviar
-                if (stage.reason == RegistrationFailure.HashMismatch ||
-                    stage.reason == RegistrationFailure.SaveFailed
-                ) {
-                    PrimaryButton(
-                        stringResource(R.string.action_take_photo_again),
-                        onClick = { onAction(RegistrationProgressAction.RetakePhoto) }
-                    )
-                } else {
+                // Sem arquivo confiável na galeria (HashMismatch, SaveFailed): refazer a foto, não reenviar
+                if (stage.canRetry) {
                     PrimaryButton(
                         stringResource(R.string.action_try_again),
                         onClick = { onAction(RegistrationProgressAction.Retry) }
                     )
+                } else {
+                    PrimaryButton(
+                        stringResource(R.string.action_take_photo_again),
+                        onClick = { onAction(RegistrationProgressAction.RetakePhoto) }
+                    )
                 }
                 backHome()
             }
+            // O motivo é do aparelho: tentar de novo daria a mesma recusa
+            is RegistrationStage.DeviceNotEligible ->
+                PrimaryButton(stringResource(R.string.action_back_home), onClick = {
+                    onAction(RegistrationProgressAction.BackHome)
+                })
             is RegistrationStage.InsufficientFunds -> {
                 PrimaryButton(
                     stringResource(R.string.action_get_test_balance),
@@ -300,6 +329,7 @@ private val RegistrationStage.status: ImageStatus
         RegistrationStage.Pending -> ImageStatus.Pending
         is RegistrationStage.Confirmed, is RegistrationStage.AlreadyRegistered -> ImageStatus.Original
         is RegistrationStage.Failed, is RegistrationStage.InsufficientFunds -> ImageStatus.Failed
+        is RegistrationStage.DeviceNotEligible -> ImageStatus.NotRegistered
     }
 
 /**
@@ -336,6 +366,16 @@ internal fun RegistrationStage.steps(): List<ProgressStep> = when (this) {
         registrationSteps(StepState.Done, StepState.Failed, walletDetail = R.string.step_failed_insufficient)
     is RegistrationStage.Failed -> reason.steps()
     is RegistrationStage.AlreadyRegistered -> emptyList()
+    is RegistrationStage.DeviceNotEligible -> integrityFailedSteps(R.string.step_failed_not_eligible)
+}
+
+/** A verificação de integridade não passou: a carteira nem chegou a abrir. */
+private fun integrityFailedSteps(@StringRes detail: Int): List<ProgressStep> = registrationSteps(StepState.Done).let {
+    listOf(
+        it.first(),
+        ProgressStep(R.string.step_device_integrity, StepState.Failed, detail),
+        ProgressStep(R.string.step_device_binding, StepState.Waiting)
+    ) + it.drop(1)
 }
 
 /** A etapa que falhou e a frase que diz por quê. */
@@ -352,6 +392,7 @@ private fun RegistrationFailure.steps(): List<ProgressStep> = when (this) {
         registrationSteps(StepState.Failed, savedDetail = R.string.step_failed_hash_mismatch)
     RegistrationFailure.SaveFailed ->
         registrationSteps(StepState.Failed, savedDetail = R.string.step_failed_save)
+    RegistrationFailure.AttesterUnavailable -> integrityFailedSteps(R.string.step_failed_attester_unavailable)
 }
 
 private fun registrationSteps(
@@ -455,6 +496,25 @@ private fun RegistrationAlreadyPreview() = HashLensTheme {
     RegistrationProgressScreen(RegistrationProgressSamples.alreadyRegistered, onAction = {}, zone = SampleData.ZONE)
 }
 
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun RegistrationNotEligiblePreview() = HashLensTheme {
+    RegistrationProgressScreen(RegistrationProgressSamples.notEligibleModified, onAction = {}, zone = SampleData.ZONE)
+}
+
+@Preview
+@Composable
+private fun RegistrationNotEligibleReasonsPreview() = HashLensTheme {
+    RegistrationProgressScreen(RegistrationProgressSamples.notEligibleOutdated, onAction = {}, zone = SampleData.ZONE)
+}
+
+@PreviewLightDark
+@Composable
+private fun RegistrationAttesterUnavailablePreview() = HashLensTheme {
+    RegistrationProgressScreen(RegistrationProgressSamples.attesterUnavailable, onAction = {}, zone = SampleData.ZONE)
+}
+
 /** Estados do Acompanhamento (ux.md §4.5), compartilhados por previews e screenshot tests. */
 object RegistrationProgressSamples {
     private fun state(stage: RegistrationStage) = RegistrationProgressUiState(stage, SampleData.Photo.landscape())
@@ -478,4 +538,12 @@ object RegistrationProgressSamples {
             RegistrationStage.InsufficientFunds(SampleData.Chain.REGISTRATION_COST, SampleData.Chain.BALANCE_LOW)
         )
     val alreadyRegistered get() = state(RegistrationStage.AlreadyRegistered(SampleData.Records.original.id))
+    val attesterUnavailable get() = state(RegistrationStage.Failed(RegistrationFailure.AttesterUnavailable))
+    val notEligibleModified get() = notEligible(NotEligibleReason.MODIFIED)
+    val notEligibleOutdated get() = notEligible(NotEligibleReason.OUTDATED)
+    val notEligibleNoSecureHardware get() = notEligible(NotEligibleReason.NO_SECURE_HARDWARE)
+    val notEligibleApp get() = notEligible(NotEligibleReason.APP_NOT_GENUINE)
+    val notEligibleRevoked get() = notEligible(NotEligibleReason.REVOKED)
+
+    private fun notEligible(reason: NotEligibleReason) = state(RegistrationStage.DeviceNotEligible(reason))
 }

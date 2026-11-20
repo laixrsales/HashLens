@@ -136,6 +136,17 @@ class EnsureDeviceBoundUseCaseTest {
         }
     }
 
+    @Test
+    fun `aparelho ja vinculado segue registrando com o atestador fora do ar`() = runTest {
+        // US2 cenário 3: o atestador só participa do vínculo
+        keystore(WALLET_A, KEY_A)
+        onChain(WALLET_A, 3 to KEY_A)
+        coEvery { attester.authorize(any(), any(), any()) } throws AttesterUnavailableException()
+
+        useCase(WALLET_A) shouldBe BoundDevice(deviceId = 3, newlyBound = false, walletAddress = WALLET_A)
+        coVerify(exactly = 0) { attester.authorize(any(), any(), any()) }
+    }
+
     // ───────────────────────────── Vínculo novo ─────────────────────
 
     @Test

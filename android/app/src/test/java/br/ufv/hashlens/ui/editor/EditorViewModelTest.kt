@@ -18,6 +18,7 @@ import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
 import br.ufv.hashlens.domain.model.EditOperation
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.EditAndRegisterUseCase
@@ -29,6 +30,7 @@ import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
 import br.ufv.hashlens.testing.MutableClock
 import br.ufv.hashlens.testing.RecordingMetrics
+import br.ufv.hashlens.ui.capture.RegistrationFailure
 import br.ufv.hashlens.ui.capture.RegistrationProgressAction
 import br.ufv.hashlens.ui.capture.RegistrationStage
 import br.ufv.hashlens.work.PendingTxReconciler
@@ -434,6 +436,32 @@ class EditorViewModelTest {
         viewModel.act(EditorAction.ConfirmSave)
 
         viewModel.ui.value.progress.shouldNotBeNull().stage shouldBe RegistrationStage.VerifyingDevice
+    }
+
+    @Test
+    fun `aparelho recusado na edição mostra o motivo no Acompanhamento`() = runTest(dispatcher) {
+        coEvery { editAndRegister(PARENT_ID, any(), ADDRESS, any()) } returns
+            EditResult.Registration(CaptureResult.NotEligible(EDITED_ID, NotEligibleReason.APP_NOT_GENUINE))
+        val viewModel = viewModel()
+        viewModel.act(EditorAction.SelectTool(EditorTool.Grayscale), EditorAction.Save)
+
+        viewModel.act(EditorAction.ConfirmSave)
+
+        viewModel.ui.value.progress.shouldNotBeNull().stage shouldBe
+            RegistrationStage.DeviceNotEligible(NotEligibleReason.APP_NOT_GENUINE)
+    }
+
+    @Test
+    fun `atestador fora do ar na edição é falha temporária`() = runTest(dispatcher) {
+        coEvery { editAndRegister(PARENT_ID, any(), ADDRESS, any()) } returns
+            EditResult.Registration(CaptureResult.AttesterUnavailable(EDITED_ID))
+        val viewModel = viewModel()
+        viewModel.act(EditorAction.SelectTool(EditorTool.Grayscale), EditorAction.Save)
+
+        viewModel.act(EditorAction.ConfirmSave)
+
+        viewModel.ui.value.progress.shouldNotBeNull().stage shouldBe
+            RegistrationStage.Failed(RegistrationFailure.AttesterUnavailable)
     }
 
     @Test

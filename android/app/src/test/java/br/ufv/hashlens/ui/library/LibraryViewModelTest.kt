@@ -2,10 +2,12 @@ package br.ufv.hashlens.ui.library
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.lifecycle.ViewModelStore
 import br.ufv.hashlens.R
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.core.imaging.ImageDecoder
+import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.TxCost
 import br.ufv.hashlens.data.gallery.GalleryRepository
 import br.ufv.hashlens.data.local.FailureReason
@@ -15,10 +17,13 @@ import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
 import br.ufv.hashlens.data.wallet.WalletState
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.usecase.CaptureResult
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
+import br.ufv.hashlens.ui.capture.RegistrationWatcher
 import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.ui.components.ImageStatus
+import br.ufv.hashlens.work.PendingTxReconciler
 import br.ufv.hashlens.work.PendingTxScheduler
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -32,6 +37,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.math.BigInteger
 import java.security.MessageDigest
 import kotlinx.coroutines.CompletableDeferred
@@ -41,6 +47,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -66,6 +73,10 @@ class LibraryViewModelTest {
     private val stored = MutableStateFlow<List<LocalImageEntity>>(emptyList())
     private val images = mockk<LocalImageDao> {
         every { observeAll() } returns stored
+        coEvery { getByStatus(any()) } answers {
+            val statuses = firstArg<List<RegistrationStatus>>()
+            stored.value.filter { it.status in statuses }
+        }
         // Como o Room: a mudança volta pelo fluxo
         coEvery { setFileAvailable(any(), any()) } answers {
             val (localId, available) = firstArg<Long>() to secondArg<Boolean>()
@@ -85,6 +96,7 @@ class LibraryViewModelTest {
     private val session = mockk<WalletSession> { every { state } returns walletState }
     private var tracked = 0
     private val scheduler = PendingTxScheduler { tracked++ }
+    private val reconciler = mockk<PendingTxReconciler>(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -114,6 +126,7 @@ class LibraryViewModelTest {
         retryRegistration = retryRegistration,
         session = session,
         scheduler = scheduler,
+        reconciler = reconciler,
         gallery = gallery,
         decoder = decoder,
         sha256Hasher = Sha256Hasher(),
@@ -359,6 +372,24 @@ class LibraryViewModelTest {
     }
 
     @Test
+    fun `reenvio recusado pelo atestador ou sem resposta avisa sem abrir a carteira`() = runTest(dispatcher) {
+        stored.value = listOf(image(1, RegistrationStatus.LOCAL_ONLY), image(2, RegistrationStatus.LOCAL_ONLY))
+        coEvery { retryRegistration(1, ADDRESS, any()) } returns
+            CaptureResult.NotEligible(1, NotEligibleReason.OUTDATED)
+        coEvery { retryRegistration(2, ADDRESS, any()) } returns CaptureResult.AttesterUnavailable(2)
+        val viewModel = viewModel()
+        val effects = effects(viewModel)
+
+        viewModel.onAction(LibraryAction.Retry(1))
+        viewModel.onAction(LibraryAction.Retry(2))
+
+        effects shouldContainExactly listOf(
+            LibraryEffect.Notice(R.string.notice_not_eligible_retry),
+            LibraryEffect.Notice(R.string.notice_attester_unavailable_retry)
+        )
+    }
+
+    @Test
     fun `saldo insuficiente ou rede fora no reenvio viram aviso`() = runTest(dispatcher) {
         stored.value = listOf(
             image(1, RegistrationStatus.FAILED, failureReason = FailureReason.TIMEOUT),
@@ -515,10 +546,91 @@ class LibraryViewModelTest {
         viewModel.item(2).thumbnail.shouldNotBeNull()
     }
 
+    @Test
+    fun `com foto registrando, o acervo aberto consulta a rede a cada poucos segundos até confirmar`() =
+        runTest(dispatcher) {
+            stored.value =
+                listOf(image(1, RegistrationStatus.CONFIRMED, recordId = 10), image(2, RegistrationStatus.PENDING))
+            var checks = 0
+            coEvery { reconciler.check(any()) } answers {
+                // Confirma na segunda consulta, como o reconciliador faz ao achar o recibo
+                if (++checks == 2) {
+                    stored.value = stored.value.map {
+                        if (it.localId == 2L) it.copy(status = RegistrationStatus.CONFIRMED, recordId = 11) else it
+                    }
+                }
+            }
+            val viewModel = viewModel()
+
+            advanceTimeBy(POLL + 1)
+            coVerify(exactly = 1) { reconciler.check(match { it.localId == 2L }) }
+            advanceTimeBy(POLL)
+
+            viewModel.item(2).status shouldBe ImageStatus.Original
+            // Nada mais registrando: para de consultar e nunca consulta as já confirmadas
+            advanceTimeBy(POLL * 5)
+            coVerify(exactly = 2) { reconciler.check(any()) }
+            coVerify(exactly = 0) { reconciler.check(match { it.localId == 1L }) }
+        }
+
+    @Test
+    fun `sem foto registrando, o acervo não consulta a rede`() = runTest(dispatcher) {
+        stored.value = listOf(
+            image(1, RegistrationStatus.CONFIRMED, recordId = 10),
+            image(2, RegistrationStatus.FAILED, failureReason = FailureReason.REJECTED),
+            image(3, RegistrationStatus.LOCAL_ONLY)
+        )
+        viewModel()
+
+        advanceTimeBy(POLL * 5)
+
+        coVerify(exactly = 0) { reconciler.check(any()) }
+    }
+
+    @Test
+    fun `reenvio pelo acervo passa a ser acompanhado pela consulta da tela aberta`() = runTest(dispatcher) {
+        stored.value = listOf(image(2, RegistrationStatus.FAILED, failureReason = FailureReason.NETWORK))
+        coEvery { retryRegistration(2, ADDRESS) } answers {
+            stored.value = stored.value.map { it.copy(status = RegistrationStatus.PENDING, failureReason = null) }
+            CaptureResult.Submitted(2, TX)
+        }
+        val viewModel = viewModel()
+
+        viewModel.onAction(LibraryAction.Retry(2))
+        advanceTimeBy(POLL + 1)
+
+        coVerify(exactly = 1) { reconciler.check(match { it.localId == 2L }) }
+    }
+
+    @Test
+    fun `sem rede, a consulta tenta de novo na próxima vez`() = runTest(dispatcher) {
+        stored.value = listOf(image(2, RegistrationStatus.PENDING))
+        coEvery { reconciler.check(any()) } throws RegistryException.Network(IOException("sem rede"))
+        viewModel()
+
+        advanceTimeBy(POLL * 3 + 1)
+
+        coVerify(exactly = 3) { reconciler.check(any()) }
+    }
+
+    @Test
+    fun `fechar o acervo para a consulta, e o worker segue acompanhando`() = runTest(dispatcher) {
+        stored.value = listOf(image(2, RegistrationStatus.PENDING))
+        val store = ViewModelStore()
+        store.put("acervo", viewModel())
+        advanceTimeBy(POLL + 1)
+
+        store.clear()
+        advanceTimeBy(POLL * 5)
+
+        coVerify(exactly = 1) { reconciler.check(any()) }
+    }
+
     private companion object {
         const val ADDRESS = "0x1234567890AbcdEF1234567890aBcdef12345678"
         const val OTHER = "0xAbCdEf0123456789aBcDeF0123456789AbCdEf01"
         const val TX = "0x3333333333333333333333333333333333333333333333333333333333333333"
         val CONNECTED = WalletState.Connected(ADDRESS, ChainConfig.SEPOLIA_CHAIN_ID)
+        const val POLL = RegistrationWatcher.POLL_INTERVAL_MS
     }
 }

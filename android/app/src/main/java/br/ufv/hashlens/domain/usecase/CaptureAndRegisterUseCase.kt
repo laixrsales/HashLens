@@ -13,6 +13,7 @@ import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.di.DefaultDispatcher
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.model.Sha256
 import java.time.Clock
 import java.time.ZoneId
@@ -48,6 +49,18 @@ sealed interface CaptureResult {
      * do aparelho cobre o `registrant` e não vale para outra carteira (data-model §2.3).
      */
     data class WrongWallet(val localId: Long, val expected: String) : CaptureResult
+
+    /**
+     * O atestador recusou este aparelho no vínculo (020 FR-010): a carteira não foi aberta, nenhuma
+     * taxa foi cobrada, e a imagem ficou `LOCAL_ONLY` ("não registrada").
+     */
+    data class NotEligible(val localId: Long, val reason: NotEligibleReason) : CaptureResult
+
+    /**
+     * O atestador não respondeu (020 FR-011): falha temporária, sem abrir a carteira. A imagem ficou
+     * `LOCAL_ONLY` e pode ser reenviada sem nova captura.
+     */
+    data class AttesterUnavailable(val localId: Long) : CaptureResult
 }
 
 /**

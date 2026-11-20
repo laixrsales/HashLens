@@ -129,14 +129,14 @@ camada de dados do app pronta para o vínculo (US1) e para a verificação (US3)
 
 ### Tests for User Story 2
 
-- [ ] T043 [P] [US2] Teste `$TEST/ui/capture/CaptureMappingsTest.kt` (novo ou estendido): cada `NotEligibleReason` e `AttesterUnavailableException` vira o estado de UI correto, com "Tentar de novo" só para a falha temporária; a imagem continua `LOCAL_ONLY` e pode ser reenviada sem nova captura
-- [ ] T044 [P] [US2] Estender `$TEST/domain/usecase/CaptureAndRegisterUseCaseTest.kt`, `$TEST/domain/usecase/EditAndRegisterUseCaseTest.kt` e `$TEST/domain/usecase/RetryRegistrationUseCaseTest.kt`: recusa ou indisponibilidade no vínculo não abre a carteira nem cobra taxa, e o reenvio depois do atestador voltar registra sem nova captura; aparelho já vinculado registra com o atestador fora do ar (US2 cenário 3)
+- [X] T043 [P] [US2] Teste `$TEST/ui/capture/CaptureMappingsTest.kt` (novo ou estendido): cada `NotEligibleReason` e `AttesterUnavailableException` vira o estado de UI correto, com "Tentar de novo" só para a falha temporária; a imagem continua `LOCAL_ONLY` e pode ser reenviada sem nova captura
+- [X] T044 [P] [US2] Estender `$TEST/domain/usecase/CaptureAndRegisterUseCaseTest.kt`, `$TEST/domain/usecase/EditAndRegisterUseCaseTest.kt` e `$TEST/domain/usecase/RetryRegistrationUseCaseTest.kt`: recusa ou indisponibilidade no vínculo não abre a carteira nem cobra taxa, e o reenvio depois do atestador voltar registra sem nova captura; aparelho já vinculado registra com o atestador fora do ar (US2 cenário 3)
 
 ### Implementation for User Story 2
 
-- [ ] T045 [US2] Estados de erro do vínculo seguindo a skill `hashlens-ui` e `docs/referencia/ux.md`: textos em `android/app/src/main/res/values/strings.xml` para aparelho modificado, sistema desatualizado (patch com mais de 24 meses), sem hardware seguro, aplicativo não original, certificado revogado e falha temporária (com dica de conferir data e hora), usando `ErrorState`/`MessageState`; previews de todos os estados em `$PKG/ui/capture/` e `$PKG/ui/editor/` e screenshots em `$TEST/ui/capture/` e `$TEST/ui/editor/`; **parar e mostrar os PNGs para aprovação da autora**
-- [ ] T046 [US2] Após a aprovação, ligar os estados aos ViewModels de captura, edição e reenvio (`$PKG/ui/capture/CaptureViewModel.kt`, `$PKG/ui/editor/`, `$PKG/ui/library/`) até T043 e T044 passarem
-- [ ] T047 [US2] Rodar no emulador e no aparelho o roteiro US2 de `$SPEC/quickstart.md` §5 (SC-003; atestador parado com e sem vínculo; verificação, genealogia e acervo no emulador) e `./gradlew :app:connectedDebugAndroidTest`
+- [X] T045 [US2] Estados de erro do vínculo seguindo a skill `hashlens-ui` e `docs/referencia/ux.md`: textos em `android/app/src/main/res/values/strings.xml` para aparelho modificado, sistema desatualizado (patch com mais de 24 meses), sem hardware seguro, aplicativo não original, certificado revogado e falha temporária (com dica de conferir data e hora), usando `ErrorState`/`MessageState`; previews de todos os estados em `$PKG/ui/capture/` e `$PKG/ui/editor/` e screenshots em `$TEST/ui/capture/` e `$TEST/ui/editor/`; **parar e mostrar os PNGs para aprovação da autora**
+- [X] T046 [US2] Após a aprovação, ligar os estados aos ViewModels de captura, edição e reenvio (`$PKG/ui/capture/CaptureViewModel.kt`, `$PKG/ui/editor/`, `$PKG/ui/library/`) até T043 e T044 passarem
+- [X] T047 [US2] Rodar no emulador e no aparelho o roteiro US2 de `$SPEC/quickstart.md` §5 (SC-003; atestador parado com e sem vínculo; verificação, genealogia e acervo no emulador) e `./gradlew :app:connectedDebugAndroidTest` — passo 1 (emulador) não executado: sem MetaMask no emulador, o vínculo não chega ao atestador; a recusa "sem hardware seguro" fica coberta por `CaptureMappingsTest`, `CaptureAndRegisterUseCaseTest` e screenshot aprovado
 
 **Checkpoint**: US1 e US2 funcionam; nenhuma recusa aparece como erro genérico.
 
