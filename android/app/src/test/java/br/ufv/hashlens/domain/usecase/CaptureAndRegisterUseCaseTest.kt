@@ -22,6 +22,9 @@ import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletException
 import br.ufv.hashlens.data.wallet.WalletSession
+import br.ufv.hashlens.domain.model.AttesterUnavailableException
+import br.ufv.hashlens.domain.model.DeviceNotEligibleException
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.testing.SignatureVectors
@@ -239,6 +242,36 @@ class CaptureAndRegisterUseCaseTest {
         result shouldBe CaptureResult.InsufficientFunds(localId = image.localId, cost = NOT_ENOUGH)
         image.status shouldBe RegistrationStatus.FAILED
         image.failureReason shouldBe FailureReason.INSUFFICIENT_FUNDS
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `recusa do atestador não abre a carteira nem cobra taxa e deixa a foto não registrada`() = runTest {
+        happyPath()
+        coEvery { ensureDeviceBound(WALLET, any()) } throws DeviceNotEligibleException(NotEligibleReason.MODIFIED)
+
+        val result = useCase(photo, ROTATION, WALLET)
+
+        val image = onlyImage()
+        result shouldBe CaptureResult.NotEligible(image.localId, NotEligibleReason.MODIFIED)
+        image.status shouldBe RegistrationStatus.LOCAL_ONLY
+        image.failureReason.shouldBeNull()
+        image.contentUri shouldBe uri.toString()
+        coVerify(exactly = 0) { txBuilder.estimate(any(), any()) }
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `atestador indisponível é falha temporária, sem abrir a carteira`() = runTest {
+        happyPath()
+        coEvery { ensureDeviceBound(WALLET, any()) } throws AttesterUnavailableException()
+
+        val result = useCase(photo, ROTATION, WALLET)
+
+        val image = onlyImage()
+        result shouldBe CaptureResult.AttesterUnavailable(image.localId)
+        image.status shouldBe RegistrationStatus.LOCAL_ONLY
+        image.failureReason.shouldBeNull()
         coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
     }
 

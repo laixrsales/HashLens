@@ -56,4 +56,25 @@ class RegistrationProgressScreenshotTest : ScreenshotTest() {
 
     @Test
     fun alreadyRegistered() = progress("ja_registrada", RegistrationProgressSamples.alreadyRegistered)
+
+    /** 020/T045: falha temporária na verificação de integridade (FR-011), com "Tentar de novo". */
+    @Test
+    fun attesterUnavailable() = progress("integridade_indisponivel", RegistrationProgressSamples.attesterUnavailable)
+
+    /** 020/T045: o atestador recusou o aparelho (FR-010), um motivo por captura. */
+    @Test
+    fun notEligibleModified() = progress("aparelho_modificado", RegistrationProgressSamples.notEligibleModified)
+
+    @Test
+    fun notEligibleOutdated() = progress("sistema_desatualizado", RegistrationProgressSamples.notEligibleOutdated)
+
+    @Test
+    fun notEligibleNoSecureHardware() =
+        progress("sem_hardware_seguro", RegistrationProgressSamples.notEligibleNoSecureHardware)
+
+    @Test
+    fun notEligibleApp() = progress("app_nao_original", RegistrationProgressSamples.notEligibleApp)
+
+    @Test
+    fun notEligibleRevoked() = progress("certificado_revogado", RegistrationProgressSamples.notEligibleRevoked)
 }

@@ -54,6 +54,29 @@ internal fun RegistrationProgress.toStage(): RegistrationStage = when (this) {
         RegistrationStage.AwaitingApproval(SepoliaEthFormat.fromWei(cost.maxCost).normalized())
 }
 
+/**
+ * Etapa final do Acompanhamento para os resultados que terminam sem acompanhar a rede (falhas, saldo,
+ * já registrada, recusa do aparelho); `null` para os que seguem outro caminho (enviado, confirmado,
+ * carteira errada). Compartilhado por captura e edição.
+ */
+internal fun CaptureResult.toStage(): RegistrationStage? = when (this) {
+    is CaptureResult.Failed -> RegistrationStage.Failed(reason.toFailure())
+    is CaptureResult.InsufficientFunds -> cost.toStage()
+    is CaptureResult.AlreadyRegistered -> RegistrationStage.AlreadyRegistered(recordId)
+    is CaptureResult.NotEligible -> RegistrationStage.DeviceNotEligible(reason)
+    is CaptureResult.AttesterUnavailable -> RegistrationStage.Failed(RegistrationFailure.AttesterUnavailable)
+    is CaptureResult.Submitted, is CaptureResult.Confirmed, is CaptureResult.WrongWallet -> null
+}
+
+/** Se o Acompanhamento oferece "Tentar de novo" (o reenvio, sem nova captura). */
+internal val RegistrationStage.canRetry: Boolean
+    get() = when (this) {
+        is RegistrationStage.Failed ->
+            reason != RegistrationFailure.HashMismatch && reason != RegistrationFailure.SaveFailed
+        is RegistrationStage.InsufficientFunds -> true
+        else -> false
+    }
+
 internal fun TxCost.toStage() = RegistrationStage.InsufficientFunds(
     cost = SepoliaEthFormat.fromWei(maxCost).normalized(),
     balance = SepoliaEthFormat.fromWei(balance).normalized()

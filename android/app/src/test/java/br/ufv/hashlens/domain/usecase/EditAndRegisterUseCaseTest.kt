@@ -17,7 +17,10 @@ import br.ufv.hashlens.data.local.ImageOrigin
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletSession
+import br.ufv.hashlens.domain.model.AttesterUnavailableException
+import br.ufv.hashlens.domain.model.DeviceNotEligibleException
 import br.ufv.hashlens.domain.model.EditOperation
+import br.ufv.hashlens.domain.model.NotEligibleReason
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.testing.SignatureVectors
@@ -304,6 +307,33 @@ class EditAndRegisterUseCaseTest {
         val result = useCase(parentId, OPERATIONS, WALLET)
 
         result shouldBe EditResult.Registration(CaptureResult.AlreadyRegistered(9))
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `recusa do atestador na edição não abre a carteira e deixa a versão não registrada`() = runTest {
+        happyPath()
+        val parentId = parent()
+        coEvery { ensureDeviceBound(WALLET, any()) } throws DeviceNotEligibleException(NotEligibleReason.OUTDATED)
+
+        val result = useCase(parentId, OPERATIONS, WALLET)
+
+        result shouldBe EditResult.Registration(CaptureResult.NotEligible(edited().localId, NotEligibleReason.OUTDATED))
+        edited().status shouldBe RegistrationStatus.LOCAL_ONLY
+        coVerify(exactly = 0) { keyManager.sign(any(), any()) }
+        coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
+    }
+
+    @Test
+    fun `atestador indisponível na edição é falha temporária, sem abrir a carteira`() = runTest {
+        happyPath()
+        val parentId = parent()
+        coEvery { ensureDeviceBound(WALLET, any()) } throws AttesterUnavailableException()
+
+        val result = useCase(parentId, OPERATIONS, WALLET)
+
+        result shouldBe EditResult.Registration(CaptureResult.AttesterUnavailable(edited().localId))
+        edited().status shouldBe RegistrationStatus.LOCAL_ONLY
         coVerify(exactly = 0) { wallet.sendTransaction(any(), any()) }
     }
 

@@ -319,6 +319,17 @@
     <string name="registration_save_failed_message">Não foi possível salvar a foto na galeria, então nada foi registrado. Verifique o espaço livre e fotografe de novo.</string>
     <string name="step_failed_reverted">A rede recusou o registro.</string>
     <string name="step_failed_save">Não foi possível salvar a foto na galeria.</string>
+    <!-- 020 US2: recusa do aparelho e falha temporária na verificação de integridade (FR-010, FR-011) -->
+    <string name="registration_not_eligible_title">Este aparelho não pode registrar fotos</string>
+    <string name="registration_not_eligible_modified">O sistema deste aparelho foi modificado ou desbloqueado, e o HashLens só registra fotos em aparelhos sem modificações.</string>
+    <string name="registration_not_eligible_outdated">A atualização de segurança deste aparelho tem mais de 2 anos. Instale as atualizações do sistema para voltar a registrar.</string>
+    <string name="registration_not_eligible_no_secure_hardware">Este aparelho não tem um chip seguro para guardar a chave que assina as fotos, como acontece nos emuladores.</string>
+    <string name="registration_not_eligible_app">Esta cópia do HashLens não é a original. Instale o HashLens original para registrar fotos.</string>
+    <string name="registration_not_eligible_revoked">O certificado de segurança deste aparelho foi revogado pelo Google.</string>
+    <string name="registration_not_eligible_available">A foto ficou salva na galeria. Verificar imagens, ver o histórico delas e o seu acervo continuam funcionando neste aparelho.</string>
+    <string name="step_failed_not_eligible">O aparelho não passou na verificação. A carteira não foi aberta e nada foi cobrado.</string>
+    <string name="registration_attester_unavailable_message">Não foi possível verificar a integridade do aparelho agora. A foto está salva na galeria; a carteira não foi aberta e nada foi cobrado.</string>
+    <string name="step_failed_attester_unavailable">Sem resposta da verificação. Confira a conexão e se a data e a hora do aparelho estão certas, e tente de novo.</string>
 
     <!-- Avisos de carteira durante o registro (T058) -->
     <string name="notice_wallet_not_ready">Conecte uma carteira na Sepolia para registrar a foto.</string>
@@ -326,6 +337,8 @@
     <string name="notice_wallet_network_changed">A carteira saiu da Sepolia durante o registro. Volte para a Sepolia para aprovar.</string>
     <string name="notice_wallet_disconnected">A carteira foi desconectada durante o registro. Conecte de novo e toque em Tentar de novo.</string>
     <string name="notice_insufficient_funds_retry">Saldo de teste insuficiente para registrar. A carteira não foi aberta. Peça saldo gratuito na tela Carteira e tente de novo.</string>
+    <string name="notice_not_eligible_retry">Este aparelho não passou na verificação de integridade e não pode registrar fotos. A carteira não foi aberta.</string>
+    <string name="notice_attester_unavailable_retry">Não foi possível verificar a integridade do aparelho agora. A carteira não foi aberta. Confira a conexão e a data e hora do aparelho e tente de novo.</string>
     <string name="notice_network_retry">Sem conexão com a rede. A carteira não foi aberta. Tente de novo.</string>
     <string name="notice_wrong_wallet_retry">Conecte a carteira %1$s usada neste registro para tentar de novo.</string>
 </resources>

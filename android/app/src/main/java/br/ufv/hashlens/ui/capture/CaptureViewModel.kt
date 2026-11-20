@@ -211,6 +211,15 @@ class CaptureViewModel @Inject constructor(
                 localId = result.localId
                 showStage(result.cost.toStage())
             }
+            // 020 US2: a foto ficou não registrada, sem abrir a carteira; "Tentar de novo" só na falha temporária
+            is CaptureResult.NotEligible -> {
+                localId = result.localId
+                result.toStage()?.let(::showStage)
+            }
+            is CaptureResult.AttesterUnavailable -> {
+                localId = result.localId
+                result.toStage()?.let(::showStage)
+            }
             is CaptureResult.AlreadyRegistered -> showStage(RegistrationStage.AlreadyRegistered(result.recordId))
             is CaptureResult.Confirmed -> images.getById(result.localId)?.let { confirmed(it) }
             is CaptureResult.WrongWallet ->
