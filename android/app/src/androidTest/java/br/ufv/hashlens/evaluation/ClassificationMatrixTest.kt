@@ -37,8 +37,9 @@ import org.web3j.protocol.http.HttpService
  * - `originais`: idênticos a capturas registradas → "Registrada – original" (SC-001);
  * - `versoes`: idênticos a versões editadas registradas → "Registrada – versão alterada" (SC-001);
  * - `nao_registrados`: nunca registrados → "Não registrada" ou "Correspondência visual" (SC-002);
- * - `adulterados`: registrados com a assinatura do aparelho alterada
- *   (`tools/chain/registrar_adulterados.py`) → "Registro adulterado" (SC-003).
+ * - `adulterados`: registrados com a assinatura do aparelho alterada → "Registro adulterado"
+ *   (SC-003). Só existem no contrato da 002; na v2 a rede recusa esses registros
+ *   (`tools/chain/tentar_origens_nao_autorizadas.py`), e a adaptação é a 020/T061.
  *
  * Exige ao menos 20 idênticos (originais + versões), 20 não registrados e 3 adulterados, e 100% de
  * acerto em cada critério. Grava `evaluation/matriz-classificacao.csv` (um arquivo por linha, com

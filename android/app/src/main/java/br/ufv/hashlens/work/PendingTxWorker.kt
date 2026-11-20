@@ -45,7 +45,9 @@ class PendingTxWorker @AssistedInject constructor(
     private val reconciler = PendingTxReconciler(images, receipts, reader, config, clock, metrics)
 
     override suspend fun doWork(): Result {
-        images.getByStatus(listOf(RegistrationStatus.PENDING, RegistrationStatus.FAILED))
+        images.getByStatus(
+            listOf(RegistrationStatus.PENDING, RegistrationStatus.FAILED, RegistrationStatus.AWAITING_WALLET)
+        )
             .forEach { image ->
                 try {
                     reconciler.check(image)

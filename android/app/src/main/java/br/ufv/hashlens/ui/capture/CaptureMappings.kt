@@ -48,6 +48,7 @@ internal fun walletNotice(
 /** Etapa do Acompanhamento avisada pelo caso de uso antes de a transação sair (captura e edição). */
 internal fun RegistrationProgress.toStage(): RegistrationStage = when (this) {
     is RegistrationProgress.Saved -> RegistrationStage.AwaitingApproval()
+    RegistrationProgress.VerifyingDevice -> RegistrationStage.VerifyingDevice
     is RegistrationProgress.BindingDevice -> RegistrationStage.BindingDevice(newKey)
     is RegistrationProgress.AwaitingWallet ->
         RegistrationStage.AwaitingApproval(SepoliaEthFormat.fromWei(cost.maxCost).normalized())

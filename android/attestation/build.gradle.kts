@@ -3,6 +3,8 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-library`
+    // Cadeias sintéticas (fixtures/TestChains.kt) compartilhadas com os testes do :attester
+    `java-test-fixtures`
     alias(libs.plugins.detekt)
 }
 

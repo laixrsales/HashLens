@@ -25,6 +25,7 @@ import br.ufv.hashlens.domain.usecase.EditResult
 import br.ufv.hashlens.domain.usecase.ImportForEditUseCase
 import br.ufv.hashlens.domain.usecase.ImportResult
 import br.ufv.hashlens.domain.usecase.ImportedParent
+import br.ufv.hashlens.domain.usecase.RegistrationProgress
 import br.ufv.hashlens.domain.usecase.RetryRegistrationUseCase
 import br.ufv.hashlens.testing.MutableClock
 import br.ufv.hashlens.testing.RecordingMetrics
@@ -417,6 +418,22 @@ class EditorViewModelTest {
 
         metrics.records shouldBe
             listOf(RecordingMetrics.Record(Metric.EDIT_TO_SUBMITTED, Duration.ofSeconds(11), "Submitted"))
+    }
+
+    @Test
+    fun `verificação da integridade aparece no Acompanhamento da edição`() = runTest(dispatcher) {
+        coEvery { editAndRegister(PARENT_ID, any(), ADDRESS, any()) } coAnswers {
+            val onProgress = arg<(RegistrationProgress) -> Unit>(3)
+            onProgress(RegistrationProgress.Saved(EDITED_ID))
+            onProgress(RegistrationProgress.VerifyingDevice)
+            kotlinx.coroutines.awaitCancellation()
+        }
+        val viewModel = viewModel()
+        viewModel.act(EditorAction.SelectTool(EditorTool.Grayscale), EditorAction.Save)
+
+        viewModel.act(EditorAction.ConfirmSave)
+
+        viewModel.ui.value.progress.shouldNotBeNull().stage shouldBe RegistrationStage.VerifyingDevice
     }
 
     @Test

@@ -100,7 +100,7 @@ release.keyPassword=...
 2. No explorador, conferir o evento `DeviceAttested` com a cadeia e `getDevice(id)` com
    `attestationHash` e `registeredBlock`.
 3. Deploy de avaliação: `uv run tools/chain/tentar_origens_nao_autorizadas.py` (research R15).
-   Esperado: todas as tentativas mineradas e revertidas, com o erro esperado em
+   Esperado: todas as tentativas mineradas e revertidas (a de outra carteira, simulada), com o erro esperado em
    `docs/resultados/dados/recusas.csv` (SC-001).
 4. APK de debug apontando para o atestador de avaliação: o vínculo é recusado como "aplicativo
    não original" (SC-001, app reassinado).

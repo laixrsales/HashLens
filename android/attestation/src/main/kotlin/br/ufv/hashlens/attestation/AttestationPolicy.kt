@@ -101,6 +101,15 @@ class AttestationPolicy(
     ) {
         private val leaf = certificates.first()
         private val serials = certificates.map { it.serialNumber.toString(SERIAL_RADIX) }
+
+        /**
+         * A lista do Google diz usar hex, mas metade das chaves tem só dígitos e 17 a 20 caracteres,
+         * o que em hex seria improvável: parecem seriais de 64 bits em decimal. Para não deixar
+         * passar um certificado revogado, o serial conta nas duas formas.
+         */
+        private val serialForms = certificates.flatMap {
+            listOf(it.serialNumber.toString(SERIAL_RADIX), it.serialNumber.toString())
+        }
         private val hardware = description.hardwareEnforced
         private val challenge = AttestationChallenge.decode(description.attestationChallenge.toByteArray())
         private val securityLevel = securityLevel()
@@ -108,7 +117,7 @@ class AttestationPolicy(
 
         /** Na ordem da policy §3. */
         private val rules: List<Pair<RejectReason, () -> Boolean>> = listOf(
-            RejectReason.REVOKED to { serials.none { it in revoked } },
+            RejectReason.REVOKED to { serialForms.none { it in revoked } },
             RejectReason.NOT_HARDWARE to { securityLevel != null },
             RejectReason.BOOT_NOT_VERIFIED to {
                 hardware.rootOfTrust?.let { it.verifiedBootState == VerifiedBootState.VERIFIED && it.deviceLocked } ==

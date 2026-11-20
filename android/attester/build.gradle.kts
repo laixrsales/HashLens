@@ -38,6 +38,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.ktor.server.test.host)
+    testImplementation(testFixtures(project(":attestation")))
 }
 
 tasks.test {

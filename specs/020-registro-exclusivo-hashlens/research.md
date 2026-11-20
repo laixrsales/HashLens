@@ -288,7 +288,9 @@ true`; `osPatchLevel` com no máximo 24 meses em relação a `emitidoEm`; pacote
   estimativa, para que a transação seja minerada e revertida), e grava hash, erro e bloco em
   `docs/resultados/dados/recusas.csv`. Tentativas: vínculo sem autorização, com autorização de
   outra carteira, vencida ou reutilizada; registro com assinatura de outra chave e com dados
-  alterados após assinar (reaproveitando uma assinatura real de um registro existente). "App
+  alterados após assinar (reaproveitando uma assinatura real de um registro existente). Basta
+  uma carteira (prova de conceito): a tentativa "autorização de outra carteira" é simulada com
+  `cast call --from` outro endereço, sem envio, e entra no CSV com `status simulada`. "App
   reassinado" é medido pelo APK de debug contra o atestador de avaliação (recusa
   `APP_NOT_GENUINE`). `registrar_adulterados.py` é aposentado: sua premissa (o contrato aceita
   assinatura inválida, `002/R5`) deixou de valer.

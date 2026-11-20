@@ -175,6 +175,10 @@ dependencies {
     // Política de atestação compartilhada com o atestador (020 research R4)
     implementation(project(":attestation"))
 
+    // Atestador (020/T036): HTTP e JSON
+    implementation(libs.okhttp)
+    implementation(libs.gson)
+
     // Blockchain e carteira
     implementation(libs.web3j.core)
     implementation(platform(libs.reown.bom))
@@ -190,6 +194,7 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.room.testing)

@@ -15,14 +15,16 @@ Critérios de sucesso:
 
 | O quê                                                                    | Para quê                                                                                                                                                                                             |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tools/chain/registrar_adulterados.py`                                   | Registra na Sepolia fotos com a assinatura do aparelho adulterada (`s` trocado por `s + 1`), com uma chave de aparelho de teste. Com `--controle`, registra uma foto com a assinatura correta.       |
+| `tools/chain/tentar_origens_nao_autorizadas.py` | Contrato v2 (020): tenta vincular e registrar por fora do HashLens genuíno, inclusive com assinatura do aparelho de outra chave ou com dados alterados. Cada transação é minerada e revertida, e o resultado vai para `docs/resultados/dados/recusas.csv` (020 SC-001 e SC-007). |
 | `tools/chain/montar_conjunto.sh`                                         | Copia as fotos para o aparelho, separadas por rótulo esperado. O rótulo vem do contrato, consultado com `cast` sobre o SHA-256 calculado no computador: é um gabarito independente do código do app. |
 | `android/app/src/androidTest/.../evaluation/ClassificationMatrixTest.kt` | Verifica cada arquivo com o caso de uso real (`VerifyImageUseCase` contra a Sepolia), monta a matriz esperado × obtido e falha se faltar arquivo ou se algum critério ficar abaixo de 100%.          |
 
-**Por que o controle.** O app classifica como "Registro adulterado" qualquer assinatura que não
-confere, inclusive uma montada com o payload errado. A foto de controle passa pelo mesmo script, só
-que sem alterar o `s`, e precisa sair como "Registrada – original". Isso mostra que o "adulterado"
-das outras vem do `s` alterado.
+> **Contrato v2 (020).** O contrato passou a conferir a assinatura do aparelho, e um registro
+> adulterado deixou de ser possível: a rede recusa a transação. Por isso,
+> `registrar_adulterados.py` foi removido, e o SC-003 desta matriz passa a ser medido pelas recusas
+> de `tentar_origens_nao_autorizadas.py` (roteiro em `specs/020-registro-exclusivo-hashlens/quickstart.md`
+> §5, US1 passo 3). A adaptação do conjunto rotulado e do `ClassificationMatrixTest` à v2 é a
+> 020/T061; os passos abaixo descrevem a execução no contrato da 002.
 
 ## 1. Roteiro do quickstart
 
@@ -51,22 +53,8 @@ originais e 1 versão).
    (US4). Espere cada uma chegar a "Foto registrada". Fotos com falha ou pendentes ficam de fora
    automaticamente no passo 4.
 
-2. **Adulteradas (≥ 3) e controle.** Tire 4 fotos novas com a câmera do sistema (não pelo
-   HashLens) e copie-as para o computador. Separe uma para o controle:
-
-   ```bash
-   mkdir -p ~/hashlens-avaliacao/adulteradas ~/hashlens-avaliacao/controle
-   # copie 3 fotos para adulteradas/ e 1 para controle/
-   export SEPOLIA_RPC_URL=...              # não versionar
-   export ADULTERADOR_PRIVATE_KEY=0x...    # carteira de teste com SepoliaETH (pode ser a de deploy)
-   uv run tools/chain/registrar_adulterados.py --simular ~/hashlens-avaliacao/adulteradas/*   # confere, não envia
-   uv run tools/chain/registrar_adulterados.py \
-     --controle ~/hashlens-avaliacao/controle/* ~/hashlens-avaliacao/adulteradas/*
-   ```
-
-   Na primeira execução, o script vincula o aparelho de teste à carteira (1 transação a mais). As
-   transações vão para `docs/resultados/dados/adulterados.csv`. Apague essas 4 fotos de DCIM/Camera
-   do aparelho, para que o passo 4 não as pegue como não registradas.
+2. **Adulteradas.** No contrato v2 não há como registrá-las (ver o aviso acima): as tentativas
+   e as transações revertidas ficam em `docs/resultados/dados/recusas.csv`.
 
 3. **Cópias quase iguais (opcional, recomendado).** Cópias recomprimidas de fotos registradas são o
    caso mais difícil do SC-002: o arquivo é outro, mas a aparência é a mesma. Elas devem sair como
@@ -83,12 +71,10 @@ originais e 1 versão).
    ```
 
 4. **Montar no aparelho.** Este passo pega as 20 fotos mais recentes da câmera do sistema sem
-   registro e soma as cópias e as adulteradas:
+   registro e soma as cópias:
 
    ```bash
-   PASTA_EXTRA_REGISTRADAS=~/hashlens-avaliacao/controle \
    PASTA_EXTRA_NAO_REGISTRADOS=~/hashlens-avaliacao/copias \
-   PASTA_ADULTERADOS=~/hashlens-avaliacao/adulteradas \
      tools/chain/montar_conjunto.sh 20
    ```
 

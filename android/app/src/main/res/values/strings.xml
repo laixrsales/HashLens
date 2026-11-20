@@ -138,6 +138,9 @@
     <string name="registration_pending_message">A rede está confirmando o registro. Você pode sair desta tela: o registro continua e o andamento fica em Meu acervo.</string>
     <string name="registration_confirmed_message">Registrada em %1$s.</string>
     <string name="registration_failed_message">O registro não foi concluído. Nada foi registrado em seu nome.</string>
+    <string name="step_device_integrity">Integridade do aparelho</string>
+    <string name="step_device_integrity_detail">Conferindo que este é o HashLens original, num aparelho sem modificações. Leva alguns segundos e não custa nada.</string>
+    <string name="registration_verifying_message">Verificando a integridade do aparelho antes de vinculá-lo à sua carteira. A carteira ainda não foi aberta.</string>
     <string name="step_device_binding">Vínculo do aparelho</string>
     <string name="step_device_binding_detail">Primeiro registro com esta carteira neste aparelho: aprove o vínculo na carteira. Isso só acontece uma vez.</string>
     <string name="step_device_binding_new_key_detail">Este aparelho ganhou uma chave nova e precisa ser vinculado de novo. Seus registros anteriores continuam válidos.</string>

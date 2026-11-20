@@ -91,7 +91,8 @@ class CaptureAndRegisterUseCaseTest {
         coEvery { gallery.save(JPEG, any()) } returns uri
         coEvery { gallery.read(uri) } returns JPEG
         coEvery { reader.getIdBySha256(SHA) } returns null
-        coEvery { ensureDeviceBound(WALLET, any()) } returns BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
+        coEvery { ensureDeviceBound(WALLET, any()) } returns
+            BoundDevice(deviceId = DEVICE_ID, newlyBound = false, walletAddress = WALLET)
         every { keyManager.sign(WALLET, any()) } returns SIGNATURE
         coEvery { txBuilder.estimate(WALLET, CALLDATA) } returns ENOUGH
         coEvery { wallet.sendTransaction(any(), any()) } returns TX
@@ -153,7 +154,7 @@ class CaptureAndRegisterUseCaseTest {
         // Status gravado quando o vínculo é conferido e quando a carteira é aberta
         coEvery { ensureDeviceBound(WALLET, any()) } coAnswers {
             seen += onlyImage().status
-            BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
+            BoundDevice(deviceId = DEVICE_ID, newlyBound = false, walletAddress = WALLET)
         }
         coEvery { wallet.sendTransaction(any(), any()) } coAnswers {
             seen += onlyImage().status

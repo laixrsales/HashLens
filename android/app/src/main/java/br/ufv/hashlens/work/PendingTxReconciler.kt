@@ -23,7 +23,12 @@ import javax.inject.Inject
  * - `PENDING` com recibo revertido, ou sem recibo depois de [ChainConfig.pendingTimeout] desde
  *   `submittedAt` → reconciliação por `getIdBySha256`: hash on-chain → `CONFIRMED` com esse id;
  *   senão `FAILED(REVERTED)` ou `FAILED(TIMEOUT)`;
- * - `FAILED(TIMEOUT)` → reconciliação de novo, porque a transação ainda pode ser minerada.
+ * - `FAILED(TIMEOUT)` → reconciliação de novo, porque a transação ainda pode ser minerada;
+ * - `AWAITING_WALLET` → reconciliação também: se o sistema encerrou o app com o pedido aberto na
+ *   carteira, a resposta com o `txHash` não volta, mas a carteira pode ter enviado. Hash on-chain →
+ *   `CONFIRMED`; sem ele, depois de [ChainConfig.pendingTimeout] desde `createdAt`,
+ *   `FAILED(TIMEOUT)`, que continua sendo reconciliado. Se o pedido ainda estiver aberto (um reenvio
+ *   de imagem antiga), a resposta da carteira grava o estado final por cima.
  *
  * O hash é a identidade do registro, não o `txHash`: nenhum registro vai a `FAILED` sem consultar
  * `getIdBySha256`.
@@ -46,6 +51,8 @@ class PendingTxReconciler @Inject constructor(
             image.status == RegistrationStatus.PENDING -> track(image)
             image.status == RegistrationStatus.FAILED && image.failureReason == FailureReason.TIMEOUT ->
                 reconcile(image, failure = null)
+            image.status == RegistrationStatus.AWAITING_WALLET ->
+                reconcile(image, failure = FailureReason.TIMEOUT.takeIf { awaitingTooLong(image) })
         }
     }
 
@@ -87,6 +94,9 @@ class PendingTxReconciler @Inject constructor(
         val submittedAt = image.submittedAt ?: return true
         return clock.millis() - submittedAt >= config.pendingTimeout.toMillis()
     }
+
+    private fun awaitingTooLong(image: LocalImageEntity): Boolean =
+        clock.millis() - image.createdAt >= config.pendingTimeout.toMillis()
 
     private companion object {
         /** Confirmado pelo recibo da transação. */

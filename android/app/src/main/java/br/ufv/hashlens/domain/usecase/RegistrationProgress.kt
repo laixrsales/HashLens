@@ -11,6 +11,12 @@ sealed interface RegistrationProgress {
     data class Saved(val localId: Long) : RegistrationProgress
 
     /**
+     * Verificando a integridade do aparelho com o atestador, antes do vínculo (020 FR-012). Vem
+     * antes de [BindingDevice] e não abre a carteira.
+     */
+    data object VerifyingDevice : RegistrationProgress
+
+    /**
      * A carteira vai abrir para vincular este aparelho (research R4).
      *
      * @param newKey `true` quando a carteira já tinha vínculo local com outra chave (perda, R25).
