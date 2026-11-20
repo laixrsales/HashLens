@@ -188,6 +188,21 @@ class CaptureViewModelTest {
     }
 
     @Test
+    fun `verificação da integridade aparece antes do vínculo`() = runTest(dispatcher) {
+        coEvery { captureAndRegister(photo, ROTATION, ADDRESS, any()) } coAnswers {
+            val onProgress = arg<(RegistrationProgress) -> Unit>(3)
+            onProgress(RegistrationProgress.Saved(LOCAL_ID))
+            onProgress(RegistrationProgress.VerifyingDevice)
+            kotlinx.coroutines.awaitCancellation()
+        }
+        val viewModel = viewModel()
+
+        viewModel.onPhotoTaken(photo, ROTATION, thumbnail)
+
+        viewModel.stage() shouldBe RegistrationStage.VerifyingDevice
+    }
+
+    @Test
     fun `pendente confirma pelo acompanhamento e mostra a data e os detalhes técnicos`() = runTest(dispatcher) {
         capture(CaptureResult.Submitted(LOCAL_ID, TX), RegistrationProgress.Saved(LOCAL_ID))
         coEvery { images.getById(LOCAL_ID) } returnsMany listOf(

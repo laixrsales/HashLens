@@ -51,6 +51,8 @@ keyattestationProtobuf = "4.28.3"
 keyattestationBouncyCastle = "1.78.1"
 keyattestationGuava = "33.5.0-jre"
 ktor = "3.6.1"
+# Mesma versão que o BOM do Reown resolve para o web3j (cliente do atestador, 020/T036)
+okhttp = "5.4.0"
 # Testes originais da keyattestation, rodados no módulo :keyattestation
 truth = "1.4.4"
 testParameterInjector = "1.18"
@@ -136,6 +138,8 @@ bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref 
 guava-jre = { module = "com.google.guava:guava", version.ref = "keyattestationGuava" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "coroutines" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver3", version.ref = "okhttp" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }

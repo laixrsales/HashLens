@@ -207,6 +207,52 @@ class PendingTxWorkerTest {
     }
 
     @Test
+    fun `aguardando a carteira com o hash já na rede confirma (app encerrado com o pedido aberto)`() = runTest {
+        val id = awaitingWallet()
+        onChainId(9)
+
+        runWorker(Duration.ofMinutes(5))
+
+        image(id).shouldBeConfirmed(recordId = 9)
+    }
+
+    @Test
+    fun `aguardando a carteira sem o hash na rede continua aguardando antes do prazo`() = runTest {
+        val id = awaitingWallet()
+        onChainId(null)
+
+        runWorker(Duration.ofMinutes(29))
+
+        image(id).run {
+            status shouldBe RegistrationStatus.AWAITING_WALLET
+            failureReason.shouldBeNull()
+        }
+    }
+
+    @Test
+    fun `aguardando a carteira por 30 min sem o hash na rede falha por TIMEOUT e segue reconciliado`() = runTest {
+        val id = awaitingWallet()
+        onChainId(null)
+        runWorker(Duration.ofMinutes(30))
+        image(id).run {
+            status shouldBe RegistrationStatus.FAILED
+            failureReason shouldBe FailureReason.TIMEOUT
+        }
+
+        onChainId(9)
+        runWorker(Duration.ofMinutes(45))
+
+        image(id).shouldBeConfirmed(recordId = 9)
+    }
+
+    /** Pedido aberto na carteira: sem `txHash` nem `submittedAt`, criado em `SUBMITTED_AT`. */
+    private suspend fun awaitingWallet(): Long {
+        val id = insert(RegistrationStatus.AWAITING_WALLET)
+        images.update(image(id).copy(txHash = null, submittedAt = null))
+        return id
+    }
+
+    @Test
     fun `29 min sem recibo continua PENDING sem consultar o hash`() = runTest {
         val id = insert()
         receipt(null)

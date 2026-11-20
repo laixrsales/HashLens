@@ -115,7 +115,8 @@ class EditAndRegisterUseCaseTest {
         coEvery { gallery.save(EDITED_JPEG, any()) } returns editedUri
         coEvery { gallery.read(editedUri) } returns EDITED_JPEG
         coEvery { reader.getIdBySha256(EDITED_SHA) } returns null
-        coEvery { ensureDeviceBound(WALLET, any()) } returns BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
+        coEvery { ensureDeviceBound(WALLET, any()) } returns
+            BoundDevice(deviceId = DEVICE_ID, newlyBound = false, walletAddress = WALLET)
         every { keyManager.sign(WALLET, any()) } returns SIGNATURE
         coEvery { txBuilder.estimate(WALLET, any()) } returns ENOUGH
         coEvery { wallet.sendTransaction(any(), any()) } returns TX

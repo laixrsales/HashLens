@@ -73,7 +73,8 @@ class RetryRegistrationUseCaseTest {
 
     init {
         coEvery { reader.getIdBySha256(SHA) } returns null
-        coEvery { ensureDeviceBound(any(), any()) } returns BoundDevice(deviceId = DEVICE_ID, newlyBound = false)
+        coEvery { ensureDeviceBound(any(), any()) } returns
+            BoundDevice(deviceId = DEVICE_ID, newlyBound = false, walletAddress = WALLET)
         every { keyManager.sign(any(), any()) } returns SIGNATURE
         coEvery { txBuilder.estimate(any(), any()) } returns ENOUGH
         coEvery { wallet.sendTransaction(any(), any()) } returns TX

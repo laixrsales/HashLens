@@ -207,6 +207,15 @@ class AttestationPolicyTest {
     }
 
     @Test
+    fun `REVOKED tambem com o serial em decimal, como parte da lista do Google`() {
+        val generated = TestChains.generate(Params(challenge = challenge()))
+        val decimal = generated.certificates[1].serialNumber.toString()
+
+        AttestationPolicy(trustAnchors = { TestChains.anchors }, revokedSerials = { setOf(decimal) })
+            .evaluate(generated.chain, expected(generated.publicKey)) shouldBe rejected(RejectReason.REVOKED)
+    }
+
+    @Test
     fun `NOT_HARDWARE`() {
         evaluate(Params(challenge = challenge(), attestationSecurityLevel = LibSecurityLevel.SOFTWARE)) shouldBe
             rejected(RejectReason.NOT_HARDWARE)

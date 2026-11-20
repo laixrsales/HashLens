@@ -53,6 +53,12 @@ O limite de patch (regra 5) continua contado a partir de `issuedAt` nos dois con
 
 Quando mais de uma regra falha, o motivo devolvido é o da primeira na ordem da tabela.
 
+Na regra 2, o serial de cada certificado é procurado na lista em hex minúsculo **e em decimal**
+(020/T034, 2026-11-18): a lista real tinha 1.787 entradas, 796 em hex de 30 a 32 dígitos e 991 só
+com dígitos e 17 a 20 caracteres, tamanho que só faz sentido para seriais de 64 bits em decimal. A
+biblioteca `android/keyattestation` compara só o hex e só `REVOKED`; a policy compara as duas
+formas e também `SUSPENDED`.
+
 `origin = GENERATED` na regra 7 (acrescentado na implementação, 020/T022): uma chave importada
 para o Keystore (`IMPORTED` ou `SECURELY_IMPORTED`) também recebe atestação de hardware, mas quem a
 importou tem uma cópia da chave privada e poderia assinar qualquer imagem fora do aparelho.

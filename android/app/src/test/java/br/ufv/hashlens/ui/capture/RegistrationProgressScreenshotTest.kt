@@ -14,6 +14,10 @@ class RegistrationProgressScreenshotTest : ScreenshotTest() {
         RegistrationProgressScreen(state, onAction = {}, zone = SampleData.ZONE)
     }
 
+    /** 020/T038: verificação da integridade do aparelho antes do vínculo (FR-012). */
+    @Test
+    fun verifyingDevice() = progress("verificando_integridade", RegistrationProgressSamples.verifyingDevice)
+
     @Test
     fun bindingDevice() = progress("vinculando_aparelho", RegistrationProgressSamples.bindingDevice)
 

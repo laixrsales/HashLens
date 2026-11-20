@@ -7,18 +7,20 @@
 #
 # - originais / versoes: fotos de Pictures/HashLens do aparelho que têm registro
 #   (parentId 0 → originais; senão → versoes). Fotos sem registro (falha, pendente) ficam de fora.
-#   Os arquivos de PASTA_EXTRA_REGISTRADAS, se definida, entram pelo mesmo critério (ex.: a foto de
-#   controle de registrar_adulterados.py, registrada com a assinatura correta).
+#   Os arquivos de PASTA_EXTRA_REGISTRADAS, se definida, entram pelo mesmo critério (ex.: fotos
+#   registradas por outro aparelho ou carteira).
 # - nao_registrados: as N fotos mais recentes de DCIM/Camera (JPEG) sem registro, mais os
 #   arquivos de PASTA_EXTRA_NAO_REGISTRADOS, se definida (ex.: cópias recomprimidas ou recortadas
 #   de fotos registradas, que devem dar "Correspondência visual" ou "Não registrada").
-# - adulterados: os arquivos de PASTA_ADULTERADOS (as fotos enviadas por
-#   tools/chain/registrar_adulterados.py, sem a de controle).
+# - adulterados: os arquivos de PASTA_ADULTERADOS, se definida, que tenham registro. Com o
+#   contrato v2 (020) não há mais como criar um registro com assinatura adulterada: a rede recusa
+#   (tools/chain/tentar_origens_nao_autorizadas.py, docs/resultados/dados/recusas.csv). A
+#   adaptação do conjunto à v2 é a 020/T061.
 #
 # Uso (a partir da raiz; aparelho conectado com o app de debug instalado):
 #
 #   export SEPOLIA_RPC_URL=...
-#   PASTA_ADULTERADOS=~/adulterados tools/chain/montar_conjunto.sh 20
+#   tools/chain/montar_conjunto.sh 20
 #
 # Os arquivos são copiados para /sdcard/Android/data/br.ufv.hashlens/files/conjunto/ e nada sai
 # do aparelho além de uma cópia temporária no computador, apagada no fim. A lista com os rótulos

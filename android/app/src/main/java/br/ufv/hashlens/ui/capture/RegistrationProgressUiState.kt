@@ -20,6 +20,12 @@ data class RegistrationProgressUiState(
 /** Em que ponto está o registro (data-model §2.3, na linguagem da tela). */
 sealed interface RegistrationStage {
     /**
+     * Verificando a integridade do aparelho com o atestador, antes do vínculo (020 FR-012). A
+     * carteira ainda não foi aberta.
+     */
+    data object VerifyingDevice : RegistrationStage
+
+    /**
      * Vinculando este aparelho à carteira antes do registro (research R4).
      *
      * @param newKey `true` quando a chave do aparelho mudou (reinstalação, research R25).

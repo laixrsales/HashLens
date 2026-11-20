@@ -1,5 +1,6 @@
 package br.ufv.hashlens.ui.capture
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -142,6 +143,10 @@ private fun TopBar(onClose: () -> Unit) {
 @Composable
 private fun Header(stage: RegistrationStage, zone: ZoneId) {
     when (stage) {
+        RegistrationStage.VerifyingDevice -> StatusHeader(
+            ImageStatus.Pending,
+            stringResource(R.string.registration_verifying_message)
+        )
         is RegistrationStage.BindingDevice -> StatusHeader(
             ImageStatus.Pending,
             stringResource(R.string.registration_binding_message)
@@ -164,18 +169,7 @@ private fun Header(stage: RegistrationStage, zone: ZoneId) {
             stringResource(R.string.registration_confirmed_message, DateFormat.dateTime(stage.registeredAt, zone)),
             title = stringResource(R.string.status_photo_registered)
         )
-        is RegistrationStage.Failed -> StatusHeader(
-            ImageStatus.Failed,
-            stringResource(
-                when (stage.reason) {
-                    RegistrationFailure.Rejected, RegistrationFailure.Network -> R.string.registration_failed_message
-                    RegistrationFailure.Timeout -> R.string.registration_timeout_message
-                    RegistrationFailure.Reverted -> R.string.registration_reverted_message
-                    RegistrationFailure.HashMismatch -> R.string.registration_hash_mismatch_message
-                    RegistrationFailure.SaveFailed -> R.string.registration_save_failed_message
-                }
-            )
-        )
+        is RegistrationStage.Failed -> StatusHeader(ImageStatus.Failed, stringResource(stage.reason.message))
         is RegistrationStage.InsufficientFunds -> StatusHeader(
             ImageStatus.Failed,
             stringResource(
@@ -191,6 +185,15 @@ private fun Header(stage: RegistrationStage, zone: ZoneId) {
         )
     }
 }
+
+private val RegistrationFailure.message: Int
+    @StringRes get() = when (this) {
+        RegistrationFailure.Rejected, RegistrationFailure.Network -> R.string.registration_failed_message
+        RegistrationFailure.Timeout -> R.string.registration_timeout_message
+        RegistrationFailure.Reverted -> R.string.registration_reverted_message
+        RegistrationFailure.HashMismatch -> R.string.registration_hash_mismatch_message
+        RegistrationFailure.SaveFailed -> R.string.registration_save_failed_message
+    }
 
 /**
  * Foto sob exame, com cantoneiras na cor do status. Em cinza enquanto não confirma; ao confirmar,
@@ -242,8 +245,10 @@ private fun Actions(stage: RegistrationStage, onAction: (RegistrationProgressAct
             )
         }
         when (stage) {
-            is RegistrationStage.BindingDevice, is RegistrationStage.AwaitingApproval, RegistrationStage.Pending ->
-                backHome()
+            RegistrationStage.VerifyingDevice,
+            is RegistrationStage.BindingDevice,
+            is RegistrationStage.AwaitingApproval,
+            RegistrationStage.Pending -> backHome()
             is RegistrationStage.Confirmed ->
                 PrimaryButton(stringResource(R.string.action_done), onClick = {
                     onAction(RegistrationProgressAction.Done)
@@ -289,21 +294,37 @@ private fun Actions(stage: RegistrationStage, onAction: (RegistrationProgressAct
 /** Cor das cantoneiras: âmbar na espera, verde ao confirmar, vermelho na falha. */
 private val RegistrationStage.status: ImageStatus
     get() = when (this) {
-        is RegistrationStage.BindingDevice, is RegistrationStage.AwaitingApproval, RegistrationStage.Pending ->
-            ImageStatus.Pending
+        RegistrationStage.VerifyingDevice,
+        is RegistrationStage.BindingDevice,
+        is RegistrationStage.AwaitingApproval,
+        RegistrationStage.Pending -> ImageStatus.Pending
         is RegistrationStage.Confirmed, is RegistrationStage.AlreadyRegistered -> ImageStatus.Original
         is RegistrationStage.Failed, is RegistrationStage.InsufficientFunds -> ImageStatus.Failed
     }
 
-/** Etapas (Salva na galeria → [Vínculo do aparelho] → Aprovação na carteira → Enviado → Confirmado). */
+/**
+ * Etapas (Salva na galeria → [Integridade do aparelho → Vínculo do aparelho] → Aprovação na carteira
+ * → Enviado → Confirmado). As duas do aparelho só aparecem no primeiro registro com a carteira.
+ */
 internal fun RegistrationStage.steps(): List<ProgressStep> = when (this) {
+    RegistrationStage.VerifyingDevice -> registrationSteps(StepState.Done).let {
+        listOf(
+            it.first(),
+            ProgressStep(R.string.step_device_integrity, StepState.Active, R.string.step_device_integrity_detail),
+            ProgressStep(R.string.step_device_binding, StepState.Waiting)
+        ) + it.drop(1)
+    }
     is RegistrationStage.BindingDevice -> registrationSteps(StepState.Done).let {
         val detail = if (newKey) {
             R.string.step_device_binding_new_key_detail
         } else {
             R.string.step_device_binding_detail
         }
-        listOf(it.first(), ProgressStep(R.string.step_device_binding, StepState.Active, detail)) + it.drop(1)
+        listOf(
+            it.first(),
+            ProgressStep(R.string.step_device_integrity, StepState.Done),
+            ProgressStep(R.string.step_device_binding, StepState.Active, detail)
+        ) + it.drop(1)
     }
     is RegistrationStage.AwaitingApproval ->
         registrationSteps(StepState.Done, StepState.Active, walletDetail = R.string.step_wallet_detail)
@@ -353,6 +374,13 @@ private fun registrationSteps(
 @Composable
 private fun RegistrationPendingPreview() = HashLensTheme {
     RegistrationProgressScreen(RegistrationProgressSamples.pending, onAction = {}, zone = SampleData.ZONE)
+}
+
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun RegistrationVerifyingPreview() = HashLensTheme {
+    RegistrationProgressScreen(RegistrationProgressSamples.verifyingDevice, onAction = {}, zone = SampleData.ZONE)
 }
 
 @Preview
@@ -431,6 +459,7 @@ private fun RegistrationAlreadyPreview() = HashLensTheme {
 object RegistrationProgressSamples {
     private fun state(stage: RegistrationStage) = RegistrationProgressUiState(stage, SampleData.Photo.landscape())
 
+    val verifyingDevice get() = state(RegistrationStage.VerifyingDevice)
     val bindingDevice get() = state(RegistrationStage.BindingDevice())
     val newDeviceKey get() = state(RegistrationStage.BindingDevice(newKey = true))
     val awaitingApproval get() = state(RegistrationStage.AwaitingApproval(SampleData.Chain.REGISTRATION_COST))

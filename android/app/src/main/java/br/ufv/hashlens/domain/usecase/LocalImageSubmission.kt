@@ -8,6 +8,8 @@ import br.ufv.hashlens.data.local.FailureReason
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.RegistrationStatus
 import br.ufv.hashlens.data.wallet.WalletException
+import br.ufv.hashlens.domain.model.AttesterUnavailableException
+import br.ufv.hashlens.domain.model.DeviceNotEligibleException
 import br.ufv.hashlens.domain.model.Sha256
 
 // Etapas comuns à captura (CaptureAndRegisterUseCase) e à edição (EditAndRegisterUseCase)
@@ -26,7 +28,8 @@ internal suspend fun submitLocalImage(
     images: LocalImageDao
 ): CaptureResult = bindDevice(ensureDeviceBound, walletAddress, onProgress).fold(
     onSuccess = { device ->
-        when (val result = registerLocalImage(localId, walletAddress, device.deviceId, onProgress)) {
+        // A carteira do vínculo: pode ser outra se a pessoa trocou de conta durante a verificação
+        when (val result = registerLocalImage(localId, device.walletAddress, device.deviceId, onProgress)) {
             is SubmissionResult.Submitted -> CaptureResult.Submitted(localId, result.txHash)
             is SubmissionResult.Failed -> CaptureResult.Failed(localId, result.reason)
             is SubmissionResult.InsufficientFunds -> CaptureResult.InsufficientFunds(localId, result.cost)
@@ -55,6 +58,11 @@ internal suspend fun RegistryReader.lookupId(sha256: Sha256): Result<Long?> = tr
     Result.success(getIdBySha256(sha256))
 } catch (e: RegistryException) {
     Result.failure(e)
+} catch (e: DeviceNotEligibleException) {
+    // Estados próprios na tela na 020/T043–T046 (US2); a carteira não chegou a abrir
+    Result.failure(e)
+} catch (e: AttesterUnavailableException) {
+    Result.failure(e)
 }
 
 private suspend fun bindDevice(
@@ -70,5 +78,10 @@ private suspend fun bindDevice(
 } catch (e: TransactionException) {
     Result.failure(e)
 } catch (e: RegistryException) {
+    Result.failure(e)
+} catch (e: DeviceNotEligibleException) {
+    // Estados próprios na tela na 020/T043–T046 (US2); a carteira não chegou a abrir
+    Result.failure(e)
+} catch (e: AttesterUnavailableException) {
     Result.failure(e)
 }
