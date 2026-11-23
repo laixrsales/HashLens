@@ -34,6 +34,7 @@ import br.ufv.hashlens.ui.common.AddressFormat
 import br.ufv.hashlens.ui.common.DateFormat
 import br.ufv.hashlens.ui.common.PercentFormat
 import br.ufv.hashlens.ui.components.ImageStatus
+import br.ufv.hashlens.ui.components.RevocationNotice
 import br.ufv.hashlens.ui.components.StatusBadge
 import br.ufv.hashlens.ui.theme.AtkinsonMono
 import br.ufv.hashlens.ui.theme.HashLensTheme
@@ -60,6 +61,7 @@ internal fun OriginalFacts(record: RecordView, zone: ZoneId) {
     Fact(stringResource(R.string.fact_registered_by), shortAddress(record.registrant), isAddress = true)
     Fact(stringResource(R.string.fact_when), DateFormat.dateTime(record.timestamp, zone))
     Fact(stringResource(R.string.fact_device), stringResource(R.string.fact_device_value, record.deviceId))
+    OriginFact(record)
 }
 
 @Composable
@@ -73,6 +75,23 @@ internal fun EditedFacts(record: RecordView, original: RecordView, zone: ZoneId)
         detail = DateFormat.dateTime(original.timestamp, zone)
     )
     Fact(stringResource(R.string.fact_device), stringResource(R.string.fact_device_value, record.deviceId))
+    OriginFact(record)
+}
+
+/** Linha de origem (020 FR-014): só registros válidos têm origem atestada. */
+@Composable
+private fun OriginFact(record: RecordView) {
+    if (record.origin != null) Fact(stringResource(R.string.fact_origin), stringResource(R.string.fact_origin_value))
+}
+
+/**
+ * Aviso de revogação ou nota de revogação não consultada (020 FR-017), logo abaixo dos fatos; a
+ * classificação não muda.
+ */
+@Composable
+internal fun OriginNotice(record: RecordView) {
+    val revocation = record.origin?.revocation ?: return
+    RevocationNotice(revocation, Modifier.padding(top = HashLensTheme.spacing.lg))
 }
 
 /** Rótulo à esquerda, valor à direita; com fonte grande, cada lado quebra a linha no próprio espaço. */
@@ -118,6 +137,12 @@ internal fun Candidates(
     candidates.forEach { candidate ->
         CandidateRow(candidate, zone, onClick = { onAction(VerificationResultAction.ViewHistory(candidate.record.id)) })
     }
+    // Só candidatos com atestação válida chegam aqui (020 verification-result §1)
+    Text(
+        stringResource(R.string.visual_match_origin),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /** Um registro visualmente igual; tocar abre o histórico dele. */
@@ -164,6 +189,7 @@ private fun CandidateRow(candidate: VerificationResult.VisualMatch.Candidate, zo
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            candidate.record.origin?.let { RevocationNotice(it.revocation, compact = true) }
         }
         // Decorativo: a linha já anuncia "Ver histórico da imagem"
         Icon(

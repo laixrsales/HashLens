@@ -1,12 +1,12 @@
 package br.ufv.hashlens.domain.usecase
 
-import br.ufv.hashlens.testing.TestDevices
-import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.attestation.fixtures.TestChains
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.crypto.SignatureCodec
 import br.ufv.hashlens.core.crypto.SignaturePayload
 import br.ufv.hashlens.core.hashing.PerceptualHasher
 import br.ufv.hashlens.core.hashing.Sha256Hasher
+import br.ufv.hashlens.data.attestation.RevocationRepository
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.domain.model.Device
@@ -15,9 +15,11 @@ import br.ufv.hashlens.domain.model.EditOperationCodec
 import br.ufv.hashlens.domain.model.ImageRecord
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.RecordView
+import br.ufv.hashlens.domain.model.RevocationStatus
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
+import br.ufv.hashlens.testing.TestAttestation
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -28,12 +30,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.io.IOException
-import java.math.BigInteger
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.Signature
-import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
@@ -47,9 +47,11 @@ import org.junit.jupiter.api.Test
  * chaves P-256 geradas na hora, sobre o mesmo payload v1 que o app assina (signature-payload §1).
  */
 class VerifyImageUseCaseTest {
-    private val config = ChainConfig(rpcUrl = "", registryAddress = CONTRACT, reownProjectId = "")
+    private val config = TestAttestation.config(CONTRACT)
     private val perceptualHasher = mockk<PerceptualHasher>()
     private val reader = mockk<RegistryReader>()
+    private val revocation = mockk<RevocationRepository>()
+    private val chains = mutableMapOf<Int, List<ByteArray>>()
 
     private val records = mutableMapOf<Long, ImageRecord>()
     private val devices = mutableMapOf<Int, Device>()
@@ -59,7 +61,8 @@ class VerifyImageUseCaseTest {
         sha256Hasher = Sha256Hasher(),
         perceptualHasher = perceptualHasher,
         reader = reader,
-        signatureVerifier = DeviceSignatureVerifier(config)
+        signatureVerifier = DeviceSignatureVerifier(config),
+        originVerifier = TestAttestation.verifier(reader, config, revocation)
     )
 
     init {
@@ -74,6 +77,8 @@ class VerifyImageUseCaseTest {
         }
         coEvery { reader.getRecord(any()) } answers { records[firstArg()] }
         coEvery { reader.getDevice(any()) } answers { devices[firstArg()] }
+        coEvery { reader.getAttestationChain(any(), any()) } answers { chains[firstArg()] }
+        coEvery { revocation.status(any()) } returns RevocationStatus.NOT_REVOKED
         coEvery { reader.getDevicesOf(any()) } answers {
             devices.values.filter { it.owner.equals(firstArg(), ignoreCase = true) }.map { it.id }
         }
@@ -157,7 +162,7 @@ class VerifyImageUseCaseTest {
     fun `assinatura inválida no SHA exato é Registro adulterado`() = runTest {
         val tampered = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH, validSignature = false)
 
-        useCase(FILE) shouldBe VerificationResult.Tampered(view(tampered))
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(tampered))
     }
 
     @Test
@@ -171,7 +176,7 @@ class VerifyImageUseCaseTest {
             deviceId = DEVICE_B
         )
 
-        useCase(FILE) shouldBe VerificationResult.Tampered(view(record))
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(record))
     }
 
     @Test
@@ -230,7 +235,7 @@ class VerifyImageUseCaseTest {
         val first = register(id = 1, sha256 = sha(1), pHash = QUERY_PHASH, validSignature = false)
         register(id = 2, sha256 = sha(2), pHash = QUERY_PHASH, validSignature = false)
 
-        useCase(FILE) shouldBe VerificationResult.Tampered(view(first))
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(first))
     }
 
     @Test
@@ -326,7 +331,7 @@ class VerifyImageUseCaseTest {
 
         useCase.verifyRecord(1) shouldBe VerificationResult.RegisteredOriginal(view(original))
         useCase.verifyRecord(2) shouldBe VerificationResult.RegisteredEdited(view(edition), view(original), 12.5)
-        useCase.verifyRecord(3) shouldBe VerificationResult.Tampered(view(tampered))
+        useCase.verifyRecord(3) shouldBe VerificationResult.Tampered(bare(tampered))
     }
 
     @Test
@@ -346,11 +351,107 @@ class VerifyImageUseCaseTest {
         coVerify { reader wasNot Called }
     }
 
-    private fun bindDevice(id: Int, owner: String) {
+    // ─────────────── 020/T050: atestação do aparelho (SC-008) ───────────────
+
+    @Test
+    fun `registro válido traz a origem atestada do aparelho`() = runTest {
+        register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+
+        val result = useCase(FILE).shouldBeInstanceOf<VerificationResult.RegisteredOriginal>()
+
+        result.record.origin shouldBe TestAttestation.origin(devices.getValue(DEVICE_A))
+    }
+
+    @Test
+    fun `cadeia publicada adulterada é Registro adulterado`() = runTest {
+        val record = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+        // Outra cadeia no evento, com o mesmo aparelho: o hash gravado não confere
+        chains[DEVICE_A] = TestChains.generate(TestChains.Params(challenge = ByteArray(0))).chain
+
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(record))
+    }
+
+    @Test
+    fun `attestationHash do aparelho divergente da cadeia é Registro adulterado`() = runTest {
+        val record = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+        devices[DEVICE_A] = devices.getValue(DEVICE_A).copy(attestationHash = ByteArray(32) { 1 })
+
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(record))
+    }
+
+    @Test
+    fun `cadeia de outro pacote é Registro adulterado`() = runTest {
+        bindDevice(DEVICE_A, WALLET_A) { it.copy(packageName = "com.exemplo.outro") }
+        val record = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(record))
+    }
+
+    @Test
+    fun `aparelho sem evento DeviceAttested é Registro adulterado`() = runTest {
+        val record = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+        chains.remove(DEVICE_A)
+
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(record))
+    }
+
+    @Test
+    fun `certificado revogado depois do vínculo mantém a classificação com o aviso`() = runTest {
+        val original = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+        coEvery { revocation.status(any()) } returns RevocationStatus.REVOKED_AFTER_BINDING
+
+        useCase(FILE) shouldBe
+            VerificationResult.RegisteredOriginal(view(original, RevocationStatus.REVOKED_AFTER_BINDING))
+    }
+
+    @Test
+    fun `revogação que não pôde ser consultada mantém a classificação com a nota`() = runTest {
+        val original = register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+        coEvery { revocation.status(any()) } returns RevocationStatus.UNKNOWN
+
+        useCase(FILE) shouldBe VerificationResult.RegisteredOriginal(view(original, RevocationStatus.UNKNOWN))
+    }
+
+    @Test
+    fun `semelhança visual só lista candidatos com atestação válida`() = runTest {
+        bindDevice(DEVICE_B, WALLET_B) { it.copy(signatureDigest = TestChains.OTHER_DIGEST) }
+        val valid = register(id = 1, sha256 = sha(1), pHash = QUERY_PHASH)
+        register(id = 2, sha256 = sha(2), pHash = QUERY_PHASH, registrant = WALLET_B, deviceId = DEVICE_B)
+
+        useCase(FILE) shouldBe VerificationResult.VisualMatch(
+            listOf(VerificationResult.VisualMatch.Candidate(view(valid), view(valid), 0.0))
+        )
+    }
+
+    @Test
+    fun `semelhança visual sem nenhum candidato atestado é adulterado do primeiro`() = runTest {
+        bindDevice(DEVICE_A, WALLET_A) { it.copy(signatureDigest = TestChains.OTHER_DIGEST) }
+        val first = register(id = 1, sha256 = sha(1), pHash = QUERY_PHASH)
+
+        useCase(FILE) shouldBe VerificationResult.Tampered(bare(first))
+    }
+
+    @Test
+    fun `erro de rede ao ler a cadeia é erro de rede, não adulterado`() = runTest {
+        register(id = 1, sha256 = sha256Of(FILE), pHash = QUERY_PHASH)
+        coEvery { reader.getAttestationChain(any(), any()) } throws RegistryException.Network(IOException("sem rede"))
+
+        useCase(FILE) shouldBe VerificationResult.Error(Reason.NETWORK)
+    }
+
+    /** Vincula um aparelho com atestação sintética válida, publicada no contrato falso. */
+    private fun bindDevice(
+        id: Int,
+        owner: String,
+        params: (TestChains.Params) -> TestChains.Params = { it }
+    ): TestAttestation.Bound {
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }
             .generateKeyPair()
+        val bound = TestAttestation.bind(config, id = id, owner = owner, key = pair, params = params)
         keys[id] = pair
-        devices[id] = TestDevices.device(id = id, owner = owner, publicKey = uncompressed(pair.public as ECPublicKey))
+        devices[id] = bound.device
+        chains[id] = bound.chain
+        return bound
     }
 
     /** Grava um registro no contrato falso, assinado pela chave do aparelho [deviceId]. */
@@ -395,7 +496,12 @@ class VerifyImageUseCaseTest {
         ).also { records[id] = it }
     }
 
-    private fun view(record: ImageRecord) = RecordView(
+    /** Registro válido: com a origem atestada do aparelho. */
+    private fun view(record: ImageRecord, revocation: RevocationStatus = RevocationStatus.NOT_REVOKED) =
+        bare(record).copy(origin = TestAttestation.origin(devices.getValue(record.deviceId), revocation))
+
+    /** Registro sem origem, como aparece em "Registro adulterado". */
+    private fun bare(record: ImageRecord) = RecordView(
         id = record.id,
         sha256 = record.sha256.hex,
         pHash = record.pHash.hex,
@@ -413,7 +519,6 @@ class VerifyImageUseCaseTest {
         const val DEVICE_A = 1
         const val DEVICE_B = 2
         const val DEVICE_A_NEW = 3
-        const val COORDINATE_SIZE = 32
 
         val FILE = "arquivo verificado".toByteArray()
         val OTHER_FILE = "arquivo original".toByteArray()
@@ -431,11 +536,5 @@ class VerifyImageUseCaseTest {
         fun sha(n: Int) = sha256Of("registro $n".toByteArray())
 
         fun timestampOf(id: Long): Instant = Instant.parse("2026-10-01T12:00:00Z").plusSeconds(id * 3_600)
-
-        fun uncompressed(key: ECPublicKey): ByteArray = byteArrayOf(0x04) + fixed(key.w.affineX) + fixed(key.w.affineY)
-
-        fun fixed(value: BigInteger): ByteArray = value.toByteArray().takeLast(COORDINATE_SIZE).toByteArray().let {
-            ByteArray(COORDINATE_SIZE - it.size) + it
-        }
     }
 }

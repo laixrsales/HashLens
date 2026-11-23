@@ -4,9 +4,11 @@ import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.hashing.Hamming
 import br.ufv.hashlens.core.hashing.PerceptualHasher
 import br.ufv.hashlens.core.hashing.Sha256Hasher
+import br.ufv.hashlens.data.attestation.DeviceOriginVerifier
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.di.DefaultDispatcher
+import br.ufv.hashlens.domain.model.DeviceOrigin
 import br.ufv.hashlens.domain.model.ImageRecord
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
@@ -25,12 +27,16 @@ import kotlinx.coroutines.withContext
  *
  * A assinatura é conferida com o aparelho gravado no próprio registro ([ImageRecord.deviceId]),
  * não com o aparelho atual da carteira: registros de um aparelho antigo continuam válidos (R25).
+ *
+ * Um registro só é válido se a assinatura e a atestação do aparelho conferem (função `valid` de
+ * 020 verification-result §1, pelo [DeviceOriginVerifier]); os válidos levam a origem atestada.
  */
 class VerifyImageUseCase @Inject constructor(
     private val sha256Hasher: Sha256Hasher,
     private val perceptualHasher: PerceptualHasher,
     private val reader: RegistryReader,
     private val signatureVerifier: DeviceSignatureVerifier,
+    private val originVerifier: DeviceOriginVerifier,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
     /**
@@ -75,41 +81,45 @@ class VerifyImageUseCase @Inject constructor(
         /** Passos 2 a 4; `null` se o SHA-256 não está registrado. */
         suspend fun byExactHash(sha256: Sha256): VerificationResult? = reader.getIdBySha256(sha256)?.let { byId(it) }
 
-        /** Passo 4: assinatura, depois original ou versão alterada. */
+        /** Passo 4: assinatura e atestação, depois original ou versão alterada. */
         suspend fun byId(id: Long): VerificationResult {
             val record = record(id)
+            val origin = origin(record)
             return when {
-                !hasValidSignature(record) -> VerificationResult.Tampered(record.toView())
+                origin == null -> VerificationResult.Tampered(record.toView())
 
-                record.isOriginal -> VerificationResult.RegisteredOriginal(record.toView())
+                record.isOriginal -> VerificationResult.RegisteredOriginal(record.toView(origin))
 
                 else -> {
                     val original = record(record.originalId)
                     VerificationResult.RegisteredEdited(
-                        record = record.toView(),
-                        original = original.toView(),
+                        record = record.toView(origin),
+                        original = original.toView(origin(original)),
                         percentFromOriginal = Hamming.percent(record.pHash, original.pHash)
                     )
                 }
             }
         }
 
-        /** Passos 5 a 8: só registros com assinatura válida entram; se nenhum, adulterado do primeiro. */
+        /** Passos 5 a 8: só registros válidos entram; se nenhum, adulterado do primeiro. */
         suspend fun byPerceptualHash(pHash: PHash): VerificationResult {
             val matches = reader.getIdsByPHash(pHash).map { record(it) }.sortedBy { it.timestamp }
-            val valid = matches.filter { hasValidSignature(it) }
+            val valid = matches.mapNotNull { record -> origin(record)?.let { record to it } }
             return when {
                 matches.isEmpty() -> VerificationResult.NotRegistered
                 valid.isEmpty() -> VerificationResult.Tampered(matches.first().toView())
-                else -> VerificationResult.VisualMatch(valid.map { candidate(it) })
+                else -> VerificationResult.VisualMatch(valid.map { (record, origin) -> candidate(record, origin) })
             }
         }
 
-        private suspend fun candidate(record: ImageRecord): VerificationResult.VisualMatch.Candidate {
+        private suspend fun candidate(
+            record: ImageRecord,
+            origin: DeviceOrigin
+        ): VerificationResult.VisualMatch.Candidate {
             val original = if (record.isOriginal) record else record(record.originalId)
             return VerificationResult.VisualMatch.Candidate(
-                record = record.toView(),
-                original = original.toView(),
+                record = record.toView(origin),
+                original = if (original === record) record.toView(origin) else original.toView(origin(original)),
                 percentFromOriginal = Hamming.percent(record.pHash, original.pHash)
             )
         }
@@ -118,9 +128,21 @@ class VerifyImageUseCase @Inject constructor(
             ?: (reader.getRecord(id) ?: throw InconsistentRegistryException("registro $id não existe"))
                 .also { records[id] = it }
 
-        // Aparelho inexistente: o contrato não aceitaria o registro, então os dados não são confiáveis
-        private suspend fun hasValidSignature(record: ImageRecord): Boolean =
-            reader.getDevice(record.deviceId)?.let { signatureVerifier.verify(record, it) } ?: false
+        /**
+         * `valid(r)` de 020 verification-result §1: a origem atestada, ou `null` se a assinatura ou a
+         * atestação não conferem. Aparelho inexistente também é `null`: o contrato não aceitaria o
+         * registro, então os dados não são confiáveis.
+         */
+        private suspend fun origin(record: ImageRecord): DeviceOrigin? {
+            val device = reader.getDevice(record.deviceId)
+            return if (device != null &&
+                signatureVerifier.verify(record, device)
+            ) {
+                originVerifier.verify(device)
+            } else {
+                null
+            }
+        }
     }
 
     /** O contrato apontou para um registro que não devolve (ex.: nó desatualizado). */

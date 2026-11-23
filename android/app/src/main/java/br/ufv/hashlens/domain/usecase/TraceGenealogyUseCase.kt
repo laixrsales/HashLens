@@ -3,11 +3,13 @@ package br.ufv.hashlens.domain.usecase
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.hashing.Hamming
+import br.ufv.hashlens.data.attestation.DeviceOriginVerifier
 import br.ufv.hashlens.data.chain.RegistrationTxFinder
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.domain.model.Device
+import br.ufv.hashlens.domain.model.DeviceOrigin
 import br.ufv.hashlens.domain.model.Genealogy
 import br.ufv.hashlens.domain.model.GenealogyNode
 import br.ufv.hashlens.domain.model.ImageRecord
@@ -29,9 +31,10 @@ sealed interface GenealogyResult {
  * largura, até [Genealogy.MAX_LEVELS] níveis e [Genealogy.MAX_NODES] nós. Os nós do caminho ficam
  * sempre na árvore, mesmo além dos limites: a tela mostra a linha do tempo até o registro consultado.
  *
- * Cada nó traz a alteração em relação ao pai e à original e se a assinatura do aparelho confere,
- * conferida com o aparelho gravado no próprio registro (R25). Assinatura inválida não tira o nó da
- * árvore: ele aparece sinalizado.
+ * Cada nó traz a alteração em relação ao pai e à original e se a assinatura e a atestação do
+ * aparelho conferem (`valid` de 020 verification-result §1 e §4), conferidas com o aparelho gravado
+ * no próprio registro (R25); o nó válido leva a origem atestada. Nó inválido não sai da árvore: ele
+ * aparece sinalizado.
  *
  * O link da transação de cada nó vem dos eventos `ImageRegistered` da árvore ([RegistrationTxFinder]),
  * porque o contrato não guarda a transação de um registro. Se essa consulta falhar, as versões
@@ -41,6 +44,7 @@ sealed interface GenealogyResult {
 class TraceGenealogyUseCase @Inject constructor(
     private val reader: RegistryReader,
     private val signatureVerifier: DeviceSignatureVerifier,
+    private val originVerifier: DeviceOriginVerifier,
     private val txFinder: RegistrationTxFinder,
     private val images: LocalImageDao,
     private val config: ChainConfig
@@ -130,27 +134,33 @@ class TraceGenealogyUseCase @Inject constructor(
             return fromDevice + fromEvents
         }
 
-        private suspend fun node(record: ImageRecord, parent: ImageRecord?, original: ImageRecord): GenealogyNode =
-            GenealogyNode(
-                record = record.toView().copy(txUrl = txHashes[record.id]?.let(config::transactionUrl)),
+        private suspend fun node(record: ImageRecord, parent: ImageRecord?, original: ImageRecord): GenealogyNode {
+            val origin = origin(record)
+            return GenealogyNode(
+                record = record.toView(origin).copy(txUrl = txHashes[record.id]?.let(config::transactionUrl)),
                 percentFromParent = parent?.let { Hamming.percent(record.pHash, it.pHash) },
                 percentFromOriginal = Hamming.percent(record.pHash, original.pHash),
-                signatureValid = hasValidSignature(record),
+                signatureValid = origin != null,
                 children = children[record.id].orEmpty().map { node(it, parent = record, original = original) }
             )
+        }
 
         private suspend fun record(id: Long): ImageRecord = records[id]
             ?: (reader.getRecord(id) ?: throw InconsistentRegistryException("registro $id não existe"))
                 .also { records[id] = it }
 
-        // Aparelho inexistente: o contrato não aceitaria o registro, então os dados não são confiáveis
-        private suspend fun hasValidSignature(record: ImageRecord): Boolean {
+        /**
+         * `valid(r)`: a origem atestada, ou `null` se a assinatura ou a atestação não conferem.
+         * Aparelho inexistente também é `null`: o contrato não aceitaria o registro.
+         */
+        private suspend fun origin(record: ImageRecord): DeviceOrigin? {
             val device = if (record.deviceId in devices) {
                 devices[record.deviceId]
             } else {
                 reader.getDevice(record.deviceId).also { devices[record.deviceId] = it }
             }
-            return device?.let { signatureVerifier.verify(record, it) } ?: false
+            if (device == null || !signatureVerifier.verify(record, device)) return null
+            return originVerifier.verify(device)
         }
     }
 

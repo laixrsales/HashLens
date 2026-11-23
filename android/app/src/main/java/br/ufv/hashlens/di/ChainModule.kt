@@ -3,6 +3,7 @@ package br.ufv.hashlens.di
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.data.chain.ChainRpc
 import br.ufv.hashlens.data.chain.EthCall
+import br.ufv.hashlens.data.chain.LogsSplitChainRpc
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.chain.Web3jChainRpc
 import br.ufv.hashlens.data.chain.Web3jEthCall
@@ -33,7 +34,11 @@ object ChainModule {
 
     @Provides
     @Singleton
-    fun chainRpc(web3j: Web3j): ChainRpc = Web3jChainRpc(web3j)
+    fun chainRpc(web3j: Web3j, config: ChainConfig): ChainRpc {
+        val main = Web3jChainRpc(web3j)
+        if (config.logsRpcUrl.isEmpty() || config.logsRpcUrl == config.rpcUrl) return main
+        return LogsSplitChainRpc(main, Web3jChainRpc(Web3j.build(HttpService(config.logsRpcUrl))))
+    }
 
     @Provides
     @Singleton

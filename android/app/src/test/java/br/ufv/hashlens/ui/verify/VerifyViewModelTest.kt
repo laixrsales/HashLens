@@ -10,11 +10,14 @@ import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
 import br.ufv.hashlens.domain.usecase.VerifyImageUseCase
 import br.ufv.hashlens.testing.MutableClock
 import br.ufv.hashlens.testing.RecordingMetrics
+import br.ufv.hashlens.ui.preview.SampleData
 import br.ufv.hashlens.ui.preview.SampleData.Records
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -115,6 +118,21 @@ class VerifyViewModelTest {
         duringQuery shouldBe VerifyFlowUiState(verify = VerifyUiState.Analyzing(AnalysisStep.Querying))
         viewModel.ui.value shouldBe VerifyFlowUiState(result = VerificationResultUiState(result))
     }
+
+    @Test
+    fun `origem atestada e aviso de revogação chegam ao resultado sem mudar a classificação (020)`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            val record = Records.original.copy(origin = SampleData.Origins.revoked)
+            val result = VerificationResult.RegisteredOriginal(record)
+            verifying(result)
+
+            viewModel.onImagePicked(uri)
+
+            val shown = viewModel.ui.value.result.shouldNotBeNull().result
+            shown.shouldBeInstanceOf<VerificationResult.RegisteredOriginal>().record.origin shouldBe
+                SampleData.Origins.revoked
+        }
 
     @Test
     fun `arquivo não suportado fica em Verificar imagem`() = runTest(dispatcher) {

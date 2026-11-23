@@ -6,8 +6,8 @@ package br.ufv.hashlens.domain.model
  *
  * @property percentFromParent alteração visual em relação ao pai; `null` para a original.
  * @property percentFromOriginal alteração visual em relação à original da cadeia (0 na própria original).
- * @property signatureValid falso quando a assinatura não confere ou o aparelho não existe; o nó
- *   continua na árvore, sinalizado.
+ * @property signatureValid falso quando a assinatura ou a atestação do aparelho não conferem (020
+ *   verification-result §4) ou o aparelho não existe; o nó continua na árvore, sinalizado.
  * @property children versões editadas diretamente a partir deste registro, na ordem de registro.
  */
 data class GenealogyNode(

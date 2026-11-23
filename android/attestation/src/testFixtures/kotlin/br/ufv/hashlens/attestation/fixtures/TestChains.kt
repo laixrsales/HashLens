@@ -88,7 +88,14 @@ object TestChains {
         /** Folha assinada por uma chave fora da cadeia (assinatura inválida). */
         val leafSignedByStranger: Boolean = false,
         /** Intermediária também com extensão de atestação (só a da folha pode existir). */
-        val extensionInIntermediate: Boolean = false
+        val extensionInIntermediate: Boolean = false,
+        /** Chave da folha; `null` gera uma nova. Com ela, o teste assina como o aparelho. */
+        val leafKey: KeyPair? = null,
+        /**
+         * Fim da validade da intermediária; `null` usa o padrão (2040). Na cadeia RKP, a intermediária
+         * vence em semanas (a validade da folha a biblioteca não confere).
+         */
+        val intermediateNotAfter: Instant? = null
     )
 
     /** Cadeia gerada e a chave pública da folha (65 bytes, `0x04 ‖ X ‖ Y`). */
@@ -98,7 +105,7 @@ object TestChains {
     }
 
     fun generate(params: Params): Generated {
-        val leafKey = ecKeyPair()
+        val leafKey = params.leafKey ?: ecKeyPair()
         val extension = keyDescription(params).encodeToAsn1()
         val issuerKey = if (params.leafSignedByStranger) ecKeyPair() else intermediateKey
         val leaf = certificate(
@@ -117,6 +124,15 @@ object TestChains {
                 rootKey,
                 ca = true,
                 attestationExtension = extension
+            )
+        } else if (params.intermediateNotAfter != null) {
+            certificate(
+                rootName,
+                intermediateName,
+                intermediateKey.public,
+                rootKey,
+                ca = true,
+                validUntil = Date.from(params.intermediateNotAfter)
             )
         } else {
             intermediate
@@ -175,13 +191,14 @@ object TestChains {
         publicKey: PublicKey,
         signer: KeyPair,
         ca: Boolean,
-        attestationExtension: ByteArray? = null
+        attestationExtension: ByteArray? = null,
+        validUntil: Date = notAfter
     ): X509Certificate {
         val builder = JcaX509v3CertificateBuilder(
             issuer,
             BigInteger.valueOf(serials.incrementAndGet()),
             notBefore,
-            notAfter,
+            validUntil,
             subject,
             publicKey
         )

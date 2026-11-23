@@ -97,7 +97,7 @@ class GenealogyScreenTest {
 
         assertText("Registro adulterado")
         assertText(
-            "Os dados deste registro não conferem com a assinatura do aparelho que o fez. " +
+            "Os dados deste registro não conferem com a assinatura ou com a atestação do aparelho que o fez. " +
                 "Não confie nas informações dele."
         )
         compose.onAllNodesWithText("Imagem consultada").assertCountEquals(1)

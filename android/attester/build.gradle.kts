@@ -44,3 +44,11 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// 020/T056: auditoria independente de um vínculo (SC-006): ./gradlew :attester:audit --args="<deviceId>"
+tasks.register<JavaExec>("audit") {
+    group = "verification"
+    description = "Refaz a decisão do atestador sobre um aparelho a partir dos dados públicos da rede"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("br.ufv.hashlens.attester.audit.AuditMainKt")
+}

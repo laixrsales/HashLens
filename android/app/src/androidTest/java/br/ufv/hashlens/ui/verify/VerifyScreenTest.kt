@@ -150,6 +150,7 @@ class VerifyScreenTest {
 
     private companion object {
         const val FOOTER =
-            "O registro comprova quando e por quem o arquivo foi registrado, não que a cena retratada seja real."
+            "Segundo a atestação do Google, o arquivo foi registrado pelo HashLens original. " +
+                "O registro comprova quando, por quem e por qual aplicativo, não que a cena retratada seja real."
     }
 }
