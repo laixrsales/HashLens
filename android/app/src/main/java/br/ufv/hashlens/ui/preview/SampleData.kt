@@ -12,8 +12,12 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import br.ufv.hashlens.R
 import br.ufv.hashlens.config.ChainConfig
+import br.ufv.hashlens.domain.model.BootState
+import br.ufv.hashlens.domain.model.DeviceOrigin
 import br.ufv.hashlens.domain.model.EditOperation
 import br.ufv.hashlens.domain.model.RecordView
+import br.ufv.hashlens.domain.model.RevocationStatus
+import br.ufv.hashlens.domain.model.SecurityLevel
 import br.ufv.hashlens.ui.common.DateFormat
 import br.ufv.hashlens.ui.components.ImageStatus
 import br.ufv.hashlens.ui.components.ProgressStep
@@ -22,6 +26,7 @@ import br.ufv.hashlens.ui.components.TechnicalItem
 import br.ufv.hashlens.ui.components.WalletChipState
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.YearMonth
 import java.time.ZoneId
 
 /**
@@ -124,6 +129,19 @@ object SampleData {
         const val VISUAL_MATCH = 3.1
     }
 
+    /** Origem atestada do aparelho dos registros válidos (020 data-model §3). */
+    object Origins {
+        val verified = DeviceOrigin(
+            securityLevel = SecurityLevel.TEE,
+            bootState = BootState.VERIFIED,
+            osPatchLevel = YearMonth.of(2026, 9),
+            boundAt = Instant.parse("2026-10-01T18:40:00Z"),
+            revocation = RevocationStatus.NOT_REVOKED
+        )
+        val revoked = verified.copy(revocation = RevocationStatus.REVOKED_AFTER_BINDING)
+        val revocationUnknown = verified.copy(revocation = RevocationStatus.UNKNOWN)
+    }
+
     object Records {
         private const val TX = "0x9a1f6c3e8b2d47f05e6a9c1b3d8f2e7a4c6b0d9e1f3a5c7e9b2d4f6a8c0e1b3d"
 
@@ -133,7 +151,8 @@ object SampleData {
             timestamp: String,
             operations: List<EditOperation> = emptyList(),
             sha256: String = "a3f1".repeat(16),
-            pHash: String = "c3d2e1f0a9b8c7d6"
+            pHash: String = "c3d2e1f0a9b8c7d6",
+            origin: DeviceOrigin? = Origins.verified
         ) = RecordView(
             id = id,
             sha256 = sha256,
@@ -142,7 +161,8 @@ object SampleData {
             deviceId = 3,
             timestamp = Instant.parse(timestamp),
             operations = operations,
-            txUrl = Chain.config.transactionUrl(TX)
+            txUrl = Chain.config.transactionUrl(TX),
+            origin = origin
         )
 
         /** Registrada – original. */
@@ -178,7 +198,7 @@ object SampleData {
         )
 
         /** Registro adulterado: assinatura do aparelho não confere. */
-        val tampered = record(5, Wallets.OTHER, "2026-10-03T15:00:00Z", sha256 = "0bad".repeat(16))
+        val tampered = record(5, Wallets.OTHER, "2026-10-03T15:00:00Z", sha256 = "0bad".repeat(16), origin = null)
 
         /** Correspondência visual: dois registros visualmente iguais, em ordem cronológica. */
         val visualMatchCandidates =
@@ -195,7 +215,12 @@ object SampleData {
             TechnicalItem(R.string.technical_phash, record.pHash),
             TechnicalItem(R.string.technical_wallet, record.registrant),
             TechnicalItem(R.string.technical_device, "#${record.deviceId}"),
-            TechnicalItem(R.string.technical_transaction, record.txUrl.orEmpty().substringAfterLast('/'), record.txUrl)
+            TechnicalItem(R.string.technical_transaction, record.txUrl.orEmpty().substringAfterLast('/'), record.txUrl),
+            // 020 FR-014: atestação do aparelho; os valores repetem os de strings.xml (o preview não lê recursos aqui)
+            TechnicalItem(R.string.technical_security_level, "Ambiente seguro do processador (TEE)"),
+            TechnicalItem(R.string.technical_boot_state, "Verificado, sem modificações"),
+            TechnicalItem(R.string.technical_patch, "set. 2026"),
+            TechnicalItem(R.string.technical_bound_at, "1 out. 2026, 15:40")
         )
     }
 

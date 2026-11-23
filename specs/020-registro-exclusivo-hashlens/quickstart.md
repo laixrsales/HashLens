@@ -77,6 +77,9 @@ registry.address=0x...            # do deploy em uso
 registry.deployBlock=...
 attester.url=http://localhost:8080
 attester.allowedCertDigests=<debug>,<release>
+# Nó só para eventos antigos (cadeia de atestação na verificação, transações do histórico).
+# Opcional; o padrão é este. O Chainstack gratuito recusa eth_getLogs com mais de ~128 blocos.
+sepolia.logsRpcUrl=https://sepolia.gateway.tenderly.co
 # Assinatura de release; sem release.storeFile, o APK de release sai sem assinatura
 release.storeFile=/home/<você>/hashlens-release.jks
 release.storePassword=...
@@ -120,8 +123,22 @@ release.keyPassword=...
    sistema verificado, patch, data do vínculo).
 2. Sem internet só para `android.googleapis.com` (ou com o cache vazio e o domínio bloqueado):
    classificação mantida, nota de revogação não consultada.
-3. Auditoria independente: `./gradlew :attester:audit --args="<deviceId>"` lê o evento e repete a política fora do app; resultado igual ao do
-   atestador (SC-006).
+3. Auditoria independente (SC-006): lê `getDevice` e o evento `DeviceAttested`, confere o hash e
+   repete a política fora do app, sem a chave do atestador. Resultado esperado igual ao do
+   atestador (`ACEITO`, com nível, sistema e patch; saída 0).
+
+   ```bash
+   cd android
+   export AUDIT_RPC_URL=https://sepolia.gateway.tenderly.co   # nó com histórico de eventos
+   export AUDIT_CONTRACT=0x...                                # ImageRegistry do deploy
+   export AUDIT_CHAIN_ID=11155111
+   export AUDIT_ALLOWED_CERT_DIGESTS=<debug>,<release>        # os mesmos do atestador
+   ./gradlew :attester:audit --args="<deviceId>"
+   ```
+
+   Sem `AUDIT_CONTRACT`, `AUDIT_CHAIN_ID` ou `AUDIT_ALLOWED_CERT_DIGESTS`, valem os `ATTESTER_*`.
+   O nó precisa servir `eth_getLogs` de blocos antigos: o Chainstack gratuito recusa blocos com
+   mais de ~128 de idade ("Archive ... requests are not available").
 
 ### Matriz de classificação (SC-007, SC-008)
 

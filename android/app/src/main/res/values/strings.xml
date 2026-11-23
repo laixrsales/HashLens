@@ -39,7 +39,7 @@
     <string name="verification_unsupported_title">Formato não suportado</string>
     <string name="verification_unsupported_message">Não foi possível ler este arquivo. Use uma imagem JPEG, PNG ou WebP; fotos em HEIC não são aceitas.</string>
     <string name="verification_unknown_message">A rede respondeu com dados inesperados. Tente novamente em alguns minutos.</string>
-    <string name="verification_footer">O registro comprova quando e por quem o arquivo foi registrado, não que a cena retratada seja real.</string>
+    <string name="verification_footer">Segundo a atestação do Google, o arquivo foi registrado pelo HashLens original. O registro comprova quando, por quem e por qual aplicativo, não que a cena retratada seja real.</string>
 
     <!-- Editor (ux.md §4.6) -->
     <string name="tool_brightness">Brilho</string>
@@ -101,7 +101,7 @@
     <string name="genealogy_from_original">≈ %1$s%% de alteração em relação à original</string>
     <string name="genealogy_none_from_parent">Sem alteração visual em relação à versão anterior</string>
     <string name="genealogy_none_from_original">Sem alteração visual em relação à original</string>
-    <string name="genealogy_invalid_signature">Os dados deste registro não conferem com a assinatura do aparelho que o fez. Não confie nas informações dele.</string>
+    <string name="genealogy_invalid_signature">Os dados deste registro não conferem com a assinatura ou com a atestação do aparelho que o fez. Não confie nas informações dele.</string>
     <string name="genealogy_truncated">Esta imagem tem mais versões do que cabem aqui. Mostrando até %1$d gerações e %2$d versões.</string>
     <string name="genealogy_photo_description">Foto desta versão, salva neste aparelho</string>
     <string name="genealogy_open_record">Ver histórico desta versão</string>
@@ -128,6 +128,14 @@
     <string name="fact_original_by">Original de</string>
     <string name="fact_device">Aparelho</string>
     <string name="fact_device_value">nº %1$d</string>
+    <!-- 020 US3: origem atestada (FR-014, FR-015, FR-017) -->
+    <string name="fact_origin">Origem</string>
+    <string name="fact_origin_value">HashLens original, em aparelho verificado</string>
+    <string name="visual_match_origin">Todos foram registrados pelo HashLens original em aparelhos verificados.</string>
+    <string name="revocation_warning_title">Certificado do aparelho revogado</string>
+    <string name="revocation_warning_message">O Google revogou o certificado de segurança deste aparelho depois que ele foi vinculado. Os registros feitos nele merecem cautela.</string>
+    <string name="revocation_warning_short">Certificado do aparelho revogado depois do vínculo</string>
+    <string name="revocation_unknown_note">Não foi possível consultar se o certificado do aparelho foi revogado.</string>
     <string name="visual_match_candidates">Registros visualmente iguais</string>
     <string name="visual_match_candidate_by">Registrada por %1$s</string>
     <string name="visual_match_candidate_edited_by">Editada por %1$s</string>
@@ -175,6 +183,13 @@
     <string name="technical_record">Registro</string>
     <string name="technical_original_record">Registro original</string>
     <string name="technical_transaction">Transação</string>
+    <string name="technical_security_level">Nível de segurança da chave</string>
+    <string name="technical_security_level_tee">Ambiente seguro do processador (TEE)</string>
+    <string name="technical_security_level_strongbox">Chip de segurança dedicado (StrongBox)</string>
+    <string name="technical_boot_state">Sistema do aparelho</string>
+    <string name="technical_boot_state_verified">Verificado, sem modificações</string>
+    <string name="technical_patch">Atualização de segurança</string>
+    <string name="technical_bound_at">Vínculo do aparelho</string>
     <string name="technical_alteration_note">A alteração visual compara o identificador visual (pHash) deste arquivo com o da original: mede o quanto a aparência geral mudou, não quantos pixels foram alterados.</string>
     <string name="technical_open_explorer">Ver no Etherscan</string>
     <string name="state_expanded">expandido</string>
@@ -252,7 +267,7 @@
     <string name="onboarding_title">Como funciona</string>
     <string name="onboarding_intro">O HashLens guarda uma prova de quando e por quem cada foto foi registrada, e de quanto ela mudou desde então.</string>
     <string name="onboarding_register_title">Registrar</string>
-    <string name="onboarding_register_text">Fotografe pelo app. A foto ganha um registro permanente com a data e a sua carteira, que assina em seu nome.</string>
+    <string name="onboarding_register_text">Fotografe pelo app. A foto ganha um registro permanente com a data e a sua carteira, que assina em seu nome. Só o HashLens original, num aparelho sem modificações, consegue registrar.</string>
     <string name="onboarding_verify_title">Verificar</string>
     <string name="onboarding_verify_text">Escolha qualquer imagem para saber se ela está registrada, por quem e quanto mudou desde a original. Não precisa de conta.</string>
     <string name="onboarding_edit_title">Editar</string>

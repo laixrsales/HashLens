@@ -1,8 +1,8 @@
 package br.ufv.hashlens.domain.usecase
 
-import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
+import br.ufv.hashlens.data.attestation.DeviceOriginVerifier
 import br.ufv.hashlens.data.chain.RegistrationTxFinder
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
@@ -10,15 +10,20 @@ import br.ufv.hashlens.data.local.ImageOrigin
 import br.ufv.hashlens.data.local.LocalImageDao
 import br.ufv.hashlens.data.local.LocalImageEntity
 import br.ufv.hashlens.data.local.RegistrationStatus
+import br.ufv.hashlens.domain.model.BootState
 import br.ufv.hashlens.domain.model.Device
+import br.ufv.hashlens.domain.model.DeviceOrigin
 import br.ufv.hashlens.domain.model.EditOperationCodec
 import br.ufv.hashlens.domain.model.Genealogy
 import br.ufv.hashlens.domain.model.GenealogyNode
 import br.ufv.hashlens.domain.model.ImageRecord
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.RecordView
+import br.ufv.hashlens.domain.model.RevocationStatus
+import br.ufv.hashlens.domain.model.SecurityLevel
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
+import br.ufv.hashlens.testing.TestDevices
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -30,6 +35,7 @@ import io.mockk.mockk
 import java.io.IOException
 import java.security.MessageDigest
 import java.time.Instant
+import java.time.YearMonth
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -47,11 +53,13 @@ import org.junit.jupiter.api.Test
  * eventos falhar, do acervo local para as versões registradas neste aparelho. Sem transação, o nó
  * aparece sem link, e a genealogia não falha por isso.
  *
- * O contrato é falso; a verificação da assinatura também (testada em `DeviceSignatureVerifierTest`).
+ * O contrato é falso; a verificação da assinatura também (testada em `DeviceSignatureVerifierTest`),
+ * e a da atestação (testada em `DeviceOriginVerifierTest`; 020/T050).
  */
 class TraceGenealogyUseCaseTest {
     private val reader = mockk<RegistryReader>()
     private val signatureVerifier = mockk<DeviceSignatureVerifier>()
+    private val originVerifier = mockk<DeviceOriginVerifier>()
     private val txFinder = mockk<RegistrationTxFinder>()
     private val images = mockk<LocalImageDao>()
     private val config = ChainConfig(rpcUrl = "", registryAddress = "0x0", reownProjectId = "")
@@ -59,6 +67,7 @@ class TraceGenealogyUseCaseTest {
     private val useCase = TraceGenealogyUseCase(
         reader = reader,
         signatureVerifier = signatureVerifier,
+        originVerifier = originVerifier,
         txFinder = txFinder,
         images = images,
         config = config
@@ -66,6 +75,10 @@ class TraceGenealogyUseCaseTest {
 
     private val records = mutableMapOf<Long, ImageRecord>()
     private val invalidSignatures = mutableSetOf<Long>()
+
+    /** Aparelhos cuja atestação não confere (cadeia adulterada, outro pacote...). */
+    private val invalidAttestations = mutableSetOf<Int>()
+    private var revocation = RevocationStatus.NOT_REVOKED
 
     init {
         coEvery { reader.getRecord(any()) } answers { records[firstArg()] }
@@ -82,6 +95,10 @@ class TraceGenealogyUseCaseTest {
             }
         }
         every { signatureVerifier.verify(any(), any()) } answers { firstArg<ImageRecord>().id !in invalidSignatures }
+        coEvery { originVerifier.verify(any()) } answers {
+            val device = firstArg<Device>()
+            if (device.id in invalidAttestations) null else origin(revocation)
+        }
         // Sem transações conhecidas, a não ser nos testes do link
         coEvery { txFinder.byOriginal(any()) } returns emptyMap()
         coEvery { images.getConfirmedByRecordIds(any()) } returns emptyList()
@@ -123,7 +140,18 @@ class TraceGenealogyUseCaseTest {
         operations = operations
     ).also { records[id] = it }
 
-    private fun view(record: ImageRecord) = RecordView(
+    private fun origin(revocation: RevocationStatus = RevocationStatus.NOT_REVOKED) = DeviceOrigin(
+        securityLevel = SecurityLevel.TEE,
+        bootState = BootState.VERIFIED,
+        osPatchLevel = YearMonth.of(2026, 9),
+        boundAt = TestDevices.REGISTERED_AT,
+        revocation = revocation
+    )
+
+    /** Registro como aparece num nó válido: com a origem atestada. */
+    private fun view(record: ImageRecord) = bare(record).copy(origin = origin())
+
+    private fun bare(record: ImageRecord) = RecordView(
         id = record.id,
         sha256 = record.sha256.hex,
         pHash = record.pHash.hex,
@@ -231,6 +259,49 @@ class TraceGenealogyUseCaseTest {
         root.signatureValid shouldBe true
         root.children.single().signatureValid shouldBe false
         root.children.single().children.single().signatureValid shouldBe true
+    }
+
+    @Test
+    fun `nó de aparelho com atestação inválida fica na árvore, sinalizado e sem origem (020)`() = runTest {
+        record(1)
+        record(2, parentId = 1, registrant = EDITOR, deviceId = EDITOR_DEVICE)
+        invalidAttestations += EDITOR_DEVICE
+
+        val root = trace(2).root
+
+        root.signatureValid shouldBe true
+        root.record.origin shouldBe origin()
+        root.children.single().signatureValid shouldBe false
+        root.children.single().record.origin.shouldBeNull()
+    }
+
+    @Test
+    fun `nó de aparelho revogado depois do vínculo continua válido e leva o aviso (020)`() = runTest {
+        record(1)
+        revocation = RevocationStatus.REVOKED_AFTER_BINDING
+
+        val root = trace(1).root
+
+        root.signatureValid shouldBe true
+        root.record.origin?.revocation shouldBe RevocationStatus.REVOKED_AFTER_BINDING
+    }
+
+    @Test
+    fun `assinatura inválida nem consulta a atestação (020)`() = runTest {
+        record(1)
+        invalidSignatures += 1L
+
+        trace(1).root.record.origin.shouldBeNull()
+
+        coVerify(exactly = 0) { originVerifier.verify(any()) }
+    }
+
+    @Test
+    fun `erro de rede ao ler a cadeia de atestação é erro de rede (020)`() = runTest {
+        record(1)
+        coEvery { originVerifier.verify(any()) } throws RegistryException.Network(IOException("sem rede"))
+
+        useCase(1) shouldBe GenealogyResult.Error(Reason.NETWORK)
     }
 
     @Test

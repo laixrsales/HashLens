@@ -27,7 +27,12 @@ data class ChainConfig(
      * SHA-256 em hex minúsculo dos certificados do APK aceitos na verificação da origem, o mesmo
      * conjunto do atestador do deploy (020 research R8).
      */
-    val allowedCertDigests: Set<String> = emptySet()
+    val allowedCertDigests: Set<String> = emptySet(),
+    /**
+     * Nó só para `eth_getLogs` (020): os eventos antigos (cadeia de atestação, transações do
+     * histórico) precisam de um nó com histórico; vazio usa o [rpcUrl].
+     */
+    val logsRpcUrl: String = ""
 ) {
     fun transactionUrl(txHash: String): String = "$explorerUrl/tx/$txHash"
 
@@ -47,7 +52,10 @@ data class ChainConfig(
             pendingTimeout = Duration.ofMinutes(BuildConfig.PENDING_TIMEOUT_MINUTES.toLong()),
             attesterUrl = BuildConfig.ATTESTER_URL,
             // O build já normaliza: hex minúsculo, sem "0x" nem ":", separado por vírgula
-            allowedCertDigests = BuildConfig.ATTESTER_ALLOWED_CERT_DIGESTS.split(",").filter { it.isNotEmpty() }.toSet()
+            allowedCertDigests = BuildConfig.ATTESTER_ALLOWED_CERT_DIGESTS.split(",")
+                .filter { it.isNotEmpty() }
+                .toSet(),
+            logsRpcUrl = BuildConfig.SEPOLIA_LOGS_RPC_URL
         )
     }
 }

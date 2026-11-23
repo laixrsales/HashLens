@@ -56,6 +56,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "SEPOLIA_RPC_URL", "\"${localProperty("sepolia.rpcUrl")}\"")
+        // 020: nó só para eth_getLogs de blocos antigos (cadeia de atestação, transações do histórico);
+        // o Chainstack gratuito recusa logs com mais de ~128 blocos
+        buildConfigField(
+            "String",
+            "SEPOLIA_LOGS_RPC_URL",
+            "\"${localProperty("sepolia.logsRpcUrl", "https://sepolia.gateway.tenderly.co")}\""
+        )
         buildConfigField("String", "REGISTRY_ADDRESS", "\"${localProperty("registry.address")}\"")
         buildConfigField("String", "REOWN_PROJECT_ID", "\"${localProperty("reown.projectId")}\"")
         buildConfigField("int", "PENDING_TIMEOUT_MINUTES", pendingTimeoutMinutes.toString())
@@ -195,6 +202,8 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.okhttp.mockwebserver)
+    // Cadeias sintéticas de atestação (020/T049, T050)
+    testImplementation(testFixtures(project(":attestation")))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.room.testing)

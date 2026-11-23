@@ -7,6 +7,9 @@ import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.hashing.PerceptualHasher
 import br.ufv.hashlens.core.hashing.Sha256Hasher
+import br.ufv.hashlens.data.attestation.DeviceOriginVerifier
+import br.ufv.hashlens.data.attestation.RevocationRepository
+import br.ufv.hashlens.data.chain.LogsSplitChainRpc
 import br.ufv.hashlens.data.chain.RegistryReader
 import br.ufv.hashlens.data.chain.Web3jChainRpc
 import br.ufv.hashlens.data.chain.Web3jEthCall
@@ -21,6 +24,7 @@ import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,13 +83,18 @@ class ClassificationMatrixTest {
         assumeTrue("sem conjunto rotulado em $root", root.isDirectory)
 
         val config = ChainConfig.fromBuildConfig()
+        val reader = Web3j.build(HttpService(config.rpcUrl)).let { web3j ->
+            // Eventos antigos (cadeia de atestação) pelo nó com histórico, como no app
+            val logs = Web3jChainRpc(Web3j.build(HttpService(config.logsRpcUrl.ifEmpty { config.rpcUrl })))
+            RegistryReader(config, Web3jEthCall(web3j), LogsSplitChainRpc(Web3jChainRpc(web3j), logs), Dispatchers.IO)
+        }
         val verify = VerifyImageUseCase(
             Sha256Hasher(),
             PerceptualHasher(),
-            Web3j.build(HttpService(config.rpcUrl)).let { web3j ->
-                RegistryReader(config, Web3jEthCall(web3j), Web3jChainRpc(web3j), Dispatchers.IO)
-            },
+            reader,
             DeviceSignatureVerifier(config),
+            // 020: revalida a atestação de cada aparelho; a revogação não muda a classificação
+            DeviceOriginVerifier(reader, config, RevocationRepository(OkHttpClient(), Dispatchers.IO)),
             Dispatchers.Default
         )
 
@@ -176,7 +185,10 @@ class ClassificationMatrixTest {
             val correct = inCriterion.count { it.correct }
             val percent = if (inCriterion.isEmpty()) 0.0 else 100.0 * correct / inCriterion.size
             appendLine(
-                "- $criterion: $correct de ${inCriterion.size} corretos (${"%.1f".format(Locale.forLanguageTag("pt-BR"), percent)}%)"
+                "- $criterion: $correct de ${inCriterion.size} corretos (${"%.1f".format(
+                    Locale.forLanguageTag("pt-BR"),
+                    percent
+                )}%)"
             )
         }
         val times = rows.filter { it.obtained != Label.NETWORK }.map { it.millis }.sorted()

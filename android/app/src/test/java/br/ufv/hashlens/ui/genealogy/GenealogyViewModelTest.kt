@@ -19,6 +19,7 @@ import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
 import br.ufv.hashlens.domain.usecase.GenealogyResult
 import br.ufv.hashlens.domain.usecase.TraceGenealogyUseCase
 import br.ufv.hashlens.ui.capture.toThumbnail
+import br.ufv.hashlens.ui.preview.SampleData
 import br.ufv.hashlens.ui.preview.SampleData.Records
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -134,6 +135,17 @@ class GenealogyViewModelTest {
         coEvery { traceGenealogy(2) } returns GenealogyResult.Traced(genealogy)
 
         viewModel().ui.value shouldBe GenealogyUiState.Loaded(genealogy)
+    }
+
+    @Test
+    fun `nó com o certificado revogado chega à tela com a origem (020)`() = runTest(dispatcher) {
+        val revoked = genealogy.copy(
+            root = genealogy.root.copy(record = Records.original.copy(origin = SampleData.Origins.revoked))
+        )
+        coEvery { traceGenealogy(2) } returns GenealogyResult.Traced(revoked)
+
+        viewModel().ui.value.shouldBeInstanceOf<GenealogyUiState.Loaded>().genealogy.root.record.origin shouldBe
+            SampleData.Origins.revoked
     }
 
     @Test

@@ -1,5 +1,6 @@
 package br.ufv.hashlens.ui.verify
 
+import android.content.res.Resources
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -23,15 +24,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import br.ufv.hashlens.R
+import br.ufv.hashlens.domain.model.BootState
+import br.ufv.hashlens.domain.model.DeviceOrigin
 import br.ufv.hashlens.domain.model.RecordView
+import br.ufv.hashlens.domain.model.SecurityLevel
 import br.ufv.hashlens.domain.model.VerificationResult
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
+import br.ufv.hashlens.ui.common.DateFormat
 import br.ufv.hashlens.ui.common.PercentFormat
 import br.ufv.hashlens.ui.components.AlterationMeter
 import br.ufv.hashlens.ui.components.ErrorState
@@ -104,6 +110,7 @@ private fun ColumnScope.Answer(
     when (result) {
         is VerificationResult.RegisteredOriginal -> {
             Section { OriginalFacts(result.record, zone) }
+            OriginNotice(result.record)
             HistoryAction(result.record.id, onAction)
         }
         is VerificationResult.RegisteredEdited -> {
@@ -111,6 +118,7 @@ private fun ColumnScope.Answer(
             // Com 0%, o aviso de que o arquivo não é idêntico já está no cabeçalho
             AlterationMeter(result.percentFromOriginal, isEditedVersion = false)
             Section { EditedFacts(result.record, result.original, zone) }
+            OriginNotice(result.record)
             HistoryAction(result.record.id, onAction)
         }
         is VerificationResult.VisualMatch -> Section { Candidates(result.candidates, zone, onAction) }
@@ -131,7 +139,7 @@ private fun ColumnScope.Answer(
             onClick = { onAction(VerificationResultAction.VerifyAnother) }
         )
     }
-    val technical = result.technicalItems()
+    val technical = result.technicalItems(LocalResources.current, zone)
     technical.takeIf { it.isNotEmpty() }?.let { items ->
         Spacer(Modifier.height(spacing.lg))
         var expanded by rememberSaveable { mutableStateOf(false) }
@@ -243,21 +251,45 @@ private fun VerificationResult.message(): String = when (this) {
 }
 
 /** Detalhes técnicos do registro exibido; a correspondência visual mostra os de cada um no histórico. */
-internal fun VerificationResult.technicalItems(): List<TechnicalItem> = when (this) {
-    is VerificationResult.RegisteredOriginal -> record.technicalItems()
+internal fun VerificationResult.technicalItems(resources: Resources, zone: ZoneId): List<TechnicalItem> = when (this) {
+    is VerificationResult.RegisteredOriginal -> record.technicalItems(resources, zone)
     is VerificationResult.RegisteredEdited ->
-        record.technicalItems() + TechnicalItem(R.string.technical_original_record, "#${original.id}")
-    is VerificationResult.Tampered -> record.technicalItems()
+        record.technicalItems(resources, zone) +
+            TechnicalItem(R.string.technical_original_record, "#${original.id}")
+    is VerificationResult.Tampered -> record.technicalItems(resources, zone)
     else -> emptyList()
 }
 
-private fun RecordView.technicalItems(): List<TechnicalItem> = listOfNotNull(
+private fun RecordView.technicalItems(resources: Resources, zone: ZoneId): List<TechnicalItem> = listOfNotNull(
     TechnicalItem(R.string.technical_record, "#$id"),
     TechnicalItem(R.string.technical_sha256, sha256),
     TechnicalItem(R.string.technical_phash, pHash),
     TechnicalItem(R.string.technical_wallet, registrant),
     TechnicalItem(R.string.technical_device, "#$deviceId"),
     txUrl?.let { TechnicalItem(R.string.technical_transaction, it.substringAfterLast('/'), it) }
+) + origin?.technicalItems(resources, zone).orEmpty()
+
+/** Atestação do aparelho (020 FR-014): nível da chave, sistema, patch e data do vínculo. */
+private fun DeviceOrigin.technicalItems(resources: Resources, zone: ZoneId): List<TechnicalItem> = listOf(
+    TechnicalItem(
+        R.string.technical_security_level,
+        resources.getString(
+            when (securityLevel) {
+                SecurityLevel.TEE -> R.string.technical_security_level_tee
+                SecurityLevel.STRONGBOX -> R.string.technical_security_level_strongbox
+            }
+        )
+    ),
+    TechnicalItem(
+        R.string.technical_boot_state,
+        resources.getString(
+            when (bootState) {
+                BootState.VERIFIED -> R.string.technical_boot_state_verified
+            }
+        )
+    ),
+    TechnicalItem(R.string.technical_patch, DateFormat.monthYear(osPatchLevel)),
+    TechnicalItem(R.string.technical_bound_at, DateFormat.dateTime(boundAt, zone))
 )
 
 @PreviewLightDark
@@ -273,6 +305,19 @@ private fun ResultEditedPreview() = ResultPreview(VerificationResultSamples.edit
 @Preview
 @Composable
 private fun ResultEditedZeroPreview() = ResultPreview(VerificationResultSamples.editedZero)
+
+@PreviewLightDark
+@PreviewFontScale
+@Composable
+private fun ResultRevokedPreview() = ResultPreview(VerificationResultSamples.revoked)
+
+@Preview
+@Composable
+private fun ResultRevocationUnknownPreview() = ResultPreview(VerificationResultSamples.revocationUnknown)
+
+@PreviewLightDark
+@Composable
+private fun ResultVisualMatchRevokedPreview() = ResultPreview(VerificationResultSamples.visualMatchRevoked)
 
 @PreviewLightDark
 @Composable
@@ -311,6 +356,29 @@ object VerificationResultSamples {
                 listOf(
                     VerificationResult.VisualMatch.Candidate(Records.original, Records.original, Percent.ZERO),
                     VerificationResult.VisualMatch.Candidate(Records.edited, Records.original, Percent.EDITED)
+                )
+            )
+        )
+
+    /** 020 FR-017: certificado do aparelho revogado depois do vínculo; a classificação se mantém. */
+    val revoked get() = state(
+        VerificationResult.RegisteredOriginal(Records.original.copy(origin = SampleData.Origins.revoked))
+    )
+
+    /** 020 FR-017: a lista de revogação não pôde ser consultada. */
+    val revocationUnknown get() = state(
+        VerificationResult.RegisteredOriginal(Records.original.copy(origin = SampleData.Origins.revocationUnknown))
+    )
+
+    /** Um dos candidatos com o certificado revogado. */
+    val visualMatchRevoked
+        get() = state(
+            VerificationResult.VisualMatch(
+                listOf(
+                    VerificationResult.VisualMatch.Candidate(Records.original, Records.original, Percent.ZERO),
+                    Records.edited.copy(origin = SampleData.Origins.revoked).let {
+                        VerificationResult.VisualMatch.Candidate(it, Records.original, Percent.EDITED)
+                    }
                 )
             )
         )

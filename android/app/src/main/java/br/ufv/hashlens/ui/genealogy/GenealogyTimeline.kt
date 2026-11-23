@@ -55,6 +55,7 @@ import br.ufv.hashlens.ui.common.DateFormat
 import br.ufv.hashlens.ui.common.EditOperationFormat
 import br.ufv.hashlens.ui.common.PercentFormat
 import br.ufv.hashlens.ui.components.ImageStatus
+import br.ufv.hashlens.ui.components.RevocationNotice
 import br.ufv.hashlens.ui.components.StatusBadge
 import br.ufv.hashlens.ui.theme.HashLensTheme
 import java.time.ZoneId
@@ -168,6 +169,8 @@ private fun Facts(
         node.percentFromParent?.let { Secondary(alteration(it, fromParent = true)) }
         if (!isOriginal) Secondary(alteration(node.percentFromOriginal, fromParent = false))
         Secondary(stringResource(R.string.genealogy_device, record.deviceId))
+        // 020 FR-017: aviso no nó, sem mudar o status
+        record.origin?.let { RevocationNotice(it.revocation, compact = true) }
         if (!node.signatureValid) {
             Text(
                 stringResource(R.string.genealogy_invalid_signature),

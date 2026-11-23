@@ -33,4 +33,8 @@ class GenealogyScreenshotTest : ScreenshotTest() {
 
     @Test
     fun network() = genealogy("sem_conexao", GenealogySamples.network)
+
+    /** 020/T054: nó com o certificado do aparelho revogado depois do vínculo (FR-017). */
+    @Test
+    fun revoked() = genealogy("certificado_revogado", GenealogySamples.revoked)
 }

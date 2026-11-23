@@ -75,3 +75,12 @@ class Web3jChainRpc(private val web3j: Web3j) : ChainRpc {
             .map { RawLog(it.address, it.topics, it.data, it.transactionHash) }
     }
 }
+
+/**
+ * [main] para tudo, menos `eth_getLogs`, que vai para [logs] (020): o nó principal pode não servir
+ * eventos de blocos antigos (o Chainstack gratuito recusa logs com mais de ~128 blocos).
+ */
+class LogsSplitChainRpc(private val main: ChainRpc, private val logs: ChainRpc) : ChainRpc by main {
+    override fun getLogs(address: String, topics: List<String?>, fromBlock: Long, toBlock: Long?): List<RawLog> =
+        logs.getLogs(address, topics, fromBlock, toBlock)
+}

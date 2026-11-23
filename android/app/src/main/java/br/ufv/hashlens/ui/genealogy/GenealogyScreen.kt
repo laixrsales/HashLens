@@ -173,6 +173,10 @@ private fun GenealogyTruncatedPreview() = GenealogyPreview(GenealogySamples.trun
 @Composable
 private fun GenealogyInvalidPreview() = GenealogyPreview(GenealogySamples.invalidSignature)
 
+@PreviewLightDark
+@Composable
+private fun GenealogyRevokedPreview() = GenealogyPreview(GenealogySamples.revoked)
+
 @Preview
 @Composable
 private fun GenealogyLoadingPreview() = GenealogyPreview(GenealogySamples.loading)
@@ -230,6 +234,27 @@ object GenealogySamples {
     val withBranches: GenealogyUiState get() = GenealogyUiState.Loaded(branched)
     val branchesExpanded: GenealogyUiState get() = GenealogyUiState.Loaded(branched, expanded = setOf(1L))
     val truncated: GenealogyUiState get() = GenealogyUiState.Loaded(branched.copy(truncated = true))
+
+    /** 020 FR-017: o aparelho da versão teve o certificado revogado depois do vínculo. */
+    val revoked: GenealogyUiState
+        get() = GenealogyUiState.Loaded(
+            Genealogy(
+                node(
+                    Records.original,
+                    null,
+                    Percent.ZERO,
+                    listOf(
+                        node(
+                            Records.edited.copy(origin = SampleData.Origins.revoked),
+                            Percent.EDITED,
+                            Percent.EDITED
+                        )
+                    )
+                ),
+                pathToQueried = listOf(1, 2),
+                truncated = false
+            )
+        )
 
     /** A versão intermediária tem assinatura que não confere. */
     val invalidSignature: GenealogyUiState

@@ -49,4 +49,15 @@ class VerifyScreenshotTest : ScreenshotTest() {
 
     @Test
     fun network() = result("sem_conexao", VerificationResultSamples.network)
+
+    /** 020/T054: certificado do aparelho revogado depois do vínculo (FR-017). */
+    @Test
+    fun revoked() = result("certificado_revogado", VerificationResultSamples.revoked)
+
+    /** 020/T054: revogação não consultada (FR-017). */
+    @Test
+    fun revocationUnknown() = result("revogacao_nao_consultada", VerificationResultSamples.revocationUnknown)
+
+    @Test
+    fun visualMatchRevoked() = result("correspondencia_visual_revogado", VerificationResultSamples.visualMatchRevoked)
 }
