@@ -14,6 +14,11 @@ Guia para preparar o ambiente e validar manualmente cada história de usuário.
 
 ## 2. Contrato
 
+> **O contrato desta seção não é mais o atual.** A 020 substituiu o `ImageRegistry` pela v2 e o app
+> lê só os novos deploys (desenvolvimento e avaliação), na tabela de
+> [`specs/020-registro-exclusivo-hashlens/quickstart.md` §2](../020-registro-exclusivo-hashlens/quickstart.md#2-contrato).
+> O deploy abaixo fica como histórico da avaliação da 002.
+
 ```bash
 cd contracts
 forge install            # dependências (forge-std)
@@ -152,12 +157,12 @@ classificação (esperado × obtido) por tipo de edição.
 
 Onde cada dado é gerado:
 
-| Dado | Como gerar | Resultado em |
-| --- | --- | --- |
-| Gás por operação e escala até 10.000 registros (T093) | `cd contracts && forge test --match-contract ImageRegistryScaleTest -vv` | `contracts/snapshots/ImageRegistryScale.json`, `docs/resultados/escalabilidade-contrato.md` |
-| Tempo dos identificadores por resolução (T094, SC-006) | `HashingBenchmark` (instrumentado) | `docs/resultados/sc-006-hashing.md` |
-| Recompressão (T095, SC-004) | `RecompressionMatchTest` (instrumentado) | `docs/resultados/sc-004-recompressao.md` |
-| Tempo de verificação, de captura até o envio e de confirmação (T096, SC-007, SC-008) | uso normal do app | `metricas.csv` no aparelho (abaixo) |
+| Dado                                                                                 | Como gerar                                                               | Resultado em                                                                                |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| Gás por operação e escala até 10.000 registros (T093)                                | `cd contracts && forge test --match-contract ImageRegistryScaleTest -vv` | `contracts/snapshots/ImageRegistryScale.json`, `docs/resultados/escalabilidade-contrato.md` |
+| Tempo dos identificadores por resolução (T094, SC-006)                               | `HashingBenchmark` (instrumentado)                                       | `docs/resultados/sc-006-hashing.md`                                                         |
+| Recompressão (T095, SC-004)                                                          | `RecompressionMatchTest` (instrumentado)                                 | `docs/resultados/sc-004-recompressao.md`                                                    |
+| Tempo de verificação, de captura até o envio e de confirmação (T096, SC-007, SC-008) | uso normal do app                                                        | `metricas.csv` no aparelho (abaixo)                                                         |
 
 **Métricas de uso (T096).** O app grava uma linha por medida em
 `/sdcard/Android/data/br.ufv.hashlens/files/metrics/metricas.csv` (colunas `momento`, `medida`,
@@ -183,4 +188,3 @@ adb shell am instrument -w -r -e class br.ufv.hashlens.benchmark.HashingBenchmar
 ```
 
 O aparelho precisa estar desbloqueado e com a tela ligada durante os testes instrumentados.
-

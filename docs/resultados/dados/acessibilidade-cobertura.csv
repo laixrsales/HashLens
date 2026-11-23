@@ -44,26 +44,51 @@ Editor,importacao_sem_conexao,fonte200,0,17,4,1
 Editor,nao_elegivel_arquivo,claro,0,17,4,1
 Editor,nao_elegivel_arquivo,escuro,0,17,4,1
 Editor,nao_elegivel_arquivo,fonte200,0,17,4,1
-Resultado da verificacao,original,claro,0,34,15,3
-Resultado da verificacao,original,escuro,0,34,15,3
-Resultado da verificacao,original,fonte200,0,33,14,3
-Resultado da verificacao,original,fonte200,1,29,12,3
-Resultado da verificacao,versao_alterada,claro,0,37,18,3
-Resultado da verificacao,versao_alterada,claro,1,34,17,3
-Resultado da verificacao,versao_alterada,escuro,0,37,18,3
-Resultado da verificacao,versao_alterada,escuro,1,34,17,3
+Resultado da verificacao,original,claro,0,36,17,3
+Resultado da verificacao,original,escuro,0,36,17,3
+Resultado da verificacao,original,fonte200,0,26,13,3
+Resultado da verificacao,original,fonte200,1,28,12,3
+Resultado da verificacao,versao_alterada,claro,0,36,19,3
+Resultado da verificacao,versao_alterada,claro,1,35,18,3
+Resultado da verificacao,versao_alterada,escuro,0,36,19,3
+Resultado da verificacao,versao_alterada,escuro,1,35,18,3
 Resultado da verificacao,versao_alterada,fonte200,0,25,12,3
 Resultado da verificacao,versao_alterada,fonte200,1,31,15,3
-Resultado da verificacao,versao_alterada_zero,claro,0,34,17,3
-Resultado da verificacao,versao_alterada_zero,claro,1,34,17,3
-Resultado da verificacao,versao_alterada_zero,escuro,0,34,17,3
-Resultado da verificacao,versao_alterada_zero,escuro,1,34,17,3
+Resultado da verificacao,versao_alterada,fonte200,2,31,15,3
+Resultado da verificacao,versao_alterada_zero,claro,0,36,19,3
+Resultado da verificacao,versao_alterada_zero,claro,1,35,18,3
+Resultado da verificacao,versao_alterada_zero,escuro,0,36,19,3
+Resultado da verificacao,versao_alterada_zero,escuro,1,35,18,3
 Resultado da verificacao,versao_alterada_zero,fonte200,0,23,10,3
-Resultado da verificacao,versao_alterada_zero,fonte200,1,31,15,3
+Resultado da verificacao,versao_alterada_zero,fonte200,1,32,16,3
+Resultado da verificacao,versao_alterada_zero,fonte200,2,31,15,3
 Resultado da verificacao,correspondencia_visual,claro,0,36,15,3
+Resultado da verificacao,correspondencia_visual,claro,1,33,14,3
 Resultado da verificacao,correspondencia_visual,escuro,0,36,15,3
-Resultado da verificacao,correspondencia_visual,fonte200,0,29,10,3
+Resultado da verificacao,correspondencia_visual,escuro,1,33,14,3
+Resultado da verificacao,correspondencia_visual,fonte200,0,24,8,3
 Resultado da verificacao,correspondencia_visual,fonte200,1,29,11,3
+Resultado da verificacao,correspondencia_visual,fonte200,2,28,10,3
+Resultado da verificacao,revogado,claro,0,38,19,4
+Resultado da verificacao,revogado,claro,1,34,17,4
+Resultado da verificacao,revogado,escuro,0,38,19,4
+Resultado da verificacao,revogado,escuro,1,34,17,4
+Resultado da verificacao,revogado,fonte200,0,26,13,4
+Resultado da verificacao,revogado,fonte200,1,24,8,4
+Resultado da verificacao,revogado,fonte200,2,23,7,4
+Resultado da verificacao,revogacao_desconhecida,claro,0,37,18,3
+Resultado da verificacao,revogacao_desconhecida,claro,1,37,18,3
+Resultado da verificacao,revogacao_desconhecida,escuro,0,37,18,3
+Resultado da verificacao,revogacao_desconhecida,escuro,1,37,18,3
+Resultado da verificacao,revogacao_desconhecida,fonte200,0,26,13,3
+Resultado da verificacao,revogacao_desconhecida,fonte200,1,27,11,3
+Resultado da verificacao,correspondencia_visual_revogado,claro,0,37,16,3
+Resultado da verificacao,correspondencia_visual_revogado,claro,1,34,15,3
+Resultado da verificacao,correspondencia_visual_revogado,escuro,0,37,16,3
+Resultado da verificacao,correspondencia_visual_revogado,escuro,1,34,15,3
+Resultado da verificacao,correspondencia_visual_revogado,fonte200,0,24,8,3
+Resultado da verificacao,correspondencia_visual_revogado,fonte200,1,30,12,3
+Resultado da verificacao,correspondencia_visual_revogado,fonte200,2,27,10,3
 Resultado da verificacao,adulterado,claro,0,24,7,3
 Resultado da verificacao,adulterado,escuro,0,24,7,3
 Resultado da verificacao,adulterado,fonte200,0,24,7,3
@@ -122,13 +147,14 @@ Inicio,pendentes,claro,0,36,15,2
 Inicio,pendentes,escuro,0,36,15,2
 Inicio,pendentes,fonte200,0,29,12,2
 Inicio,pendentes,fonte200,1,34,13,2
-Como funciona,unico,claro,0,27,13,4
-Como funciona,unico,claro,1,27,13,4
-Como funciona,unico,escuro,0,27,13,4
-Como funciona,unico,escuro,1,27,13,4
-Como funciona,unico,fonte200,0,22,8,4
-Como funciona,unico,fonte200,1,20,6,4
+Como funciona,unico,claro,0,26,12,4
+Como funciona,unico,claro,1,26,12,4
+Como funciona,unico,escuro,0,26,12,4
+Como funciona,unico,escuro,1,26,12,4
+Como funciona,unico,fonte200,0,20,6,4
+Como funciona,unico,fonte200,1,21,7,4
 Como funciona,unico,fonte200,2,20,6,4
+Como funciona,unico,fonte200,3,20,6,4
 Meu acervo,carregando,claro,0,15,3,1
 Meu acervo,carregando,escuro,0,15,3,1
 Meu acervo,carregando,fonte200,0,15,3,1
@@ -340,10 +366,17 @@ Historico da imagem,limite_excedido,escuro,1,50,25,1
 Historico da imagem,limite_excedido,fonte200,0,33,14,1
 Historico da imagem,limite_excedido,fonte200,1,31,16,1
 Historico da imagem,limite_excedido,fonte200,2,30,14,1
+Historico da imagem,revogado,claro,0,36,17,1
+Historico da imagem,revogado,escuro,0,36,17,1
+Historico da imagem,revogado,fonte200,0,32,15,1
+Historico da imagem,revogado,fonte200,1,30,14,1
 Historico da imagem,assinatura_invalida,claro,0,50,26,1
+Historico da imagem,assinatura_invalida,claro,1,50,26,1
 Historico da imagem,assinatura_invalida,escuro,0,50,26,1
+Historico da imagem,assinatura_invalida,escuro,1,50,26,1
 Historico da imagem,assinatura_invalida,fonte200,0,34,16,1
 Historico da imagem,assinatura_invalida,fonte200,1,29,13,1
+Historico da imagem,assinatura_invalida,fonte200,2,28,12,1
 Historico da imagem,sem_conexao,claro,0,19,5,2
 Historico da imagem,sem_conexao,escuro,0,19,5,2
 Historico da imagem,sem_conexao,fonte200,0,19,5,2
@@ -377,22 +410,26 @@ Carteira,rede_errada,fonte200,0,31,13,1
 Carteira,saldo_baixo,claro,0,31,13,1
 Carteira,saldo_baixo,escuro,0,31,13,1
 Carteira,saldo_baixo,fonte200,0,31,13,1
-Acompanhamento do registro,vinculando_aparelho,claro,0,26,11,2
-Acompanhamento do registro,vinculando_aparelho,escuro,0,26,11,2
+Acompanhamento do registro,verificando_aparelho,claro,0,27,12,2
+Acompanhamento do registro,verificando_aparelho,escuro,0,27,12,2
+Acompanhamento do registro,verificando_aparelho,fonte200,0,20,7,2
+Acompanhamento do registro,verificando_aparelho,fonte200,1,22,9,2
+Acompanhamento do registro,vinculando_aparelho,claro,0,27,12,2
+Acompanhamento do registro,vinculando_aparelho,escuro,0,27,12,2
 Acompanhamento do registro,vinculando_aparelho,fonte200,0,21,8,2
-Acompanhamento do registro,vinculando_aparelho,fonte200,1,21,8,2
-Acompanhamento do registro,novo_vinculo,claro,0,26,11,2
-Acompanhamento do registro,novo_vinculo,escuro,0,26,11,2
-Acompanhamento do registro,novo_vinculo,fonte200,0,20,7,2
-Acompanhamento do registro,novo_vinculo,fonte200,1,21,8,2
+Acompanhamento do registro,vinculando_aparelho,fonte200,1,22,9,2
+Acompanhamento do registro,novo_vinculo,claro,0,27,12,2
+Acompanhamento do registro,novo_vinculo,escuro,0,27,12,2
+Acompanhamento do registro,novo_vinculo,fonte200,0,21,8,2
+Acompanhamento do registro,novo_vinculo,fonte200,1,22,9,2
 Acompanhamento do registro,aguardando_aprovacao,claro,0,25,10,2
 Acompanhamento do registro,aguardando_aprovacao,escuro,0,25,10,2
 Acompanhamento do registro,aguardando_aprovacao,fonte200,0,22,9,2
-Acompanhamento do registro,aguardando_aprovacao,fonte200,1,20,7,2
+Acompanhamento do registro,aguardando_aprovacao,fonte200,1,21,8,2
 Acompanhamento do registro,pendente,claro,0,25,10,2
 Acompanhamento do registro,pendente,escuro,0,25,10,2
-Acompanhamento do registro,pendente,fonte200,0,25,10,2
-Acompanhamento do registro,pendente,fonte200,1,25,10,2
+Acompanhamento do registro,pendente,fonte200,0,22,9,2
+Acompanhamento do registro,pendente,fonte200,1,21,8,2
 Acompanhamento do registro,confirmado,claro,0,28,11,3
 Acompanhamento do registro,confirmado,escuro,0,28,11,3
 Acompanhamento do registro,confirmado,fonte200,0,28,11,3
@@ -427,3 +464,39 @@ Acompanhamento do registro,saldo_insuficiente,fonte200,1,23,8,2
 Acompanhamento do registro,ja_registrada,claro,0,24,7,2
 Acompanhamento do registro,ja_registrada,escuro,0,24,7,2
 Acompanhamento do registro,ja_registrada,fonte200,0,24,7,2
+Acompanhamento do registro,atestador_indisponivel,claro,0,30,13,2
+Acompanhamento do registro,atestador_indisponivel,claro,1,26,11,2
+Acompanhamento do registro,atestador_indisponivel,escuro,0,30,13,2
+Acompanhamento do registro,atestador_indisponivel,escuro,1,26,11,2
+Acompanhamento do registro,atestador_indisponivel,fonte200,0,20,7,2
+Acompanhamento do registro,atestador_indisponivel,fonte200,1,23,9,2
+Acompanhamento do registro,nao_elegivel_modificado,claro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_modificado,claro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_modificado,escuro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_modificado,escuro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_modificado,fonte200,0,20,7,2
+Acompanhamento do registro,nao_elegivel_modificado,fonte200,1,21,9,2
+Acompanhamento do registro,nao_elegivel_desatualizado,claro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_desatualizado,claro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_desatualizado,escuro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_desatualizado,escuro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_desatualizado,fonte200,0,20,7,2
+Acompanhamento do registro,nao_elegivel_desatualizado,fonte200,1,21,9,2
+Acompanhamento do registro,nao_elegivel_sem_hardware,claro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_sem_hardware,claro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_sem_hardware,escuro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_sem_hardware,escuro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_sem_hardware,fonte200,0,20,7,2
+Acompanhamento do registro,nao_elegivel_sem_hardware,fonte200,1,21,9,2
+Acompanhamento do registro,nao_elegivel_app,claro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_app,claro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_app,escuro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_app,escuro,1,24,11,2
+Acompanhamento do registro,nao_elegivel_app,fonte200,0,21,8,2
+Acompanhamento do registro,nao_elegivel_app,fonte200,1,21,9,2
+Acompanhamento do registro,nao_elegivel_revogado,claro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_revogado,claro,1,28,13,2
+Acompanhamento do registro,nao_elegivel_revogado,escuro,0,28,13,2
+Acompanhamento do registro,nao_elegivel_revogado,escuro,1,28,13,2
+Acompanhamento do registro,nao_elegivel_revogado,fonte200,0,22,9,2
+Acompanhamento do registro,nao_elegivel_revogado,fonte200,1,21,9,2

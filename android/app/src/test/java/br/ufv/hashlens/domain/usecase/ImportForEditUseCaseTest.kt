@@ -1,15 +1,14 @@
 package br.ufv.hashlens.domain.usecase
 
-import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.core.hashing.Sha256Hasher
 import br.ufv.hashlens.data.chain.RegistryException
 import br.ufv.hashlens.data.chain.RegistryReader
-import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.domain.model.ImageRecord
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.domain.model.Sha256
 import br.ufv.hashlens.domain.model.VerificationResult.Error.Reason
+import br.ufv.hashlens.testing.TestDevices
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery

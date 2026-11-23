@@ -33,7 +33,9 @@ Tentativas, a partir de um aparelho já vinculado pelo app (`--device`) e de um 
 
 As tentativas 2 e 3 precisam da autorização ainda no prazo: rode o script até ~10 min depois do
 vínculo feito pelo app. Com `--foto`, as tentativas 4 e 5 usam o SHA-256 e o pHash da foto
-(tools/golden); sem ela, valores aleatórios.
+(tools/golden); sem ela, valores aleatórios. A foto não pode estar registrada (ex.: uma cópia
+recomprimida da foto de `--registro`): com uma já registrada, o contrato recusa antes por
+`AlreadyRegistered`, e o `--simular` acusa a divergência.
 
 Uso (a partir da raiz do repositório):
 
@@ -48,7 +50,7 @@ O RPC só lê estado e logs de blocos recentes (~128 blocos, cerca de 25 min): r
 depois do vínculo.
 
 `--simular` só lê a rede: mostra cada tentativa e o erro que o contrato devolve hoje (`cast
-call`), sem chaves e sem enviar nada. Saída: docs/resultados/dados/recusas.csv (arquivo,
+call`), sem chaves e sem enviar nada. Saída: docs/resultados/dados/recusas.csv (contrato, arquivo,
 tentativa, erro esperado, erro obtido, transação, bloco, status).
 """
 
@@ -74,7 +76,7 @@ from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 
 RAIZ = Path(__file__).resolve().parents[2]
 SAIDA = RAIZ / "docs/resultados/dados/recusas.csv"
-COLUNAS = ["arquivo", "tentativa", "erro_esperado", "erro_obtido", "transacao", "bloco", "status"]
+COLUNAS = ["contrato", "arquivo", "tentativa", "erro_esperado", "erro_obtido", "transacao", "bloco", "status"]
 
 # Ordem da curva P-256 (secp256r1)
 N = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
@@ -400,7 +402,7 @@ def main() -> None:
         ok = status in (0, "simulada") and obtido == tentativa.erro_esperado
         divergentes += not ok
         print(f"{tentativa.nome}: status {status}, {obtido}, bloco {bloco}, tx {tx}{'' if ok else '  ← DIVERGE'}")
-        linhas.append([tentativa.arquivo, tentativa.nome, tentativa.erro_esperado, obtido, tx, bloco, status])
+        linhas.append([registro, tentativa.arquivo, tentativa.nome, tentativa.erro_esperado, obtido, tx, bloco, status])
 
     if linhas:
         gravar(linhas)

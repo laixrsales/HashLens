@@ -404,7 +404,9 @@ reenviar pelo acervo; desconectar a carteira e verificar o bloqueio de captura/e
 - A edição de terceiros não exige autorização do autor original; a blockchain é pública e a
   autoria fica preservada na genealogia.
 - Ataques de recaptura (fotografar uma tela ou outra imagem) e a comprovação de que a chave do
-  aparelho reside em hardware genuíno estão fora do escopo.
+  aparelho reside em hardware genuíno estão fora do escopo. (Superado pela 020 quanto ao hardware:
+  o vínculo passa a exigir a Android Key Attestation; ver
+  `specs/020-registro-exclusivo-hashlens/spec.md`. A recaptura continua fora do escopo.)
 - Plataforma alvo: Android. iOS fora do escopo.
 - Não há backend próprio; as imagens ficam apenas no aparelho e na galeria.
 - Não existe protótipo prévio: o inventário de telas e estados em `docs/referencia/ux.md` faz esse

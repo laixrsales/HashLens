@@ -1,6 +1,8 @@
 package br.ufv.hashlens.core.crypto
 
+import android.content.pm.PackageManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import br.ufv.hashlens.attestation.AttestationChallenge
 import br.ufv.hashlens.attestation.AttestationPolicy
 import br.ufv.hashlens.attestation.AttestationVerdict
@@ -17,6 +19,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayInputStream
 import java.math.BigInteger
 import java.security.KeyStore
+import java.security.MessageDigest
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.cert.CertificateFactory
@@ -180,7 +183,9 @@ class DeviceKeyManagerTest {
                 contract = config.registryAddress,
                 wallet = WALLET_A,
                 publicKey = publicKey,
-                allowedCertDigests = config.allowedCertDigests,
+                // O certificado do próprio APK em execução, e não o do deploy em local.properties: com o
+                // deploy de avaliação a lista só tem o release, e o teste roda com o debug
+                allowedCertDigests = setOf(runningApkCertDigest()),
                 referenceTime = Instant.now(),
                 window = ChallengeWindow.ATTESTER
             )
@@ -192,6 +197,21 @@ class DeviceKeyManagerTest {
     @Test
     fun cadeiaSemChaveFalha() {
         shouldThrow<IllegalStateException> { manager.getAttestationChain(WALLET_B) }
+    }
+
+    /** SHA-256 (hex minúsculo) do certificado que assinou o app em teste. */
+    @Suppress("DEPRECATION") // GET_SIGNATURES só abaixo do API 28
+    private fun runningApkCertDigest(): String {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val pm = context.packageManager
+        val cert = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            pm.getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+                .signingInfo!!.apkContentsSigners.first()
+        } else {
+            pm.getPackageInfo(context.packageName, PackageManager.GET_SIGNATURES).signatures!!.first()
+        }
+        return MessageDigest.getInstance("SHA-256").digest(cert.toByteArray())
+            .joinToString("") { "%02x".format(it) }
     }
 
     private companion object {

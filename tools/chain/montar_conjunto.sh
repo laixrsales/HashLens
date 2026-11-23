@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Monta no aparelho o conjunto rotulado da matriz de classificação (T101, SC-001 a SC-003).
+# Monta no aparelho o conjunto rotulado da matriz de classificação (020/T061, 020 SC-007).
 #
 # O rótulo de cada arquivo vem direto do contrato, consultado aqui com `cast` sobre o SHA-256
 # calculado no computador, e não do app: é o gabarito contra o qual o app é avaliado
@@ -12,14 +12,15 @@
 # - nao_registrados: as N fotos mais recentes de DCIM/Camera (JPEG) sem registro, mais os
 #   arquivos de PASTA_EXTRA_NAO_REGISTRADOS, se definida (ex.: cópias recomprimidas ou recortadas
 #   de fotos registradas, que devem dar "Correspondência visual" ou "Não registrada").
-# - adulterados: os arquivos de PASTA_ADULTERADOS, se definida, que tenham registro. Com o
-#   contrato v2 (020) não há mais como criar um registro com assinatura adulterada: a rede recusa
-#   (tools/chain/tentar_origens_nao_autorizadas.py, docs/resultados/dados/recusas.csv). A
-#   adaptação do conjunto à v2 é a 020/T061.
+# Não há grupo de adulterados: no contrato v2 um registro com assinatura do aparelho adulterada
+# não existe, porque a rede o recusa (tools/chain/tentar_origens_nao_autorizadas.py,
+# docs/resultados/recusas.md).
+#
+# Contrato e RPC: REGISTRY_ADDRESS e SEPOLIA_RPC_URL, ou, sem elas, registry.address e
+# sepolia.rpcUrl de android/local.properties (o mesmo deploy do app instalado).
 #
 # Uso (a partir da raiz; aparelho conectado com o app de debug instalado):
 #
-#   export SEPOLIA_RPC_URL=...
 #   tools/chain/montar_conjunto.sh 20
 #
 # Os arquivos são copiados para /sdcard/Android/data/br.ufv.hashlens/files/conjunto/ e nada sai
@@ -28,9 +29,13 @@
 set -euo pipefail
 
 N_NAO_REGISTRADOS="${1:-20}"
-REGISTRY="${REGISTRY_ADDRESS:-0xF2f42B34414936e456c6AC10c4844f456CAD65Ba}"
-: "${SEPOLIA_RPC_URL:?defina SEPOLIA_RPC_URL}"
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
+propriedade() { grep -E "^$1=" "$RAIZ/android/local.properties" 2>/dev/null | cut -d= -f2- | tr -d '[:space:]'; }
+REGISTRY="${REGISTRY_ADDRESS:-$(propriedade registry.address)}"
+SEPOLIA_RPC_URL="${SEPOLIA_RPC_URL:-$(propriedade sepolia.rpcUrl)}"
+: "${REGISTRY:?defina REGISTRY_ADDRESS ou registry.address em android/local.properties}"
+: "${SEPOLIA_RPC_URL:?defina SEPOLIA_RPC_URL ou sepolia.rpcUrl em android/local.properties}"
+echo "contrato $REGISTRY"
 DESTINO=/sdcard/Android/data/br.ufv.hashlens/files/conjunto
 LISTA="$RAIZ/docs/resultados/dados/conjunto-rotulado.csv"
 TEMP="$(mktemp -d)"
@@ -68,7 +73,7 @@ classificar_registradas() { # pasta local: originais ou versões conforme o cont
 }
 
 adb shell rm -rf "$DESTINO"
-adb shell mkdir -p "$DESTINO/originais" "$DESTINO/versoes" "$DESTINO/nao_registrados" "$DESTINO/adulterados"
+adb shell mkdir -p "$DESTINO/originais" "$DESTINO/versoes" "$DESTINO/nao_registrados"
 echo "arquivo,grupo,registro" >"$LISTA"
 
 echo "Fotos do HashLens (Pictures/HashLens):"
@@ -97,13 +102,6 @@ if [ -n "${PASTA_EXTRA_NAO_REGISTRADOS:-}" ]; then
     for arquivo in "$PASTA_EXTRA_NAO_REGISTRADOS"/*; do
         id="$(registro_de "$arquivo")"
         if [ "$id" = "0" ]; then adicionar "$arquivo" nao_registrados 0; else echo "  $(basename "$arquivo"): registrada (id $id), fica de fora"; fi
-    done
-fi
-
-if [ -n "${PASTA_ADULTERADOS:-}" ]; then
-    for arquivo in "$PASTA_ADULTERADOS"/*; do
-        id="$(registro_de "$arquivo")"
-        if [ "$id" = "0" ]; then echo "  $(basename "$arquivo"): sem registro, fica de fora"; else adicionar "$arquivo" adulterados "$id"; fi
     done
 fi
 

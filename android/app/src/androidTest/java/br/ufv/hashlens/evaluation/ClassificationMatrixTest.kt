@@ -32,7 +32,7 @@ import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 
 /**
- * Matriz de classificação do conjunto rotulado (T101, SC-001 a SC-003).
+ * Matriz de classificação do conjunto rotulado no contrato v2 (020/T061, 020 SC-007; 002 SC-001 e SC-002).
  *
  * Cada arquivo de `files/conjunto/<grupo>/` no armazenamento do app passa pela verificação real
  * ([VerifyImageUseCase] contra o contrato na Sepolia, com a configuração de `local.properties`).
@@ -40,13 +40,16 @@ import org.web3j.protocol.http.HttpService
  *
  * - `originais`: idênticos a capturas registradas → "Registrada – original" (SC-001);
  * - `versoes`: idênticos a versões editadas registradas → "Registrada – versão alterada" (SC-001);
- * - `nao_registrados`: nunca registrados → "Não registrada" ou "Correspondência visual" (SC-002);
- * - `adulterados`: registrados com a assinatura do aparelho alterada → "Registro adulterado"
- *   (SC-003). Só existem no contrato da 002; na v2 a rede recusa esses registros
- *   (`tools/chain/tentar_origens_nao_autorizadas.py`), e a adaptação é a 020/T061.
+ * - `nao_registrados`: nunca registrados → "Não registrada" ou "Correspondência visual" (SC-002).
  *
- * Exige ao menos 20 idênticos (originais + versões), 20 não registrados e 3 adulterados, e 100% de
- * acerto em cada critério. Grava `evaluation/matriz-classificacao.csv` (um arquivo por linha, com
+ * Não há grupo de adulterados: no contrato v2 um registro com assinatura do aparelho adulterada não
+ * existe, porque a rede o recusa. A 002 SC-003 passa a ser medida por essas recusas
+ * (`tools/chain/tentar_origens_nao_autorizadas.py`, `docs/resultados/recusas.md`), e a classificação
+ * "Registro adulterado" por dados de um leitor falso (020 SC-008, testes unitários). Se algum arquivo
+ * do conjunto sair como "Registro adulterado", ele aparece na coluna e conta como erro.
+ *
+ * Exige ao menos 20 idênticos (originais + versões) e 20 não registrados, e 100% de acerto em cada
+ * critério. Grava `evaluation/matriz-classificacao.csv` (um arquivo por linha, com
  * o tempo da verificação) e `evaluation/matriz-classificacao.md` (a matriz esperado × obtido). Sem
  * a pasta `conjunto` (ex.: no `connectedDebugAndroidTest`, que reinstala o app), o teste é pulado.
  * Roteiro em `docs/resultados/matriz-classificacao.md`.
@@ -69,8 +72,7 @@ class ClassificationMatrixTest {
     private enum class Group(val folder: String, val criterion: String, val accepted: Set<Label>) {
         ORIGINALS("originais", "SC-001", setOf(Label.ORIGINAL)),
         VERSIONS("versoes", "SC-001", setOf(Label.EDITED)),
-        NOT_REGISTERED("nao_registrados", "SC-002", setOf(Label.NOT_REGISTERED, Label.VISUAL_MATCH)),
-        TAMPERED("adulterados", "SC-003", setOf(Label.TAMPERED))
+        NOT_REGISTERED("nao_registrados", "SC-002", setOf(Label.NOT_REGISTERED, Label.VISUAL_MATCH))
     }
 
     private data class Row(val file: String, val group: Group, val obtained: Label, val millis: Long) {
@@ -116,7 +118,6 @@ class ClassificationMatrixTest {
                 rows.count { it.group == Group.NOT_REGISTERED } shouldBeGreaterThanOrEqual
                     20
             }
-            withClue("registros adulterados") { rows.count { it.group == Group.TAMPERED } shouldBeGreaterThanOrEqual 3 }
             withClue(
                 rows.filterNot {
                     it.correct
@@ -191,6 +192,9 @@ class ClassificationMatrixTest {
                 )}%)"
             )
         }
+        appendLine(
+            "- SC-003 (002): no contrato v2, medido pelas recusas na rede (docs/resultados/recusas.md)"
+        )
         val times = rows.filter { it.obtained != Label.NETWORK }.map { it.millis }.sorted()
         if (times.isNotEmpty()) {
             val median = times[times.size / 2]

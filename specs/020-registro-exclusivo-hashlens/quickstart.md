@@ -35,7 +35,7 @@ Fazer dois deploys, cada um com o seu `ATTESTER_ADDRESS`, e registrar na tabela:
 | Data       | Deploy          | Endereço `ImageRegistry`                     | Bloco    | Atestador                                    | Commit    |
 | ---------- | --------------- | -------------------------------------------- | -------- | -------------------------------------------- | --------- |
 | 2026-11-18 | desenvolvimento | `0xfBa7aeDa5e979F88336b35e81A1780b4655BAe6E` | 12163212 | `0x308F1744DFA756A4ADdfd852D2BeAAF13C1F586e` | `562550e` |
-|            | avaliação       |                                              |          |                                              |           |
+| 2026-11-23 | avaliação       | `0xEd920f008400E817601a9Afa51d86dD975A1e6D3` | 12197165 | `0x447F456DbFd9A5Df5a8a7Bd8089D9b3B693EA21D` | `562550e` |
 
 O contrato da 002 (`0xF2f42B34…65Ba`) deixa de ser lido (clarificação Q3).
 
@@ -53,7 +53,8 @@ O contrato da 002 (`0xF2f42B34…65Ba`) deixa de ser lido (clarificação Q3).
 
 ```bash
 cd android
-export ATTESTER_PRIVATE_KEY=0x...            # do deploy correspondente
+read -s -p "ATTESTER_PRIVATE_KEY: " ATTESTER_PRIVATE_KEY && echo   # do deploy correspondente
+export ATTESTER_PRIVATE_KEY
 export ATTESTER_CHAIN_ID=11155111
 export ATTESTER_CONTRACT=0x...               # ImageRegistry do mesmo deploy
 export ATTESTER_ALLOWED_CERT_DIGESTS=<debug>,<release>   # avaliação: só <release>
@@ -64,9 +65,18 @@ curl -s localhost:8080/v1/health             # confere chainId, contrato e atest
 
 - **Desenvolvimento**: `adb reverse tcp:8080 tcp:8080` e `attester.url=http://localhost:8080`.
   Refazer o `adb reverse` sempre que o aparelho reconectar.
-- **Avaliação**: subir o túnel apontando para `localhost:8080` e usar o endereço HTTPS em
-  `attester.url`. Com túnel rápido, o endereço muda a cada execução: atualizar `local.properties`
-  e recompilar o APK de release.
+- **Avaliação**: ngrok com domínio estático (research R9), em outro terminal, com o atestador
+  já no ar:
+
+  ```bash
+  ngrok http --url=ambulance-geologist-lake.ngrok-free.dev 8080
+  curl -s https://ambulance-geologist-lake.ngrok-free.dev/v1/health   # mesmo JSON do localhost
+  ```
+
+  No `local.properties`, `attester.url=https://ambulance-geologist-lake.ngrok-free.dev`. O endereço
+  é fixo, e o APK de release não precisa ser recompilado a cada execução. Instalação e authtoken
+  (uma vez só): pacote `ngrok` do repositório apt oficial, depois
+  `read -rs -p "Authtoken: " T; echo; ngrok config add-authtoken "$T"; unset T`.
 
 ## 4. Aplicativo
 

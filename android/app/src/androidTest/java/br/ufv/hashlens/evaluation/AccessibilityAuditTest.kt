@@ -1,5 +1,6 @@
 package br.ufv.hashlens.evaluation
 
+import android.app.UiAutomation
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -147,6 +148,7 @@ class AccessibilityAuditTest {
         audit(
             "Acompanhamento do registro",
             *listOf(
+                "verificando_aparelho" to verifyingDevice,
                 "vinculando_aparelho" to bindingDevice,
                 "novo_vinculo" to newDeviceKey,
                 "aguardando_aprovacao" to awaitingApproval,
@@ -159,7 +161,14 @@ class AccessibilityAuditTest {
                 "falha_revertida" to reverted,
                 "falha_galeria" to saveFailed,
                 "saldo_insuficiente" to insufficientFunds,
-                "ja_registrada" to alreadyRegistered
+                "ja_registrada" to alreadyRegistered,
+                // 020 US2: recusas do vínculo e atestador fora do ar
+                "atestador_indisponivel" to attesterUnavailable,
+                "nao_elegivel_modificado" to notEligibleModified,
+                "nao_elegivel_desatualizado" to notEligibleOutdated,
+                "nao_elegivel_sem_hardware" to notEligibleNoSecureHardware,
+                "nao_elegivel_app" to notEligibleApp,
+                "nao_elegivel_revogado" to notEligibleRevoked
             ).map { (name, state) ->
                 State(name) { RegistrationProgressScreen(state, onAction = {}, zone = SampleData.ZONE) }
             }.toTypedArray()
@@ -209,6 +218,10 @@ class AccessibilityAuditTest {
                 "versao_alterada" to edited,
                 "versao_alterada_zero" to editedZero,
                 "correspondencia_visual" to visualMatch,
+                // 020 US3: aviso de revogação e nota de revogação não consultada
+                "revogado" to revoked,
+                "revogacao_desconhecida" to revocationUnknown,
+                "correspondencia_visual_revogado" to visualMatchRevoked,
                 "adulterado" to tampered,
                 "nao_registrada" to notRegistered,
                 "sem_conexao" to network
@@ -228,6 +241,7 @@ class AccessibilityAuditTest {
                 "com_ramificacoes" to withBranches,
                 "ramificacoes_abertas" to branchesExpanded,
                 "limite_excedido" to truncated,
+                "revogado" to revoked,
                 "assinatura_invalida" to invalidSignature,
                 "sem_conexao" to network
             ).map { (name, state) ->
@@ -335,50 +349,61 @@ class AccessibilityAuditTest {
                 settle()
                 var page = 0
                 do {
-                    val hierarchy = AccessibilityHierarchyAndroid
-                        .newBuilder(checkNotNull(uiAutomation.rootInActiveWindow), instrumentation.targetContext)
-                        .build()
-                    // Sem textos, a UiAutomation não enxergou a árvore do Compose e as checagens não valeriam nada
-                    val views = hierarchy.activeWindow.allViews
-                    val labeled = views.count { !it.text.isNullOrEmpty() || !it.contentDescription.isNullOrEmpty() }
-                    withClue("${state.name}/${variant.label}/p$page: árvore de acessibilidade sem textos") {
-                        labeled shouldBeGreaterThan 0
-                    }
-                    // Títulos marcados para o TalkBack (ux.md §7): o ATF não checa, então só contamos
-                    val headings = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-                        .fetchSemanticsNodes()
-                        .size
-                    if (screen != CONTROL) {
-                        coverage += "$screen,${state.name},${variant.label},$page,${views.size},$labeled,$headings"
-                    }
-                    val parameters = Parameters().apply { putScreenCapture(BitmapImage(uiAutomation.takeScreenshot())) }
-                    CHECKS.flatMap { it.runCheckOnHierarchy(hierarchy, null, parameters) }
-                        .filter {
-                            it.type == AccessibilityCheckResultType.ERROR ||
-                                it.type == AccessibilityCheckResultType.WARNING
-                        }
-                        .mapTo(found) { result ->
-                            Finding(
-                                screen = screen,
-                                state = state.name,
-                                variant = variant.label,
-                                page = page,
-                                type = result.type,
-                                check = result.sourceCheckClass.simpleName,
-                                element = result.element?.let { e ->
-                                    val label = e.text ?: e.contentDescription
-                                    "${e.className?.toString()?.substringAfterLast(
-                                        '.'
-                                    )} \"${label ?: ""}\" ${e.boundsInScreen}"
-                                }.orEmpty(),
-                                message = result.getMessage(Locale.forLanguageTag("pt-BR")).toString()
-                            )
-                        }
+                    found += checkPage(screen, state, variant, page, uiAutomation)
                     page++
                 } while (scrollOnePage())
             }
         }
         return found
+    }
+
+    /** Checa a página visível de um estado: árvore com textos, cobertura e os resultados do ATF. */
+    private fun checkPage(
+        screen: String,
+        state: State,
+        variant: Variant,
+        page: Int,
+        uiAutomation: UiAutomation
+    ): List<Finding> {
+        val hierarchy = AccessibilityHierarchyAndroid
+            .newBuilder(checkNotNull(uiAutomation.rootInActiveWindow), instrumentation.targetContext)
+            .build()
+        // Sem textos, a UiAutomation não enxergou a árvore do Compose e as checagens não valeriam nada
+        val views = hierarchy.activeWindow.allViews
+        val labeled = views.count { !it.text.isNullOrEmpty() || !it.contentDescription.isNullOrEmpty() }
+        withClue("${state.name}/${variant.label}/p$page: árvore de acessibilidade sem textos") {
+            labeled shouldBeGreaterThan 0
+        }
+        // Títulos marcados para o TalkBack (ux.md §7): o ATF não checa, então só contamos
+        val headings = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            .fetchSemanticsNodes()
+            .size
+        if (screen != CONTROL) {
+            coverage += "$screen,${state.name},${variant.label},$page,${views.size},$labeled,$headings"
+        }
+        val parameters = Parameters().apply { putScreenCapture(BitmapImage(uiAutomation.takeScreenshot())) }
+        return CHECKS.flatMap { it.runCheckOnHierarchy(hierarchy, null, parameters) }
+            .filter {
+                it.type == AccessibilityCheckResultType.ERROR ||
+                    it.type == AccessibilityCheckResultType.WARNING
+            }
+            .map { result ->
+                Finding(
+                    screen = screen,
+                    state = state.name,
+                    variant = variant.label,
+                    page = page,
+                    type = result.type,
+                    check = result.sourceCheckClass.simpleName,
+                    element = result.element?.let { e ->
+                        val label = e.text ?: e.contentDescription
+                        "${e.className?.toString()?.substringAfterLast(
+                            '.'
+                        )} \"${label ?: ""}\" ${e.boundsInScreen}"
+                    }.orEmpty(),
+                    message = result.getMessage(Locale.forLanguageTag("pt-BR")).toString()
+                )
+            }
     }
 
     /** Avança animações finitas e dá tempo ao Compose de publicar a árvore de acessibilidade atualizada. */
@@ -393,11 +418,10 @@ class AccessibilityAuditTest {
     private fun scrollOnePage(): Boolean {
         val nodes = compose.onAllNodes(hasScrollAction()).fetchSemanticsNodes()
         val index = nodes.indexOfFirst { it.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange) != null }
-        if (index < 0) return false
-        val node = nodes[index]
-        val range = node.config[SemanticsProperties.VerticalScrollAxisRange]
-        val remaining = range.maxValue() - range.value()
-        if (remaining <= 1f) return false
+        val node = nodes.getOrNull(index)
+        val remaining = node?.config?.get(SemanticsProperties.VerticalScrollAxisRange)
+            ?.let { it.maxValue() - it.value() } ?: 0f
+        if (node == null || remaining <= 1f) return false
         val step = minOf(remaining, node.boundsInRoot.height * PAGE_FRACTION)
         compose.onAllNodes(hasScrollAction())[index].performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, step) }
         settle()

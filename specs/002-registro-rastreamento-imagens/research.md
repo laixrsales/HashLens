@@ -69,6 +69,9 @@ setup (as versões mudam com frequência).
   — não adotada na PoC para não depender da disponibilidade do pré-compilado na rede e não
   aumentar o custo de gás; registrada como trabalho futuro. Biblioteca P-256 em Solidity pura
   (gás muito alto).
+- **Superado pela 020** (`specs/020-registro-exclusivo-hashlens/`): o contrato v2 confere a
+  assinatura do aparelho na rede, com o pré-compilado `P256VERIFY` (EIP-7951), e recusa registros
+  com assinatura inválida. A verificação off-chain no app continua como segunda conferência.
 
 ## R6. Assinatura da pessoa
 
@@ -186,6 +189,9 @@ setup (as versões mudam com frequência).
 - **Decision**: fora do escopo do MVP. Sem Android Key Attestation, o sistema prova "mesma chave
   vinculada à carteira", não "chave em hardware de um aparelho Android genuíno".
 - **Trabalho futuro**: registrar o hash da cadeia de certificados de atestação no `registerDevice`.
+- **Superado pela 020** (`specs/020-registro-exclusivo-hashlens/`): o vínculo passa a exigir a
+  Android Key Attestation, conferida por um atestador, e o `registerDevice` grava o
+  `attestationHash` e publica a cadeia completa no evento `DeviceAttested`.
 
 ## R20. Sistema de design
 

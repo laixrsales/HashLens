@@ -58,5 +58,12 @@ ViewModel. Ao terminar previews, pare e mostre os screenshots gerados para aprov
 - App (instrumentados, com aparelho): `cd android && ./gradlew :app:connectedDebugAndroidTest`
   (por Wi-Fi, use aparelho pareado com `adb pair`, não `adb connect ip:porta`; ver quickstart §3)
 - Screenshots das telas: `cd android && ./gradlew :app:recordRoborazziDebug` (PNGs em `app/build/outputs/roborazzi/`)
+- Validação da atestação e atestador (testes): `cd android && ./gradlew :attestation:test :attester:test`
+- Atestador: `cd android && ./gradlew :attester:run` (porta 8080; variáveis `ATTESTER_*` no
+  quickstart da 020 §3, chave só por ambiente). No desenvolvimento, `adb reverse tcp:8080 tcp:8080`
+  a cada reconexão do aparelho; na avaliação, túnel ngrok (quickstart da 020 §3)
+- Auditoria independente de um vínculo: `cd android && ./gradlew :attester:audit --args="<deviceId>"`
+- Deploys do contrato (desenvolvimento e avaliação): tabela em
+  `specs/020-registro-exclusivo-hashlens/quickstart.md` §2
 
 Segredos (`local.properties`, chaves de deploy) nunca entram no Git.
