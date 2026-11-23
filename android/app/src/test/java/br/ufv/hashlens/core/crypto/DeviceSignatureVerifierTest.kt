@@ -1,11 +1,10 @@
 package br.ufv.hashlens.core.crypto
 
-import br.ufv.hashlens.testing.TestDevices
 import br.ufv.hashlens.config.ChainConfig
-import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.domain.model.ImageRecord
 import br.ufv.hashlens.domain.model.PHash
 import br.ufv.hashlens.testing.SignatureVectors
+import br.ufv.hashlens.testing.TestDevices
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import java.time.Instant

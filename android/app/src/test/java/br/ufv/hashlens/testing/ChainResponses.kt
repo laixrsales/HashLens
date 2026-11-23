@@ -65,12 +65,11 @@ object ChainResponses {
     val attestationHash: String get() = root["attestationHash"].asText()
 
     /** Resposta de `eth_getLogs` capturada para o filtro [name]. */
-    fun logs(name: String): List<RawLog> =
-        root["logs"].single { it["nome"].asText() == name }["resposta"].map { log ->
-            RawLog(
-                address = log["address"].asText(),
-                topics = log["topics"].map { it.asText() },
-                data = log["data"].asText()
-            )
-        }
+    fun logs(name: String): List<RawLog> = root["logs"].single { it["nome"].asText() == name }["resposta"].map { log ->
+        RawLog(
+            address = log["address"].asText(),
+            topics = log["topics"].map { it.asText() },
+            data = log["data"].asText()
+        )
+    }
 }

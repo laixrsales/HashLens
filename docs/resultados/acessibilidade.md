@@ -1,7 +1,8 @@
-# Auditoria de acessibilidade (T097)
+# Auditoria de acessibilidade (002/T097 e 020/T064)
 
 Checklist de `docs/referencia/ux.md` §7, aplicado a todas as telas (FR-036). Feita em 13/10/2026 num
-Samsung Galaxy M52 5G (Android 13).
+Samsung Galaxy M52 5G (Android 13) e refeita em 23/11/2026, no mesmo aparelho, com os estados novos da
+020 (seção "Rodada da 020"). Os números abaixo são da rodada de 23/11/2026.
 
 ## Resultado
 
@@ -31,11 +32,11 @@ Scanner, e checa:
 O teste usa a UiAutomation, como o Scanner. A checagem pronta do Compose (`enableAccessibilityChecks`)
 exige Android 14 e por isso não foi usada.
 
-- **Cobertura:** os 79 estados das 11 telas, ou seja, as mesmas amostras dos screenshot tests, de
+- **Cobertura:** os 90 estados das 11 telas (79 na rodada da 002), ou seja, as mesmas amostras dos screenshot tests, de
   Como funciona até Carteira, incluindo a folha de conexão e a de opções do acervo.
 - **Variantes:** cada estado em tema claro, escuro e com fonte em 200%.
-- **Rolagem:** cada estado é checado no topo e a cada página de rolagem. No total foram 428 telas
-  checadas, com 14.251 elementos avaliados.
+- **Rolagem:** cada estado é checado no topo e a cada página de rolagem. No total foram 501 telas
+  checadas, com 16.311 elementos avaliados (428 e 14.251 na rodada da 002).
 - **Critério de falha:** o teste falha com qualquer resultado ERROR.
 - **Controle positivo:** o teste `checksDetectViolations` desenha uma tela propositalmente ruim
   (botão de 16 dp sem rótulo e texto cinza-claro sobre branco) e exige que as três falhas sejam
@@ -84,14 +85,15 @@ O aparelho precisa estar desbloqueado durante toda a execução, que leva cerca 
 
 ## Avisos (WARNING) analisados
 
-A rodada final tem 0 ERROR e 80 WARNING. Nenhum dos avisos é violação:
+A rodada final tem 0 ERROR e 87 WARNING (80 na rodada da 002). Nenhum dos avisos é violação:
 
 | Aviso                                                                                                      | Ocorrências | Análise                                                                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Contraste de texto no Editor: "Salvar e registrar" sem alterações e faixa de ferramentas durante um ajuste | 51          | Controles desabilitados de propósito. A WCAG 1.4.3 isenta componentes inativos.                                                                                                |
 | Contraste de imagem na "Prévia da foto editada" (Editor)                                                   | 3           | O ATF mediu o conteúdo da foto, não um ícone. Falso positivo.                                                                                                                  |
 | Contraste de "9 out. 2026, 12:20" no Acervo escuro                                                         | 2           | Data cortada na borda da rolagem (9 px de altura visível), e a medida pega o antisserrilhado. Inteira, a mesma data não é acusada; o par de cores está no `ThemeContrastTest`. |
-| Rótulo repetido "Ver registro na rede" (Histórico)                                                         | 17          | Um por versão da cadeia. Cada um fica dentro do nó da sua versão, que o TalkBack lê antes (data e autor).                                                                      |
+| Rótulo repetido "Ver registro na rede" (Histórico)                                                         | 22          | Um por versão da cadeia. Cada um fica dentro do nó da sua versão, que o TalkBack lê antes (data e autor).                                                                      |
+| Contraste de "Verificar outra imagem" em correspondência visual com aparelho revogado (Verificação)        | 2           | Botão cortado na borda da rolagem (10 px de altura visível), como a data do Acervo. Na página seguinte, inteiro, não é acusado.                                                |
 | Rótulo repetido "Tentar de novo" (Acervo)                                                                  | 4           | Um por foto com falha, dentro da célula da foto, como acima.                                                                                                                   |
 | Rótulo repetido "Conectar carteira" (folha de conexão)                                                     | 3           | O título da folha e o botão têm o mesmo nome por regra ("mesma ação, mesmo nome", hashlens-ui).                                                                                |
 
@@ -102,6 +104,29 @@ Estados sem título marcado: Câmera (pronta e processando), Editor e a folha de
 não têm texto de título na tela: a câmera e o editor são tela cheia com ícones, e a folha começa pelo
 selo de status. Todas as telas com barra de título e todos os estados de mensagem (vazio, erro, sem
 permissão) marcam o título.
+
+## Rodada da 020 (T064)
+
+Feita em 23/11/2026 com o app de debug, depois da avaliação no deploy. `AccessibilityAuditTest`
+ganhou 11 estados, os mesmos dos screenshot tests da 020:
+
+- **Acompanhamento do registro (US1 e US2):** `verificando_aparelho`, `atestador_indisponivel` e as
+  recusas `nao_elegivel_modificado`, `nao_elegivel_desatualizado`, `nao_elegivel_sem_hardware`,
+  `nao_elegivel_app` e `nao_elegivel_revogado`.
+- **Resultado da verificação (US3):** `revogado`, `revogacao_desconhecida` e
+  `correspondencia_visual_revogado`.
+- **Histórico da imagem (US3):** `revogado`.
+
+A captura e a edição usam a tela de acompanhamento. A verificação e a genealogia usam o resultado
+e o histórico. O Como funciona não mudou na 020 e foi checado de novo junto com o resto.
+
+Resultado: **0 ERROR** e 7 WARNING novos, todos em categorias já analisadas na tabela acima: 5 de
+"Ver registro na rede" repetido no Histórico (estados `revogado` e `assinatura_invalida`) e 2 de
+contraste num botão cortado na borda da rolagem. Todos os estados novos marcam título. Os estados
+sem título continuam os mesmos da 002 (Câmera, Editor e folha de opções do Acervo).
+
+Uma primeira execução teve 5 testes interrompidos porque a depuração sem fio caiu no meio. A
+rodada válida foi feita depois de reconectar, com a tela mantida ligada (`svc power stayon true`).
 
 ## Roteiro manual com TalkBack
 

@@ -1,0 +1,79 @@
+arquivo,grupo,esperado,obtido,correto,tempo_ms
+"HashLens_20261123_144434_929.jpg",originais,Registrada – original,Registrada – original,true,3252
+"HashLens_20261123_153838_880.jpg",originais,Registrada – original,Registrada – original,true,1134
+"HashLens_20261123_153903_349.jpg",originais,Registrada – original,Registrada – original,true,1110
+"HashLens_20261123_153937_984.jpg",originais,Registrada – original,Registrada – original,true,1093
+"HashLens_20261123_154003_133.jpg",originais,Registrada – original,Registrada – original,true,954
+"HashLens_20261123_154036_725.jpg",originais,Registrada – original,Registrada – original,true,999
+"HashLens_20261123_154057_925.jpg",originais,Registrada – original,Registrada – original,true,1038
+"HashLens_20261123_154124_724.jpg",originais,Registrada – original,Registrada – original,true,1004
+"HashLens_20261123_154149_777.jpg",originais,Registrada – original,Registrada – original,true,923
+"HashLens_20261123_154213_951.jpg",originais,Registrada – original,Registrada – original,true,920
+"HashLens_20261123_154243_092.jpg",originais,Registrada – original,Registrada – original,true,1128
+"HashLens_20261123_154306_024.jpg",originais,Registrada – original,Registrada – original,true,1109
+"HashLens_20261123_154422_391_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1712
+"HashLens_20261123_154505_996_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1330
+"HashLens_20261123_154525_219_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1772
+"HashLens_20261123_154550_427_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1424
+"HashLens_20261123_154624_139_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1616
+"HashLens_20261123_154711_376_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1778
+"HashLens_20261123_154733_747_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1301
+"HashLens_20261123_154756_046_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1742
+"HashLens_20261123_154815_126_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1391
+"HashLens_20261123_154854_461_editada.jpg",versoes,Registrada – versão alterada,Registrada – versão alterada,true,1298
+"20261123_154931.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,775
+"20261123_154934.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,795
+"20261123_154937.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,776
+"20261123_154939.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,908
+"20261123_154942.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,901
+"20261123_154946.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,686
+"20261123_154949.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,797
+"20261123_154955.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,853
+"20261123_155005.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,736
+"20261123_155011.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,776
+"20261123_155018.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,819
+"20261123_155026.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,1713
+"20261123_155030.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,796
+"20261123_155039.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,889
+"20261123_155054.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,799
+"20261123_155104.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,761
+"20261123_155141.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,833
+"20261123_155143.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,794
+"20261123_155151.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,794
+"20261123_155154.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,890
+"HashLens_20261010_204314_511_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,704
+"HashLens_20261011_181446_364_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,692
+"HashLens_20261012_110606_553_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,596
+"HashLens_20261012_113648_465_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,707
+"HashLens_20261013_174109_883_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,696
+"HashLens_20261013_174350_545_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,703
+"HashLens_20261118_192402_661_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,507
+"HashLens_20261118_200703_232_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,696
+"HashLens_20261118_205311_146_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,605
+"HashLens_20261119_174035_255_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,511
+"HashLens_20261119_221031_951_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,696
+"HashLens_20261120_091742_592_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,699
+"HashLens_20261120_094314_304_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,700
+"HashLens_20261123_095249_949_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Não registrada,true,606
+"HashLens_20261123_144434_929_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1414
+"HashLens_20261123_153838_880_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,2326
+"HashLens_20261123_153903_349_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1053
+"HashLens_20261123_153937_984_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1739
+"HashLens_20261123_154003_133_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1149
+"HashLens_20261123_154036_725_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1129
+"HashLens_20261123_154057_925_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1387
+"HashLens_20261123_154124_724_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1129
+"HashLens_20261123_154149_777_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,2113
+"HashLens_20261123_154213_951_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,971
+"HashLens_20261123_154243_092_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1030
+"HashLens_20261123_154306_024_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1943
+"HashLens_20261123_154422_391_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1358
+"HashLens_20261123_154505_996_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,2001
+"HashLens_20261123_154525_219_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1726
+"HashLens_20261123_154550_427_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,2040
+"HashLens_20261123_154624_139_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1670
+"HashLens_20261123_154711_376_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1862
+"HashLens_20261123_154733_747_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1450
+"HashLens_20261123_154756_046_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1695
+"HashLens_20261123_154815_126_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1458
+"HashLens_20261123_154854_461_editada_q80.jpg",nao_registrados,Não registrada ou Correspondência visual,Correspondência visual,true,1500

@@ -1,10 +1,10 @@
 package br.ufv.hashlens.data.chain
 
+import br.ufv.hashlens.attestation.AttestationHash
 import br.ufv.hashlens.config.ChainConfig
 import br.ufv.hashlens.core.crypto.DeviceSignatureVerifier
 import br.ufv.hashlens.domain.model.Device
 import br.ufv.hashlens.domain.model.ImageRecord
-import br.ufv.hashlens.attestation.AttestationHash
 import br.ufv.hashlens.testing.ChainReceipts
 import br.ufv.hashlens.testing.ChainResponses
 import br.ufv.hashlens.testing.SignatureVectors

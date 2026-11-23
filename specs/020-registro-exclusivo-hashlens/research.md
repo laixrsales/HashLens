@@ -164,11 +164,15 @@ true`; `osPatchLevel` com no máximo 24 meses em relação a `emitidoEm`; pacote
   - **Desenvolvimento**: `./gradlew :attester:run` no computador da autora; o aparelho acessa por
     `adb reverse tcp:8080 tcp:8080` e `http://localhost:8080`, o que só é aceito no build de debug
     (`network_security_config` de debug).
-  - **Avaliação**: o mesmo processo exposto por um túnel HTTPS gratuito. Recomendado: domínio fixo
-    gratuito (Cloudflare Tunnel com hostname nomeado ou ngrok com domínio estático), para não
-    recompilar o app a cada execução. Com túnel rápido (`trycloudflare.com`), o endereço muda e
-    precisa ser atualizado em `local.properties` e o APK de release, recompilado. ⚠️ Escolher o
-    túnel na tarefa de setup.
+  - **Avaliação**: o mesmo processo exposto por um túnel HTTPS gratuito. **Escolha da autora em
+    2026-11-23 (T058): ngrok com domínio estático** (plano gratuito,
+    `https://ambulance-geologist-lake.ngrok-free.dev`), com `ngrok http --url=<domínio> 8080`. O
+    endereço é fixo, e o APK de release é gerado uma vez só. O authtoken fica em
+    `~/.config/ngrok/ngrok.yml`, fora do repositório. A página de aviso do plano gratuito só
+    aparece a navegadores (User-Agent de navegador), não ao OkHttp do app.
+    Descartados: Cloudflare Tunnel nomeado (exige um domínio próprio na Cloudflare) e túnel
+    rápido `trycloudflare.com` (o endereço muda a cada execução, o que obriga a atualizar
+    `local.properties` e recompilar o APK de release).
   - O computador precisa estar ligado só durante **vínculos**; registros em aparelhos já
     vinculados não passam pelo atestador (US2 cenário 3).
 - **Logs**: o atestador registra só o resultado (autorizado ou recusado, com o motivo) e o
