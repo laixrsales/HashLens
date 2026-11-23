@@ -68,13 +68,16 @@ Resumo:
 # Contrato
 cd contracts && forge build && forge test -vv
 
-# Atestador (variáveis ATTESTER_*, ver quickstart da 020 §3) e validação da atestação
+# Atestador (demais variáveis ATTESTER_*, ver quickstart da 020 §3) e validação da atestação
 cd android && ./gradlew :attestation:test :attester:test
+read -s -p "ATTESTER_PRIVATE_KEY: " ATTESTER_PRIVATE_KEY && echo && export ATTESTER_PRIVATE_KEY
 ./gradlew :attester:run                     # porta 8080
 adb reverse tcp:8080 tcp:8080               # desenvolvimento: aparelho chega ao atestador local
+./gradlew :attester:audit --args="<deviceId>"   # refaz a conferência de um vínculo só com dados públicos
 
 # App: antes, crie android/local.properties (RPC, contrato, atestador, projectId da Reown; ver quickstart §4)
 ./gradlew :app:installDebug
+./gradlew :app:assembleRelease              # APK de release (avaliação; keystore em local.properties)
 ./gradlew :app:testDebugUnitTest            # testes unitários
 ./gradlew :app:connectedDebugAndroidTest    # testes instrumentados (aparelho conectado)
 ```
@@ -92,5 +95,6 @@ adb reverse tcp:8080 tcp:8080               # desenvolvimento: aparelho chega ao
   [modelo de dados](specs/002-registro-rastreamento-imagens/data-model.md).
 - [Princípios do projeto](.specify/memory/constitution.md).
 - [Direção visual](docs/design/direcao-visual.md) e [diretrizes de UX](docs/referencia/ux.md).
-- [Resultados](docs/resultados/): desempenho, escalabilidade, recompressão, revisão de segurança,
-  recusas de origens não autorizadas, gás v2 contra v1 e matriz de classificação.
+- [Resultados](docs/resultados/): desempenho, escalabilidade, recompressão, acessibilidade, revisão
+  de segurança, recusas de origens não autorizadas, gás e tempos de registro (v2 contra v1) e matriz
+  de classificação no deploy de avaliação.
